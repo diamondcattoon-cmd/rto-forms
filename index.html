@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RTO Forms — Vehicle Transfer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+.header{background:#1a3a6b;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px}
+.header h1{font-size:17px;font-weight:700}
+.header p{font-size:11px;opacity:.7;margin-top:2px}
+.container{max-width:680px;margin:0 auto;padding:20px 14px 60px}
+.card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:14px}
+.card-title{padding:12px 16px 0;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+.card-body{padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.g2{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld.full{grid-column:1/-1}
+.fld label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.3px}
+.fld input,.fld select{padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:7px;font-size:13px;font-family:inherit;color:#1a202c;width:100%}
+.fld input:focus,.fld select:focus{outline:none;border-color:#3b82f6}
+.forms-chips{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px}
+.chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.btn{width:100%;padding:14px;background:#1a3a6b;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{background:#1e4080}
+.btn:disabled{background:#94a3b8;cursor:not-allowed}
+.status{text-align:center;font-size:13px;color:#64748b;padding:8px;min-height:28px}
+.status.err{color:#dc2626}
+.status.ok{color:#16a34a;font-weight:600}
+.top-info{background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;font-size:12px;color:#1e40af;line-height:1.6;margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🚗 RTO Forms — Vehicle Transfer</h1>
+    <p>Jamshedpur DTO | Ek baar bharo — charon forms taiyar</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="top-info">
+    <b>Kaunse forms generate honge:</b><br>
+    ✅ Form 29 &nbsp;|&nbsp; ✅ Form 30 &nbsp;|&nbsp; ✅ Affidavit Seller &nbsp;|&nbsp; ✅ Affidavit Purchaser
+  </div>
+
+  <div class="card">
+    <div class="card-title">Vehicle Details</div>
+    <div class="card-body">
+      <div class="g2">
+        <div class="fld"><label>Registration No. *</label><input id="reg_no" placeholder="JH05AB1234"></div>
+        <div class="fld"><label>Vehicle Type</label><input id="vehicle_type" placeholder="Motor Car / Motor Cycle"></div>
+        <div class="fld"><label>Make &amp; Model</label><input id="make" placeholder="Maruti Swift 2018"></div>
+        <div class="fld"><label>Engine No.</label><input id="engine_no" placeholder="K12M1234567"></div>
+        <div class="fld full"><label>Chassis No.</label><input id="chassis_no" placeholder="MA3FJEB1S00123456"></div>
+        <div class="fld"><label>Date of Sale</label><input type="date" id="sale_date"></div>
+        <div class="fld"><label>RTO / DTO Office</label><input id="rto" placeholder="District Transport Office, Jamshedpur"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Seller (Transferor) Details</div>
+    <div class="card-body">
+      <div class="g2">
+        <div class="fld full"><label>Seller Full Name *</label><input id="seller_name" placeholder="Ramesh Kumar Sharma"></div>
+        <div class="fld full"><label>S/o (Pita ka Naam)</label><input id="seller_father" placeholder="Shri Mohan Lal Sharma"></div>
+        <div class="fld full"><label>Address (House/Street)</label><input id="seller_addr" placeholder="H.No. 45, Station Road"></div>
+        <div class="fld"><label>Town</label><input id="seller_town" placeholder="Jamshedpur"></div>
+        <div class="fld"><label>District</label><input id="seller_dist" placeholder="East Singhbhum"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Purchaser (Transferee) Details</div>
+    <div class="card-body">
+      <div class="g2">
+        <div class="fld full"><label>Purchaser Full Name *</label><input id="buyer_name" placeholder="Suresh Kumar Yadav"></div>
+        <div class="fld full"><label>S/o (Pita ka Naam)</label><input id="buyer_father" placeholder="Shri Ram Prasad Yadav"></div>
+        <div class="fld full"><label>Address (House/Street)</label><input id="buyer_addr" placeholder="Village Rampur, NH-33"></div>
+        <div class="fld"><label>Town</label><input id="buyer_town" placeholder="Baharagora"></div>
+        <div class="fld"><label>District</label><input id="buyer_dist" placeholder="East Singhbhum"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Advocate / Notary Details</div>
+    <div class="card-body">
+      <div class="g2">
+        <div class="fld"><label>Advocate at (City)</label><input id="advocate_at" placeholder="Jamshedpur" value="Jamshedpur"></div>
+        <div class="fld"><label>Place (for affidavit)</label><input id="sign_place" placeholder="Jamshedpur" value="Jamshedpur"></div>
+        <div class="fld"><label>State</label><input id="state" placeholder="Jharkhand" value="Jharkhand"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="genBtn" onclick="generateForms()">⚡ Charon Forms Generate Karo &amp; Download</button>
+  <div class="status" id="statusMsg"></div>
+
+</div>
+
+<script>
+function g(id){ return document.getElementById(id)?.value?.trim() || ''; }
+
+function formatDate(dateStr) {
+  if (!dateStr) return { day: '', year: '' };
+  const d = new Date(dateStr);
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const day = d.getDate();
+  const suffix = day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th';
+  return {
+    day: day + suffix + ' ' + months[d.getMonth()],
+    year: d.getFullYear().toString()
+  };
+}
+
+async function generateForms() {
+  const regNo = g('reg_no');
+  const sellerName = g('seller_name');
+  const buyerName = g('buyer_name');
+
+  if (!regNo || !sellerName || !buyerName) {
+    document.getElementById('statusMsg').textContent = '❌ Registration No., Seller Name aur Buyer Name zaroori hain';
+    document.getElementById('statusMsg').className = 'status err';
+    return;
+  }
+
+  const btn = document.getElementById('genBtn');
+  const status = document.getElementById('statusMsg');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating PDF...';
+  status.textContent = 'Charon forms ban rahe hain...';
+  status.className = 'status';
+
+  const dateInfo = formatDate(g('sale_date'));
+
+  const data = {
+    reg_no: regNo,
+    vehicle_type: g('vehicle_type') || 'Motor Vehicle',
+    make: g('make'),
+    engine_no: g('engine_no'),
+    chassis_no: g('chassis_no'),
+    sale_day: dateInfo.day,
+    sale_year: dateInfo.year,
+    rto: g('rto') || 'District Transport Office, Jamshedpur',
+    state: g('state') || 'Jharkhand',
+    seller_name: sellerName,
+    seller_father: g('seller_father'),
+    seller_addr: g('seller_addr'),
+    seller_town: g('seller_town'),
+    seller_dist: g('seller_dist'),
+    buyer_name: buyerName,
+    buyer_father: g('buyer_father'),
+    buyer_addr: g('buyer_addr'),
+    buyer_town: g('buyer_town'),
+    buyer_dist: g('buyer_dist'),
+    advocate_at: g('advocate_at') || 'Jamshedpur',
+    sign_place: g('sign_place') || 'Jamshedpur',
+  };
+
+  try {
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || 'Server error');
+    }
+
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RTO_Forms_${regNo}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    status.textContent = '✅ PDF Download ho gaya! Seedha print karo.';
+    status.className = 'status ok';
+  } catch(err) {
+    status.textContent = '❌ Error: ' + err.message;
+    status.className = 'status err';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⚡ Charon Forms Generate Karo & Download';
+}
+</script>
+</body>
+</html>

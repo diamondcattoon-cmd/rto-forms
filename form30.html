@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4 portrait; margin: 10mm 15mm 10mm 15mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.45; color: #000; width: 180mm; }
+  .title { text-align: center; font-weight: bold; font-size: 15pt; letter-spacing: 1px; margin-bottom: 2px; }
+  .sub { text-align: center; font-size: 10pt; margin-bottom: 2px; }
+  .subtitle { text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 2px; }
+  .note { font-size: 8.5pt; margin-bottom: 6px; line-height: 1.4; }
+  .row { display: flex; align-items: flex-end; margin-bottom: 3px; }
+  .lbl { flex-shrink: 0; white-space: nowrap; }
+  .val { font-weight: bold; border-bottom: 1px dotted #000; flex: 1; padding-bottom: 1px; padding-left: 2px; }
+  .val.sm { flex: 0 0 35px; }
+  .val.md { flex: 0 0 95px; }
+  .val.lg { flex: 0 0 150px; }
+  .val.xl { flex: 0 0 210px; }
+  .fullrow { border-bottom: 1px dotted #000; width: 100%; min-height: 15px; margin-bottom: 3px; font-weight: bold; padding-left: 2px; }
+  .indent { padding-left: 20px; }
+  .center { text-align: center; }
+  .bold { font-weight: bold; }
+  .divider { border-top: 1.5px solid #000; margin: 6px 0 5px; }
+  .part-title { text-align: center; font-weight: bold; font-size: 12pt; letter-spacing: 1px; margin: 3px 0; }
+  .gap4 { height: 4px; }
+  .gap6 { height: 6px; }
+  .gap8 { height: 8px; }
+  .note-small { font-size: 8.5pt; }
+  .sig-row { display: flex; justify-content: space-between; margin: 3px 0; }
+  .diamond { font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<div class="title">FORM - 30</div>
+<div class="sub">[ See Rule 56 (2) and (3) ]</div>
+<div class="subtitle">REPORT OF TRANSFER OF OWNERSHIP OF A MOTOR VEHICLE</div>
+<div class="subtitle">PART - 1 &nbsp;&nbsp; FOR THE USE OF THE TRANSFERER</div>
+<div class="note">( To be made in duplicate and if the vehicle is held under an agreement of hire purchases / lease / hypothecation and the duplicate copy with the endorsement of the registering authority to be returned to the financer simultaneously on making the entry of transfer of ownership in the certificate of registration)</div>
+
+<div>To,</div>
+<div>The Registering Authority</div>
+<div class="fullrow">{{rto}}</div>
+<div class="fullrow"></div>
+<div class="gap4"></div>
+
+<div class="row"><span class="lbl">Name of the Transferer&nbsp;</span><span class="val">{{seller_name}}</span></div>
+<div class="row"><span class="lbl">Son / Wife / Daughter of&nbsp;</span><span class="val">{{seller_father}}</span></div>
+<div class="row"><span class="lbl">Full Address&nbsp;</span><span class="val">{{seller_addr}}</span></div>
+<div class="fullrow"></div>
+<div class="gap4"></div>
+
+<div class="row indent">
+  <span class="lbl">I hereby declare I / We have on this&nbsp;</span>
+  <span class="val sm">{{sale_day}}</span>
+  <span class="lbl">&nbsp;day of</span>
+</div>
+<div class="row">
+  <span class="lbl">the year&nbsp;</span>
+  <span class="val sm">{{sale_year}}</span>
+  <span class="lbl">&nbsp;Sold my / our motor vehicle bearing registration</span>
+</div>
+<div class="row">
+  <span class="lbl">mark&nbsp;</span>
+  <span class="val md">{{reg_no}}</span>
+  <span class="lbl">&nbsp;to Shri / Smt.&nbsp;</span>
+  <span class="val">{{buyer_name}}</span>
+</div>
+<div class="row"><span class="lbl">Son / Wife / Daughter of&nbsp;</span><span class="val">{{buyer_father}}</span></div>
+<div class="row"><span class="lbl">residing at&nbsp;</span><span class="val">{{buyer_addr}}</span></div>
+<div class="fullrow"></div>
+
+<div class="note">( Full address and handed over the certificate of registration and the certificate of insurance to him / her / them )</div>
+<div class="note">I / We hereby declare that to the best of my / Our knowledge the certificate of registration of the vehicle has been / has not been suspended or cancelled.</div>
+<div class="note"><span class="diamond">❖❖</span> &nbsp;I enclose the No. Objection Certificate issued by the Registering Authority.</div>
+<div class="note"><span class="diamond">❖❖</span> &nbsp;If the No Objection Certificate issued by the Registering Authority is not enclosed the transfer should file the along with the application a declaration as required under sub-section (1) of section 50.</div>
+
+<div class="gap6"></div>
+<div class="sig-row">
+  <div></div>
+  <div>
+    <div class="row"><span class="lbl">(S) (&nbsp;</span><span class="val lg"></span><span class="lbl">&nbsp;)</span></div>
+    <div>Signature of the Transfer</div>
+  </div>
+</div>
+
+<div class="row"><span class="lbl">Date&nbsp;</span><span class="val lg"></span></div>
+<div class="note-small">
+  <span class="diamond">❖</span> Details of suspension or cancellation &nbsp;&nbsp;
+  <span class="diamond">❖</span> Strike out whichever is inapplicable
+</div>
+
+<div class="divider"></div>
+<div class="part-title">PART - II &nbsp; FOR THE USE OF TRANSFEREE</div>
+<div class="gap4"></div>
+
+<div>To,</div>
+<div>The Registering Authority</div>
+<div class="fullrow">{{rto}}</div>
+<div class="fullrow"></div>
+<div class="gap4"></div>
+
+<div class="row"><span class="lbl">Name of the Transferee&nbsp;</span><span class="val">{{buyer_name}}</span></div>
+<div class="row"><span class="lbl">Son / Wife / Daughter of&nbsp;</span><span class="val">{{buyer_father}}</span></div>
+<div class="row"><span class="lbl">Full Address&nbsp;</span><span class="val">{{buyer_addr}}</span></div>
+
+<div class="row indent">
+  <span class="lbl">I hereby declare I / We have on this&nbsp;</span>
+  <span class="val sm">{{sale_day}}</span>
+  <span class="lbl">&nbsp;day of</span>
+</div>
+<div class="row">
+  <span class="lbl">The year&nbsp;</span>
+  <span class="val sm">{{sale_year}}</span>
+  <span class="lbl">&nbsp;purchased the motor vehicle bearing registration</span>
+</div>
+<div class="row">
+  <span class="lbl">number&nbsp;</span>
+  <span class="val md">{{reg_no}}</span>
+  <span class="lbl">&nbsp;from&nbsp;</span>
+  <span class="val">{{seller_name}}</span>
+</div>
+<div class="row"><span class="lbl">Name and full address&nbsp;</span><span class="val">{{seller_addr}}</span></div>
+<div class="fullrow"></div>
+<div class="center note-small">( Name &amp; full address )</div>
+<div class="gap4"></div>
+
+<div class="note">and request that necessary entries regarding the transfer of ownership of the vehicle in my / our name may be recorded in the Certificate of Registration Certificate of fitness of the vehicle which is enclosed</div>
+<div>The Certificate of Insurance is also enclosed</div>
+<div>Specimen Signature of the Transferee -</div>
+<div class="gap6"></div>
+
+<div class="sig-row">
+  <div>
+    <div>(P) 1</div>
+    <div style="margin-top:18px">(P) 2</div>
+  </div>
+  <div>
+    <div class="row"><span class="lbl">(P) (&nbsp;</span><span class="val lg"></span><span class="lbl">&nbsp;)</span></div>
+    <div style="margin-top:10px">Signature of the Transferee</div>
+  </div>
+</div>
+
+</body>
+</html>

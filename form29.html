@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4 portrait; margin: 12mm 15mm 10mm 15mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11.5pt;
+    line-height: 1.5;
+    color: #000;
+    width: 180mm;
+  }
+  .title { text-align: center; font-weight: bold; font-size: 15pt; letter-spacing: 1px; margin-bottom: 2px; }
+  .sub { text-align: center; font-size: 10pt; margin-bottom: 2px; }
+  .subtitle { text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 6px; }
+  .note { font-size: 8.5pt; margin-bottom: 8px; line-height: 1.4; }
+  .row { display: flex; align-items: flex-end; margin-bottom: 3px; white-space: nowrap; }
+  .row.wrap { white-space: normal; }
+  .lbl { flex-shrink: 0; }
+  .val { font-weight: bold; border-bottom: 1px dotted #000; flex: 1; min-width: 20px; padding-bottom: 1px; padding-left: 2px; }
+  .val.sm { flex: 0 0 35px; }
+  .val.md { flex: 0 0 95px; }
+  .val.lg { flex: 0 0 160px; }
+  .val.xl { flex: 0 0 210px; }
+  .val.full { flex: 1; }
+  .val.rto { flex: 1; }
+  .fullrow { border-bottom: 1px dotted #000; width: 100%; min-height: 16px; margin-bottom: 3px; font-weight: bold; padding-left: 2px; }
+  .indent { padding-left: 18px; }
+  .right-note { font-size: 8.5pt; margin-left: auto; flex-shrink: 0; }
+  .sig-row { display: flex; justify-content: space-between; margin: 4px 0; }
+  .sig-left { width: 45%; }
+  .sig-right { width: 50%; text-align: left; }
+  .gap4 { height: 4px; }
+  .gap8 { height: 8px; }
+  .gap12 { height: 12px; }
+  .bold { font-weight: bold; }
+  .center { text-align: center; }
+  .endorsement-title { text-align: center; font-weight: bold; font-size: 13pt; letter-spacing: 3px; margin: 4px 0; }
+  .divider { border-top: 1.5px solid #000; margin: 8px 0 6px 0; }
+  .note-small { font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<div class="title">FORM - 29</div>
+<div class="sub">[ See Rule 55 (1) ]</div>
+<div class="subtitle">FORM OF NOTICE OF TRANSFER OF OWNERSHIP OF A<br>MOTOR VEHICLE</div>
+
+<div class="note">( To be made in duplicate and the duplicate copy with endorsement of the registering authority to be returned to the transferer immediately on making entries of transfer of ownership)</div>
+
+<div>To,</div>
+<div>The Registering Authority</div>
+<div class="fullrow">{{rto}}</div>
+
+<div class="row">
+  <span class="fullrow" style="font-weight:normal;position:relative">
+    &nbsp;
+    <span style="position:absolute;right:0;bottom:2px;font-size:8.5pt;font-weight:normal">(in whose jurisdiction the transferee residence)</span>
+  </span>
+</div>
+
+<div class="row">
+  <span class="lbl">I/We</span>
+  <span class="val xl">{{seller_name}}</span>
+  <span class="lbl">&nbsp;residing</span>
+</div>
+
+<div class="row">
+  <span class="lbl">at</span>
+  <span class="val xl">{{seller_addr}}</span>
+  <span class="lbl">&nbsp;have on the&nbsp;</span>
+  <span class="val sm">{{sale_day}}</span>
+  <span class="lbl">&nbsp;sold and delivery my/our</span>
+</div>
+
+<div class="row">
+  <span class="lbl">day of the year</span>
+  <span class="val sm">{{sale_year}}</span>
+  <span class="lbl">&nbsp;Vehicle No.</span>
+  <span class="val md">{{reg_no}}</span>
+  <span class="lbl">&nbsp;Make</span>
+  <span class="val full">{{make}}</span>
+</div>
+
+<div class="row">
+  <span class="lbl">Chassis No.</span>
+  <span class="val lg">{{chassis_no}}</span>
+  <span class="lbl">&nbsp;Engine No.</span>
+  <span class="val full">{{engine_no}}</span>
+</div>
+
+<div class="row">
+  <span class="lbl">Sr./Smt.</span>
+  <span class="val xl">{{buyer_name}}</span>
+  <span class="lbl">&nbsp;(Name), Son/Wife/Daughter</span>
+</div>
+
+<div class="row">
+  <span class="lbl">of</span>
+  <span class="val lg">{{buyer_father}}</span>
+  <span class="lbl">&nbsp;residing at House No. Street, Village/</span>
+</div>
+
+<div class="fullrow">{{buyer_addr}}</div>
+
+<div class="row">
+  <span class="lbl">Town</span>
+  <span class="val md">{{buyer_town}}</span>
+  <span class="lbl">&nbsp;Dist.</span>
+  <span class="val md">{{buyer_dist}}</span>
+  <span class="lbl">&nbsp;State</span>
+  <span class="val full">{{state}}</span>
+</div>
+
+<div>The registration certificate and insurance certificate have been handed over to him/her/them.</div>
+<div class="gap4"></div>
+<div class="sig-row">
+  <div class="sig-left">(P)</div>
+  <div class="sig-right">
+    <div>(S)</div>
+    <div>Signature of Registered Owner</div>
+    <div>(Transferee)</div>
+  </div>
+</div>
+
+<div class="gap8"></div>
+<div class="row">
+  <span class="lbl">Date</span>
+  <span class="val lg"></span>
+</div>
+
+<div class="row">
+  <span class="lbl">I</span>
+  <span class="val xl">{{seller_name}}</span>
+  <span class="lbl">&nbsp;Transferor)</span>
+</div>
+
+<div>Copy to the registered Authority in whose jurisdiction the transferor residence</div>
+<div><span class="bold">Note :-</span> &nbsp;<span class="note-small">To be sent to Registered Authority by Regd. Acknowledgment due</span></div>
+
+<div class="gap8"></div>
+<div class="divider"></div>
+
+<div class="endorsement-title">OFFICE &nbsp; ENDORSEMENT</div>
+<div class="gap4"></div>
+
+<div class="row">
+  <span class="lbl">No.</span>
+  <span class="val md"></span>
+  <span class="lbl">&nbsp;Date</span>
+  <span class="val md"></span>
+  <span class="lbl">&nbsp;Office of the</span>
+  <span class="val full"></span>
+</div>
+
+<div>The ownership of Vehicle has been transferred to the name of</div>
+<div class="fullrow"></div>
+
+<div class="row">
+  <span class="val xl"></span>
+  <span class="lbl">&nbsp;with effect from</span>
+  <span class="val full"></span>
+</div>
+
+<div class="gap4"></div>
+<div>(S)</div>
+<div>(S)</div>
+<div class="gap4"></div>
+<div>To</div>
+<div class="fullrow"></div>
+<div class="fullrow"></div>
+<div class="fullrow"></div>
+<div>(The Transferee)</div>
+
+<div class="gap8"></div>
+<div class="sig-row">
+  <div class="sig-left">
+    <div>By registered post or under proper acknowledgement,</div>
+    <div class="note-small">*Strike our whichever is in applicable</div>
+  </div>
+  <div class="sig-right">
+    <div>Registering Authority</div>
+    <div>(Office Seal)</div>
+  </div>
+</div>
+
+</body>
+</html>
