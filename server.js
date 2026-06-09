@@ -1,21 +1,17 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const puppeteerCore = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const fs = require('fs');
 const path = require('path');
 
 const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
-
-// Files are in root directory (no subfolders)
 const ROOT = __dirname;
 
-// Serve index.html at root
-app.get('/', (req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 
-// Fill template with data
 function fillTemplate(filename, data) {
   let html = fs.readFileSync(path.join(ROOT, filename), 'utf8');
   Object.keys(data).forEach(k => {
@@ -24,11 +20,18 @@ function fillTemplate(filename, data) {
   return html;
 }
 
-// HTML to PDF via Puppeteer
+function extractBody(html) {
+  const s = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || '';
+  const b = (html.match(/<body>([\s\S]*?)<\/body>/) || [])[1] || html;
+  return `<style>${s}</style>${b}`;
+}
+
 async function htmlToPdf(htmlPages) {
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+  const browser = await puppeteerCore.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
   });
   try {
     const page = await browser.newPage();
@@ -42,21 +45,17 @@ async function htmlToPdf(htmlPages) {
       ${htmlPages.map(h => `<div class="pg">${extractBody(h)}</div>`).join('')}
     </body></html>`;
     await page.setContent(combined, { waitUntil: 'networkidle0' });
-    const pdf = await page.pdf({ format: 'A4', printBackground: true,
-      margin: { top:'0', right:'0', bottom:'0', left:'0' } });
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '0', right: '0', bottom: '0', left: '0' }
+    });
     return pdf;
   } finally {
     await browser.close();
   }
 }
 
-function extractBody(html) {
-  const s = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || '';
-  const b = (html.match(/<body>([\s\S]*?)<\/body>/) || [])[1] || html;
-  return `<style>${s}</style>${b}`;
-}
-
-// POST /api/generate
 app.post('/api/generate', async (req, res) => {
   try {
     const d = req.body;
@@ -64,13 +63,16 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'seller_name, buyer_name, reg_no required' });
 
     const dt = d.sale_date ? new Date(d.sale_date) : new Date();
-    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const months = ['January','February','March','April','May','June','July','August',
+                    'September','October','November','December'];
     const day = dt.getDate();
     const suf = day===1?'st':day===2?'nd':day===3?'rd':'th';
-    const sale_day = day+suf+' '+months[dt.getMonth()];
-    const sale_year = dt.getFullYear().toString();
-
-    const fd = { ...d, sale_day, sale_year, state: d.state||'Jharkhand' };
+    const fd = {
+      ...d,
+      sale_day: day+suf+' '+months[dt.getMonth()],
+      sale_year: dt.getFullYear().toString(),
+      state: d.state || 'Jharkhand'
+    };
 
     const sellerAff = {
       for_type:'SELLER', dep_name:d.seller_name, dep_father:d.seller_father||'',
@@ -94,24 +96,22 @@ app.post('/api/generate', async (req, res) => {
       adv_at:d.advocate_at||'', sign_place:d.sign_place||'', party_label:'Purchaser',
     };
 
-    const html29  = fillTemplate('form29.html', fd);
-    const html30  = fillTemplate('form30.html', fd);
-    const htmlAS  = fillTemplate('affidavit.html', sellerAff);
-    const htmlAB  = fillTemplate('affidavit.html', buyerAff);
-
-    console.log('Generating PDF for', d.reg_no);
-    const pdf = await htmlToPdf([html29, html30, htmlAS, htmlAB]);
+    console.log('Generating PDF:', d.reg_no);
+    const pdf = await htmlToPdf([
+      fillTemplate('form29.html', fd),
+      fillTemplate('form30.html', fd),
+      fillTemplate('affidavit.html', sellerAff),
+      fillTemplate('affidavit.html', buyerAff),
+    ]);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="RTO_${d.reg_no}.pdf"`);
     res.send(pdf);
-    console.log('Done:', d.reg_no);
+    console.log('PDF sent:', d.reg_no);
   } catch(err) {
-    console.error(err);
+    console.error('Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
-
-app.get('/health', (req, res) => res.json({ status:'ok', time:new Date() }));
 
 app.listen(PORT, () => console.log(`RTO Forms running on port ${PORT}`));
