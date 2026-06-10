@@ -86,6 +86,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .fset-label{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .fset-num{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--stamp);background:var(--stamp-soft);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .fset-label h4{font-size:14px;font-weight:600;letter-spacing:.2px}
+.picks{display:flex;gap:8px;flex-wrap:wrap}
+.pick{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--txt);background:var(--paper);border:1.5px solid var(--line);border-radius:24px;padding:7px 15px;cursor:pointer;transition:all .15s;user-select:none}
+.pick:hover{border-color:var(--ink)}
+.pick:has(input:checked){background:var(--ink);border-color:var(--ink);color:#fff}
+.pick input{accent-color:var(--stamp);width:14px;height:14px;cursor:pointer}
+.pick-note{font-size:12px;color:var(--txt-2);margin-top:10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
 .fld{display:flex;flex-direction:column;gap:5px}
@@ -99,6 +105,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .btn-generate{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:#fff;font-weight:600;font-size:15.5px;padding:15px 32px;border-radius:9px;border:none;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.2px}
 .btn-generate:hover{background:var(--ink-2);transform:translateY(-1px)}
 .btn-generate:disabled{background:var(--txt-3);cursor:not-allowed;transform:none}
+.btn-blank{display:inline-flex;align-items:center;gap:8px;background:var(--white);color:var(--ink);font-weight:600;font-size:14.5px;padding:14px 24px;border-radius:9px;border:1.5px solid var(--ink);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-blank:hover{background:var(--ink);color:#fff}
 .gen-note{font-size:12.5px;color:var(--txt-2)}
 .gen-note .mono{color:var(--approve);font-weight:600}
 .status{font-size:13.5px;min-height:22px;font-weight:500;padding-top:8px}
@@ -175,18 +183,18 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 <!-- ════════ HERO ════════ -->
 <section class="hero" id="top">
   <div class="hero-in">
-    <div class="hero-eyebrow">// Government forms, filled in minutes</div>
-    <h1>Vehicle transfer ke <span class="accent">charon forms</span>,<br>ek baar bharo — print karo.</h1>
-    <p class="hero-sub">Form 29, Form 30, Seller Affidavit aur Purchaser Affidavit — sab ek saath, print-ready A4 PDF mein. Bilkul free, koi login nahi.</p>
+    <div class="hero-eyebrow">// India's RTO paperwork, simplified</div>
+    <h1>Every RTO form.<br>Filled online, <span class="accent">print-ready</span> in minutes.</h1>
+    <p class="hero-sub">RTO Forms India is a free online filler for Motor Vehicles Act forms. Type the details once and download submission-ready A4 PDFs — or print blank forms to fill by hand. No login, no fees, and your data never leaves your browser.</p>
     <div class="hero-cta">
-      <a href="#tool" class="btn-stamp">Forms bharna shuru karo</a>
-      <a href="#forms" class="btn-ghost">Sare 40+ forms dekho</a>
+      <a href="#tool" class="btn-stamp">Start filling forms</a>
+      <a href="#forms" class="btn-ghost">Browse all forms</a>
     </div>
     <div class="hero-stats">
-      <div class="hstat"><span class="n">4-in-1</span><span class="l">Forms per download</span></div>
+      <div class="hstat"><span class="n">29+</span><span class="l">RTO forms catalogued</span></div>
       <div class="hstat"><span class="n">&lt; 2 min</span><span class="l">Fill to print</span></div>
       <div class="hstat"><span class="n">₹0</span><span class="l">Completely free</span></div>
-      <div class="hstat"><span class="n">A4</span><span class="l">Print-ready PDF</span></div>
+      <div class="hstat"><span class="n">A4</span><span class="l">Filled or blank PDFs</span></div>
     </div>
   </div>
 </section>
@@ -195,7 +203,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 <section class="sec" id="tool">
   <div class="sec-eyebrow">Live tool</div>
   <h2 class="sec-title">Vehicle Transfer Package</h2>
-  <p class="sec-sub">Seller, purchaser aur gaadi ki details ek baar bharo — neeche ke charon documents ek PDF mein download honge.</p>
+  <p class="sec-sub">Enter the seller, purchaser and vehicle details once — all four documents below are generated together in a single PDF. Need empty forms instead? Use the blank download.</p>
 
   <div class="tool-wrap">
     <div class="tool-head">
@@ -203,18 +211,32 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <span class="tool-badge">LIVE</span>
         <div>
           <h3>Ownership Transfer — Full Set</h3>
-          <p>DTO / RTO submission ke liye complete file</p>
+          <p>Complete file for DTO / RTO submission</p>
         </div>
       </div>
       <div class="tool-forms">
         <span class="tf-chip">FORM 29</span>
         <span class="tf-chip">FORM 30</span>
-        <span class="tf-chip">AFFIDAVIT — SELLER</span>
-        <span class="tf-chip">AFFIDAVIT — PURCHASER</span>
+        <span class="tf-chip">AFFIDAVITS ×2</span>
+        <span class="tf-chip">+ 25 / 26 / 28 OPTIONAL</span>
       </div>
     </div>
 
     <div class="tool-body">
+
+      <div class="fset">
+        <div class="fset-label"><span class="fset-num">0</span><h4>Forms to include in the PDF</h4></div>
+        <div class="picks">
+          <label class="pick"><input type="checkbox" id="pk29" checked> Form 29 — Transfer notice</label>
+          <label class="pick"><input type="checkbox" id="pk30" checked> Form 30 — Transfer report</label>
+          <label class="pick"><input type="checkbox" id="pkAS" checked> Affidavit — Seller</label>
+          <label class="pick"><input type="checkbox" id="pkAP" checked> Affidavit — Purchaser</label>
+          <label class="pick"><input type="checkbox" id="pk28"> Form 28 — NOC</label>
+          <label class="pick"><input type="checkbox" id="pk25"> Form 25 — RC renewal</label>
+          <label class="pick"><input type="checkbox" id="pk26"> Form 26 — Duplicate RC</label>
+        </div>
+        <p class="pick-note">Extra forms are filled from the same details below — no separate typing. For Forms 25 / 26 / 28 the seller fields are used as the owner / applicant.</p>
+      </div>
 
       <div class="fset">
         <div class="fset-label"><span class="fset-num">1</span><h4>Vehicle details</h4></div>
@@ -261,8 +283,9 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
       </div>
 
       <div class="gen-row">
-        <button class="btn-generate" id="genBtn" onclick="generatePDF()">Generate 4 forms — Download PDF</button>
-        <span class="gen-note">Output: <span class="mono">RTO_Transfer_[RegNo].pdf</span> — 4 pages, A4, print-ready</span>
+        <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate selected forms — Download PDF</button>
+        <button class="btn-blank" id="blankBtn" onclick="generatePDF(true)">Download blank forms</button>
+        <span class="gen-note">Output: <span class="mono">4 pages · A4 · print-ready</span></span>
       </div>
       <div class="status" id="statusMsg" role="status"></div>
 
@@ -275,8 +298,8 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 <!-- ════════ FORMS CATALOG ════════ -->
 <section class="sec" id="forms">
   <div class="sec-eyebrow">Catalog</div>
-  <h2 class="sec-title">Sare RTO forms — ek jagah</h2>
-  <p class="sec-sub">Motor Vehicles Act 1988 ke sabhi forms. Jo live hain unhe abhi bharo; baaki jald aa rahe hain.</p>
+  <h2 class="sec-title">All RTO forms in one place</h2>
+  <p class="sec-sub">Every form under the Motor Vehicles Act 1988 and CMV Rules 1989. Live forms can be filled right now — the rest are on the way.</p>
 
   <div class="cat-tabs" id="catTabs">
     <button class="cat-tab on" onclick="filterCat('all',this)">All</button>
@@ -294,22 +317,22 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 <!-- ════════ HOW IT WORKS ════════ -->
 <section class="sec" id="how">
   <div class="sec-eyebrow">Process</div>
-  <h2 class="sec-title">Teen kadam — file taiyar</h2>
+  <h2 class="sec-title">Three steps to a ready file</h2>
   <div class="steps">
     <div class="step">
       <div class="step-num">01</div>
-      <h4>Details bharo</h4>
-      <p>Seller, purchaser aur vehicle ki jaankari ek hi form mein. Sirf zaroori fields — koi lamba registration nahi.</p>
+      <h4>Fill the details</h4>
+      <p>Seller, purchaser and vehicle information in one short form. Only the essential fields — no registration, no account.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
-      <h4>PDF download karo</h4>
-      <p>Ek click par charon forms ka A4 PDF turant download. Browser mein hi banta hai — data kahin upload nahi hota.</p>
+      <h4>Download the PDF</h4>
+      <p>One click gives you all four forms as an A4 PDF — filled or blank. Everything is generated inside your browser; nothing is uploaded.</p>
     </div>
     <div class="step">
       <div class="step-num">03</div>
-      <h4>Print karke jama karo</h4>
-      <p>Court fee stamp lagao, sign karwao, aur DTO / RTO mein file jama kar do. Format submission-ready hai.</p>
+      <h4>Print and submit</h4>
+      <p>Affix the court fee stamp, collect signatures, and submit the file at your DTO / RTO. The format is submission-ready.</p>
     </div>
   </div>
 </section>
@@ -320,7 +343,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
     <div class="ftr-top">
       <div class="ftr-brand">
         RTO Forms India
-        <small>Motor Vehicles Act 1988 ke forms online bharne ka free tool. Data aapke browser mein hi rehta hai — kahin store nahi hota.</small>
+        <small>A free tool for filling Motor Vehicles Act 1988 forms online. Your data stays in your browser — nothing is stored on any server.</small>
       </div>
       <div class="ftr-links">
         <a href="#tool">Vehicle Transfer</a>
@@ -338,21 +361,18 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 <script>
 /* ════════ FORMS CATALOG DATA ════════ */
 const FORMS=[
- {num:'29',name:'Notice of Transfer of Ownership',desc:'Seller notice to RTO',cat:'transfer',live:true},
- {num:'30',name:'Report of Transfer of Ownership',desc:'Buyer report — Part I & II',cat:'transfer',live:true},
- {num:'AFF-S',name:'Affidavit — Seller',desc:'Vehicle sale affidavit',cat:'transfer',live:true},
- {num:'AFF-P',name:'Affidavit — Purchaser',desc:'Vehicle purchase affidavit',cat:'transfer',live:true},
- {num:'28',name:'No Objection Certificate',desc:'NOC from original RTO',cat:'transfer',live:false},
+ {num:'29 + 30',name:'Vehicle Transfer Package',desc:'Form 29, Form 30 + Seller & Purchaser affidavits — one PDF',cat:'transfer',live:true},
+ {num:'28',name:'No Objection Certificate',desc:'NOC application to RTO',cat:'transfer',live:true},
  {num:'35',name:'Hire Purchase / Hypothecation',desc:'Add HP agreement',cat:'transfer',live:false},
  {num:'36',name:'HP Termination',desc:'Remove hypothecation',cat:'transfer',live:false},
  {num:'20',name:'Registration of Motor Vehicle',desc:'New vehicle registration',cat:'registration',live:false},
  {num:'21',name:'Sale Certificate',desc:'Dealer sale certificate',cat:'registration',live:false},
- {num:'25',name:'Temporary Registration',desc:'TR for new vehicle',cat:'registration',live:false},
- {num:'26',name:'Temporary RC',desc:'Temp registration certificate',cat:'registration',live:false},
+ {num:'25',name:'Renewal of Registration',desc:'RC renewal application',cat:'registration',live:true},
+ {num:'26',name:'Duplicate RC',desc:'Lost / damaged RC replacement',cat:'registration',live:true},
  {num:'27',name:'New Registration Mark',desc:'Re-assignment of number',cat:'registration',live:false},
  {num:'31',name:'Alteration in Vehicle',desc:'Modification approval',cat:'registration',live:false},
  {num:'33',name:'Cancellation of Registration',desc:'RC cancellation',cat:'registration',live:false},
- {num:'34',name:'Duplicate RC',desc:'Lost RC replacement',cat:'registration',live:false},
+ {num:'34',name:'Hire-Purchase Endorsement',desc:'HP entry in RC',cat:'registration',live:false},
  {num:'37',name:'Change of Address',desc:'Address update in RC',cat:'registration',live:false},
  {num:'1',name:'Learner\'s Licence Application',desc:'New LL application',cat:'licence',live:false},
  {num:'1A',name:'Medical Certificate',desc:'Fitness for DL',cat:'licence',live:false},
@@ -393,7 +413,7 @@ function filterCat(cat,btn){
   renderForms();
 }
 function comingSoon(num){
-  alert('Form '+num+' jald aa raha hai!\nAbhi Vehicle Transfer package (Form 29, 30 + Affidavits) live hai.');
+  alert('Form '+num+' is coming soon!\nThe Vehicle Transfer package (Form 29, 30 + both Affidavits) is live right now.');
 }
 renderForms();
 
@@ -430,8 +450,8 @@ function lrow(doc,y,label,val,sz){
 }
 function secline(doc,y,title){
   doc.setLineWidth(0.5);doc.line(15,y,195,y);
-  center(doc,y+7,title,12,true);
-  return y+13;
+  center(doc,y+6,title,11.5,true);
+  return y+11;
 }
 
 /* ── FORM 29 ── */
@@ -477,14 +497,14 @@ function addForm29(doc,d){
   normal(doc,15,y,'(P)');
   normal(doc,135,y,'(S)'); y+=5;
   normal(doc,135,y,'Signature of Registered Owner'); y+=5;
-  normal(doc,135,y,'(Transferee)'); y+=10;
+  normal(doc,135,y,'(Transferee)'); y+=8;
   normal(doc,15,y,'Date: _____________________'); y+=7;
   normal(doc,15,y,'I, ');
   x=15+doc.getTextWidth('I, ');
   dline(doc,x,y+0.5,170); bold(doc,x+2,y,d.s_name);
   normal(doc,172,y,'(Transferor)'); y+=8;
   normal(doc,15,y,'Copy to the registered Authority in whose jurisdiction the transferor resides.'); y+=6;
-  bold(doc,15,y,'Note:',9.5); normal(doc,28,y,'To be sent to Registered Authority by Regd. Acknowledgment Due',9.5); y+=9;
+  bold(doc,15,y,'Note:',9.5); normal(doc,28,y,'To be sent to Registered Authority by Regd. Acknowledgment Due',9.5); y+=7;
   y=secline(doc,y,'OFFICE  ENDORSEMENT');
   y+=2;
   y=lrowPair(doc,y,'No.  ','','Date  ','');
@@ -493,13 +513,13 @@ function addForm29(doc,d){
   dline(doc,15,y+0.5,193); y+=8;
   dline(doc,15,y+0.5,115);
   normal(doc,117,y,'with effect from');
-  dline(doc,152,y+0.5,193); y+=9;
+  dline(doc,152,y+0.5,193); y+=8;
+  normal(doc,15,y,'(S)'); y+=5;
   normal(doc,15,y,'(S)'); y+=6;
-  normal(doc,15,y,'(S)'); y+=8;
-  normal(doc,15,y,'To'); y+=6;
-  dline(doc,15,y+0.5,120); y+=7;
-  dline(doc,15,y+0.5,120); y+=7;
-  normal(doc,15,y,'(The Transferee)'); y+=10;
+  normal(doc,15,y,'To'); y+=5;
+  dline(doc,15,y+0.5,120); y+=6;
+  dline(doc,15,y+0.5,120); y+=6;
+  normal(doc,15,y,'(The Transferee)'); y+=8;
   normal(doc,15,y,'By registered post or under proper acknowledgement.');
   normal(doc,135,y,'Registering Authority'); y+=5;
   normal(doc,15,y,'* Strike out whichever is inapplicable',8.5);
@@ -550,11 +570,11 @@ function addForm30(doc,d){
   y=wrap(doc,15,y,'I/We hereby declare that to the best of my/our knowledge the certificate of registration of the vehicle has been / has not been suspended or cancelled.',178,9.5);
   y=wrap(doc,15,y,'\u2756\u2756  I enclose the No Objection Certificate issued by the Registering Authority.',178,9.5);
   y=wrap(doc,15,y,'\u2756\u2756  If the No Objection Certificate is not enclosed, the transferer should file along with this application a declaration as required under sub-section (1) of section 50.',178,9.5);
-  y+=4;
-  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
-  normal(doc,120,y,'Signature of the Transferer'); y+=8;
-  normal(doc,15,y,'Date: _____________________'); y+=5;
-  normal(doc,15,y,'\u2756 Details of suspension or cancellation    \u2756 Strike out whichever is inapplicable',8.5); y+=8;
+  y+=2;
+  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=4;
+  normal(doc,120,y,'Signature of the Transferer'); y+=6;
+  normal(doc,15,y,'Date: _____________________'); y+=4;
+  normal(doc,15,y,'\u2756 Details of suspension or cancellation    \u2756 Strike out whichever is inapplicable',8.5); y+=5;
   y=secline(doc,y,'PART - II  :  FOR THE USE OF TRANSFEREE');
   y+=2;
   normal(doc,15,y,'To,  The Registering Authority'); y+=6;
@@ -574,10 +594,10 @@ function addForm30(doc,d){
   y=lrow(doc,y,'Name & full address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''));
   y+=1;
   y=wrap(doc,15,y,'and request that necessary entries regarding the transfer of ownership of the vehicle in my/our name may be recorded in the Certificate of Registration / Certificate of Fitness of the vehicle which is enclosed.',178,9.5);
-  normal(doc,15,y,'The Certificate of Insurance is also enclosed.'); y+=6;
-  normal(doc,15,y,'Specimen signature of the Transferee:'); y+=10;
+  normal(doc,15,y,'The Certificate of Insurance is also enclosed.'); y+=5;
+  normal(doc,15,y,'Specimen signature of the Transferee:'); y+=7;
   normal(doc,15,y,'(P) 1.');
-  normal(doc,120,y,'(P)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=9;
+  normal(doc,120,y,'(P)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=7;
   normal(doc,15,y,'(P) 2.');
   normal(doc,120,y,'Signature of the Transferee');
 }
@@ -586,20 +606,19 @@ function addForm30(doc,d){
 function addAffidavit(doc,d,forType){
   const isS=forType==='SELLER';
   doc.setLineWidth(0.5);
-  doc.rect(139,10,54,19);
-  normal(doc,166,17,'Affix here Court Fee',8);
-  normal(doc,166,23,'Stamp Rs. 5 Only',8);
-  doc.setFont('times','normal');
-  center(doc,32,'AFFIDAVIT',19,true);
-  center(doc,40,'(FOR '+forType+')',12);
-  doc.setLineWidth(0.3);doc.line(15,44,195,44);
+  doc.rect(78,12,54,19);
+  center(doc,19,'Affix here Court Fee',8);
+  center(doc,25,'Stamp Rs. 5 Only',8);
+  center(doc,44,'AFFIDAVIT',19,true);
+  center(doc,52,'(FOR '+forType+')',12);
+  doc.setLineWidth(0.3);doc.line(15,56,195,56);
 
   const dn=isS?d.s_name:d.b_name, df=isS?d.s_father:d.b_father;
   const da=isS?d.s_addr:d.b_addr, dt2=isS?d.s_town:d.b_town, dd=isS?d.s_dist:d.b_dist;
   const on=isS?d.b_name:d.s_name, of=isS?d.b_father:d.s_father;
   const oa=isS?d.b_addr:d.s_addr, ot=isS?d.b_town:d.s_town, od=isS?d.b_dist:d.s_dist;
 
-  let y=53;
+  let y=67;
   normal(doc,15,y,'I, ');
   let x=15+doc.getTextWidth('I, ');
   dline(doc,x,y+0.5,108); bold(doc,x+2,y,dn);
@@ -649,71 +668,246 @@ function addAffidavit(doc,d,forType){
     y=wrap(doc,25,y,'4.  That the ownership of the said vehicle may kindly be transferred in my name; the above seller has no objection.',168,11);
   }
 
-  /* signature block — fixed bottom area */
-  let ly=212;
+  let ly=204;
   normal(doc,15,ly,'Solemnly affirmed and declared'); ly+=6;
   normal(doc,15,ly,'before me to be true by the deponent'); ly+=6;
-  normal(doc,15,ly,'who is identified by'); ly+=10;
-  normal(doc,15,ly,'Sri '); dline(doc,23,ly+0.5,88); ly+=10;
+  normal(doc,15,ly,'who is identified by'); ly+=9;
+  normal(doc,15,ly,'Sri '); dline(doc,23,ly+0.5,88); ly+=9;
   normal(doc,15,ly,'Advocate at ');
   let ax=15+doc.getTextWidth('Advocate at ');
-  dline(doc,ax,ly+0.5,88); bold(doc,ax+2,ly,d.adv_at); ly+=16;
+  dline(doc,ax,ly+0.5,88); bold(doc,ax+2,ly,d.adv_at); ly+=14;
   bold(doc,15,ly,'NOTARY PUBLIC',11.5);
 
-  let ry=212;
+  let ry=204;
   bold(doc,118,ry,'Verification',11.5); ry+=7;
-  normal(doc,118,ry,'The statements made above are true to'); ry+=5.5;
-  normal(doc,118,ry,'the best of my knowledge, belief and'); ry+=5.5;
-  normal(doc,118,ry,'information, and I sign this affidavit'); ry+=5.5;
+  normal(doc,118,ry,'The statements made above are true to'); ry+=5;
+  normal(doc,118,ry,'the best of my knowledge, belief and'); ry+=5;
+  normal(doc,118,ry,'information, and I sign this affidavit'); ry+=5;
   normal(doc,118,ry,'at ');
   let vx=118+doc.getTextWidth('at ');
   dline(doc,vx,ry+0.5,160); bold(doc,vx+2,ry,d.adv_at);
-  normal(doc,162,ry,' on 20____'); ry+=10;
-  bold(doc,118,ry,isS?'SELLER':'PURCHASER',11.5); ry+=14;
+  normal(doc,162,ry,' on 20____'); ry+=9;
+  bold(doc,118,ry,isS?'SELLER':'PURCHASER',11.5); ry+=13;
   bold(doc,118,ry,'Deponent',10.5); ry+=6;
-  normal(doc,118,ry,'The deponent is known to me and has'); ry+=5.5;
-  normal(doc,118,ry,'signed in my presence.'); ry+=10;
+  normal(doc,118,ry,'The deponent is known to me and has'); ry+=5;
+  normal(doc,118,ry,'signed in my presence.'); ry+=9;
   bold(doc,118,ry,'Advocate.',11);
 }
 
+/* ── FORM 28 — NOC ── */
+function addForm28(doc,d){
+  center(doc,16,'FORM - 28',15,true);
+  center(doc,22,'[ See Rule 54 ]',9.5);
+  center(doc,28,'APPLICATION FOR GRANT OF NO OBJECTION CERTIFICATE',10.5,true);
+  doc.setLineWidth(0.3);doc.line(15,31,195,31);
+  let y=40;
+  normal(doc,15,y,'To,'); y+=5;
+  normal(doc,15,y,'The Registering Authority'); y+=6;
+  y=lrow(doc,y,'',d.rto);
+  y+=3;
+  normal(doc,15,y,'I / We ');
+  let x=15+doc.getTextWidth('I / We ');
+  dline(doc,x,y+0.5,120); bold(doc,x+2,y,d.s_name);
+  normal(doc,122,y,' S/o ');
+  x=122+doc.getTextWidth(' S/o ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
+  y=lrow(doc,y,'resident of:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
+  y+=2;
+  y=wrap(doc,15,y,'being the registered owner of the motor vehicle described below, hereby apply for the grant of a No Objection Certificate in respect of the said vehicle:',178,11);
+  y+=4;
+  y=lrowPair(doc,y,'Registration mark:  ',d.reg_no,'Vehicle type:  ',d.veh_type);
+  y=lrowPair(doc,y,'Chassis No.:  ',d.ch_no,'Engine No.:  ',d.eng_no);
+  y=lrow(doc,y,'Make / Model:  ',(d.make+' '+d.model).trim());
+  y+=2;
+  normal(doc,15,y,'The vehicle is proposed to be transferred to the jurisdiction of:'); y+=7;
+  dline(doc,15,y+0.5,193); y+=10;
+  bold(doc,15,y,'I / We hereby declare that:',11); y+=8;
+  normal(doc,25,y,'1.  The vehicle is not involved in any case of theft.'); y+=7;
+  normal(doc,25,y,'2.  No government dues or taxes are pending against the vehicle.'); y+=7;
+  normal(doc,25,y,'3.  The vehicle is not involved in any pending court case or challan.'); y+=7;
+  normal(doc,25,y,'4.  The certificate of registration has not been suspended or cancelled.'); y+=10;
+  y=wrap(doc,15,y,'I / We request that a No Objection Certificate may kindly be granted for the said vehicle.',178,11);
+  y+=10;
+  normal(doc,15,y,'Date: _____________________');
+  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
+  normal(doc,120,y,'Signature of the Owner'); y+=12;
+  y=secline(doc,y,'OFFICE  ENDORSEMENT');
+  y+=3;
+  y=wrap(doc,15,y,'The No Objection Certificate in respect of the above vehicle is hereby granted / refused.',178,11);
+  y+=4;
+  y=lrowPair(doc,y,'No.:  ','','Date:  ','');
+  y+=12;
+  normal(doc,120,y,'Registering Authority'); y+=5;
+  normal(doc,120,y,'(Office Seal)');
+}
+
+/* ── FORM 25 — RC RENEWAL ── */
+function addForm25(doc,d){
+  center(doc,16,'FORM - 25',15,true);
+  center(doc,22,'[ See Rule 52 ]',9.5);
+  center(doc,28,'APPLICATION FOR RENEWAL OF CERTIFICATE OF REGISTRATION',10.5,true);
+  center(doc,33,'( Other than a Transport Vehicle )',9);
+  doc.setLineWidth(0.3);doc.line(15,36,195,36);
+  let y=45;
+  normal(doc,15,y,'To,'); y+=5;
+  normal(doc,15,y,'The Registering Authority'); y+=6;
+  y=lrow(doc,y,'',d.rto);
+  y+=3;
+  normal(doc,15,y,'I / We ');
+  let x=15+doc.getTextWidth('I / We ');
+  dline(doc,x,y+0.5,120); bold(doc,x+2,y,d.s_name);
+  normal(doc,122,y,' S/o ');
+  x=122+doc.getTextWidth(' S/o ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
+  y=lrow(doc,y,'resident of:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
+  y+=2;
+  y=wrap(doc,15,y,'hereby apply for renewal of the certificate of registration of my / our vehicle described below:',178,11);
+  y+=4;
+  y=lrowPair(doc,y,'Registration mark:  ',d.reg_no,'Vehicle type:  ',d.veh_type);
+  y=lrowPair(doc,y,'Chassis No.:  ',d.ch_no,'Engine No.:  ',d.eng_no);
+  y=lrow(doc,y,'Make / Model:  ',(d.make+' '+d.model).trim());
+  y+=2;
+  normal(doc,15,y,'The certificate of registration of the vehicle expires on:'); y+=7;
+  dline(doc,15,y+0.5,110); y+=10;
+  bold(doc,15,y,'I / We hereby declare that:',11); y+=8;
+  normal(doc,25,y,'1.  The vehicle is not used as a transport vehicle.'); y+=7;
+  normal(doc,25,y,'2.  All taxes due on the vehicle have been paid.'); y+=7;
+  normal(doc,25,y,'3.  The vehicle is covered by a valid certificate of insurance.'); y+=10;
+  y=wrap(doc,15,y,'I / We request that the certificate of registration may kindly be renewed.',178,11);
+  y+=10;
+  normal(doc,15,y,'Date: _____________________');
+  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
+  normal(doc,120,y,'Signature of the Owner'); y+=12;
+  y=secline(doc,y,'OFFICE  ENDORSEMENT');
+  y+=3;
+  normal(doc,15,y,'The certificate of registration is renewed up to:'); y+=7;
+  dline(doc,15,y+0.5,110); y+=12;
+  normal(doc,120,y,'Registering Authority'); y+=5;
+  normal(doc,120,y,'(Office Seal)');
+}
+
+/* ── FORM 26 — DUPLICATE RC ── */
+function addForm26(doc,d){
+  center(doc,16,'FORM - 26',15,true);
+  center(doc,22,'[ See Rule 53 ]',9.5);
+  center(doc,28,'APPLICATION FOR ISSUE OF DUPLICATE CERTIFICATE OF REGISTRATION',10.5,true);
+  doc.setLineWidth(0.3);doc.line(15,31,195,31);
+  let y=40;
+  normal(doc,15,y,'To,'); y+=5;
+  normal(doc,15,y,'The Registering Authority'); y+=6;
+  y=lrow(doc,y,'',d.rto);
+  y+=3;
+  normal(doc,15,y,'I / We ');
+  let x=15+doc.getTextWidth('I / We ');
+  dline(doc,x,y+0.5,120); bold(doc,x+2,y,d.s_name);
+  normal(doc,122,y,' S/o ');
+  x=122+doc.getTextWidth(' S/o ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
+  y=lrow(doc,y,'resident of:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
+  y+=2;
+  y=wrap(doc,15,y,'hereby declare that the certificate of registration of my / our vehicle described below has been lost / destroyed / completely written off / soiled / torn / mutilated:  ( strike out whichever is inapplicable )',178,10.5);
+  y+=4;
+  y=lrowPair(doc,y,'Registration mark:  ',d.reg_no,'Vehicle type:  ',d.veh_type);
+  y=lrowPair(doc,y,'Chassis No.:  ',d.ch_no,'Engine No.:  ',d.eng_no);
+  y=lrow(doc,y,'Make / Model:  ',(d.make+' '+d.model).trim());
+  y+=4;
+  bold(doc,15,y,'I / We hereby declare that:',11); y+=8;
+  normal(doc,25,y,'1.  The certificate has not been impounded or suspended by any authority.'); y+=7;
+  normal(doc,25,y,'2.  The vehicle is not involved in any pending court case or police case.'); y+=7;
+  normal(doc,25,y,'3.  A report of the loss has been lodged at Police Station:'); y+=7;
+  dline(doc,30,y+0.5,160); y+=10;
+  y=wrap(doc,15,y,'I / We request that a duplicate certificate of registration may kindly be issued.',178,11);
+  y+=10;
+  normal(doc,15,y,'Date: _____________________');
+  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
+  normal(doc,120,y,'Signature of the Owner'); y+=12;
+  y=secline(doc,y,'OFFICE  ENDORSEMENT');
+  y+=3;
+  y=wrap(doc,15,y,'A duplicate certificate of registration is hereby issued in respect of the above vehicle.',178,11);
+  y+=4;
+  y=lrowPair(doc,y,'No.:  ','','Date:  ','');
+  y+=12;
+  normal(doc,120,y,'Registering Authority'); y+=5;
+  normal(doc,120,y,'(Office Seal)');
+}
+
 /* ── MAIN ── */
-function generatePDF(){
-  const sn=g('s_name'),bn=g('b_name'),rn=g('reg_no');
+function generatePDF(blank){
   const st=document.getElementById('statusMsg');
-  if(!sn||!bn||!rn){
-    st.textContent='Registration No., Seller name aur Purchaser name zaroori hain.';
+  const btn=document.getElementById('genBtn');
+  const bbtn=document.getElementById('blankBtn');
+
+  const picks=[
+    ['pk29', addForm29, 'Form 29'],
+    ['pk30', addForm30, 'Form 30'],
+    ['pkAS', (doc,d)=>addAffidavit(doc,d,'SELLER'), 'Affidavit Seller'],
+    ['pkAP', (doc,d)=>addAffidavit(doc,d,'PURCHASER'), 'Affidavit Purchaser'],
+    ['pk28', addForm28, 'Form 28'],
+    ['pk25', addForm25, 'Form 25'],
+    ['pk26', addForm26, 'Form 26'],
+  ];
+  const chosen=picks.filter(p=>document.getElementById(p[0])?.checked);
+
+  if(!chosen.length){
+    st.textContent='Select at least one form to include.';
     st.className='status err';
     return;
   }
-  const btn=document.getElementById('genBtn');
-  btn.disabled=true;btn.textContent='PDF ban raha hai…';
-  st.textContent='';st.className='status';
 
-  const d={
-    reg_no:rn,veh_type:g('veh_type')||'Motor Vehicle',make:g('make'),model:g('model'),
-    eng_no:g('eng_no'),ch_no:g('ch_no'),sale_date:g('sale_date'),
-    rto:g('rto')||'District Transport Office, Jamshedpur',state:g('state')||'Jharkhand',
-    s_name:sn,s_father:g('s_father'),s_addr:g('s_addr'),s_town:g('s_town'),s_dist:g('s_dist'),
-    b_name:bn,b_father:g('b_father'),b_addr:g('b_addr'),b_town:g('b_town'),b_dist:g('b_dist'),
-    adv_at:g('adv_at')||'Jamshedpur',
-  };
+  let d;
+  if(blank){
+    d={reg_no:'',veh_type:'',make:'',model:'',eng_no:'',ch_no:'',sale_date:'',
+       rto:'',state:'',s_name:'',s_father:'',s_addr:'',s_town:'',s_dist:'',
+       b_name:'',b_father:'',b_addr:'',b_town:'',b_dist:'',adv_at:''};
+  } else {
+    const sn=g('s_name'),rn=g('reg_no');
+    const needsBuyer=['pk29','pk30','pkAS','pkAP'].some(id=>document.getElementById(id)?.checked);
+    const bn=g('b_name');
+    if(!sn||!rn){
+      st.textContent='Registration No. and Seller / Owner name are required.';
+      st.className='status err';
+      return;
+    }
+    if(needsBuyer && !bn){
+      st.textContent='Purchaser name is required for transfer forms (29 / 30 / affidavits).';
+      st.className='status err';
+      return;
+    }
+    d={
+      reg_no:rn,veh_type:g('veh_type')||'Motor Vehicle',make:g('make'),model:g('model'),
+      eng_no:g('eng_no'),ch_no:g('ch_no'),sale_date:g('sale_date'),
+      rto:g('rto')||'District Transport Office, Jamshedpur',state:g('state')||'Jharkhand',
+      s_name:sn,s_father:g('s_father'),s_addr:g('s_addr'),s_town:g('s_town'),s_dist:g('s_dist'),
+      b_name:bn,b_father:g('b_father'),b_addr:g('b_addr'),b_town:g('b_town'),b_dist:g('b_dist'),
+      adv_at:g('adv_at')||'Jamshedpur',
+    };
+  }
+
+  btn.disabled=true; if(bbtn) bbtn.disabled=true;
+  st.textContent=''; st.className='status';
 
   setTimeout(()=>{
     try{
       const doc=new jsPDF({unit:'mm',format:'a4'});
       doc.setFont('times','normal');
-      addForm29(doc,d);
-      doc.addPage(); addForm30(doc,d);
-      doc.addPage(); addAffidavit(doc,d,'SELLER');
-      doc.addPage(); addAffidavit(doc,d,'PURCHASER');
-      doc.save('RTO_Transfer_'+rn.replace(/\s+/g,'')+'.pdf');
-      st.textContent='PDF download ho gaya — 4 forms ready. Print karo aur stamp lagao.';
+      chosen.forEach((p,i)=>{
+        if(i>0) doc.addPage();
+        doc.setFont('times','normal');
+        p[1](doc,d);
+      });
+      const fname = blank
+        ? 'RTO_Blank_Forms.pdf'
+        : 'RTO_Forms_'+(d.reg_no||'set').replace(/\s+/g,'')+'.pdf';
+      doc.save(fname);
+      st.textContent = blank
+        ? 'Blank forms downloaded — '+chosen.length+' empty form(s) ready to print and fill by hand.'
+        : 'PDF downloaded — '+chosen.length+' filled form(s) ready. Print, stamp and submit.';
       st.className='status ok';
     }catch(e){
       st.textContent='Error: '+e.message;
       st.className='status err';
     }
-    btn.disabled=false;btn.textContent='Generate 4 forms — Download PDF';
+    btn.disabled=false; if(bbtn) bbtn.disabled=false;
   },80);
 }
 </script>
