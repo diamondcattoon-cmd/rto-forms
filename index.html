@@ -383,7 +383,7 @@ const FORMS=[
  {num:'22',name:'Roadworthiness Certificate',desc:'Initial road-worthiness by manufacturer — Rule 47',cat:'registration',fmt:true,pdfs:['FORM-22.PDF']},
  {num:'23',name:'Certificate of Registration',desc:'RC book form issued by authority — Rule 48',cat:'registration',fmt:true,pdfs:['FORM-23.pdf']},
  {num:'24',name:'Register of Motor Vehicles',desc:'Vehicle register maintained by RA — Rule 49',cat:'registration',fmt:true,pdfs:['FORM-24.pdf']},
- {num:'25',name:'Renewal of Registration',desc:'Renew RC of non-transport vehicle — Rule 52',cat:'registration',fill:'pk25',pdfs:['FORM-25.pdf']},
+ {num:'25',name:'Renewal of Registration',desc:'Renew RC of non-transport vehicle — Rule 52 (full 2-page format)',cat:'registration',fill:'pk25',pdfs:['FORM-25.pdf']},
  {num:'26',name:'Duplicate RC',desc:'Lost / torn / mutilated RC replacement — Rule 53',cat:'registration',fill:'pk26',pdfs:['FORM-26.pdf']},
  {num:'27',name:'New Registration Mark',desc:'Assignment of new mark on migration to another state — Rule 54',cat:'registration',fill:'pk27',pdfs:['FORM-27.pdf']},
  {num:'28',name:'No Objection Certificate',desc:'NOC for transfer or migration of vehicle — Rule 54',cat:'transfer',fill:'pk28',pdfs:['FORM-28.pdf']},
@@ -788,49 +788,106 @@ function addForm28(doc,d){
   normal(doc,120,y,'(Office Seal)');
 }
 
-/* ── FORM 25 — RC RENEWAL ── */
+/* ── FORM 25 — RC RENEWAL (full official content, 2 pages) ── */
 function addForm25(doc,d){
+  /* ---- PAGE 1 : APPLICATION ---- */
   center(doc,16,'FORM - 25',15,true);
   center(doc,22,'[ See Rule 52 ]',9.5);
   center(doc,28,'APPLICATION FOR RENEWAL OF CERTIFICATE OF REGISTRATION',10.5,true);
-  center(doc,33,'( Other than a Transport Vehicle )',9);
+  center(doc,33,'OF A MOTOR VEHICLE, OTHER THAN A TRANSPORT VEHICLE',10.5,true);
   doc.setLineWidth(0.3);doc.line(15,36,195,36);
-  let y=45;
+  let y=44;
   normal(doc,15,y,'To,'); y+=5;
   normal(doc,15,y,'The Registering Authority'); y+=6;
-  y=lrow(doc,y,'',d.rto);
-  y+=3;
-  normal(doc,15,y,'I / We ');
-  let x=15+doc.getTextWidth('I / We ');
-  dline(doc,x,y+0.5,120); bold(doc,x+2,y,d.s_name);
-  normal(doc,122,y,' S/o ');
-  x=122+doc.getTextWidth(' S/o ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
-  y=lrow(doc,y,'resident of:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
-  y+=2;
-  y=wrap(doc,15,y,'hereby apply for renewal of the certificate of registration of my / our vehicle described below:',178,11);
+  y=lrow(doc,y,'',d.rto); y+=3;
+  y=wrap(doc,15,y,'I / We intend to renew the certificate of registration of the motor vehicle, the particulars of which are given below :-',178,11);
   y+=4;
-  y=lrowPair(doc,y,'Registration mark:  ',d.reg_no,'Vehicle type:  ',d.veh_type);
-  y=lrowPair(doc,y,'Chassis No.:  ',d.ch_no,'Engine No.:  ',d.eng_no);
-  y=lrow(doc,y,'Make / Model:  ',(d.make+' '+d.model).trim());
+
+  // 1. owner + relation
+  normal(doc,15,y,'1.  Full name of the registered owner ');
+  let x=15+doc.getTextWidth('1.  Full name of the registered owner ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_name); y+=7;
+  normal(doc,22,y,'son / wife / daughter of ');
+  x=22+doc.getTextWidth('son / wife / daughter of ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
+
+  y=lrow(doc,y,'2.  Full address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
+  y=lrow(doc,y,'3.  Registration mark of the vehicle:  ',d.reg_no);
+  y=lrow(doc,y,'4.  Class of vehicle:  ',d.veh_type);
+  y=lrow(doc,y,'5.  Maker\'s name:  ',d.make);
+  y=lrow(doc,y,'6.  Model and year of manufacture:  ',d.model);
+  y=lrow(doc,y,'7.  Chassis number:  ',d.ch_no);
+  y=lrow(doc,y,'8.  Engine number / motor number:  ',d.eng_no);
   y+=2;
-  normal(doc,15,y,'The certificate of registration of the vehicle expires on:'); y+=7;
-  dline(doc,15,y+0.5,110); y+=10;
-  bold(doc,15,y,'I / We hereby declare that:',11); y+=8;
-  normal(doc,25,y,'1.  The vehicle is not used as a transport vehicle.'); y+=7;
-  normal(doc,25,y,'2.  All taxes due on the vehicle have been paid.'); y+=7;
-  normal(doc,25,y,'3.  The vehicle is covered by a valid certificate of insurance.'); y+=10;
-  y=wrap(doc,15,y,'I / We request that the certificate of registration may kindly be renewed.',178,11);
+
+  normal(doc,15,y,'9.  Whether the vehicle is covered by a valid certificate of insurance:   Yes / No'); y+=8;
+  normal(doc,22,y,'(a)  Name of the insurance company: ');
+  x=22+doc.getTextWidth('(a)  Name of the insurance company: ');
+  dline(doc,x,y+0.5,193); y+=8;
+  normal(doc,22,y,'(b)  Policy number: ');
+  x=22+doc.getTextWidth('(b)  Policy number: ');
+  dline(doc,x,y+0.5,120);
+  normal(doc,124,y,'(c)  Valid up to: ');
+  x=124+doc.getTextWidth('(c)  Valid up to: ');
+  dline(doc,x,y+0.5,193); y+=9;
+
+  normal(doc,15,y,'10. Pollution Under Control (PUC) certificate No. and validity:'); y+=8;
+  dline(doc,22,y+0.5,193); y+=9;
+
+  normal(doc,15,y,'11. Whether motor vehicle tax has been paid up to date:   Yes / No'); y+=8;
+  normal(doc,22,y,'Tax paid up to: ');
+  x=22+doc.getTextWidth('Tax paid up to: ');
+  dline(doc,x,y+0.5,120); y+=12;
+
+  y=wrap(doc,15,y,'I / We solemnly declare that the above statement is true and request that the certificate of registration may kindly be renewed.',178,11);
   y+=10;
+
   normal(doc,15,y,'Date: _____________________');
   normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
-  normal(doc,120,y,'Signature of the Owner'); y+=12;
-  y=secline(doc,y,'OFFICE  ENDORSEMENT');
-  y+=3;
-  normal(doc,15,y,'The certificate of registration is renewed up to:'); y+=7;
-  dline(doc,15,y+0.5,110); y+=12;
-  normal(doc,120,y,'Registering Authority'); y+=5;
-  normal(doc,120,y,'(Office Seal)');
+  normal(doc,120,y,'Signature / thumb impression of the Owner'); y+=12;
+
+  bold(doc,15,y,'Note:',9.5);
+  normal(doc,28,y,'The certificate of registration and proof of fee paid should be enclosed with this application.',9.5);
+
+  /* ---- PAGE 2 : OFFICE ENDORSEMENT + RECEIPT ---- */
+  doc.addPage();
+  doc.setFont('times','normal');
+  center(doc,18,'FORM - 25  (Page 2)',12,true);
+  center(doc,24,'FOR OFFICE USE ONLY',9.5);
+  doc.setLineWidth(0.3);doc.line(15,27,195,27);
+
+  let z=38;
+  z=secline(doc,z,'OFFICE  ENDORSEMENT'); z+=4;
+  normal(doc,15,z,'The certificate of registration of vehicle No. ');
+  let zx=15+doc.getTextWidth('The certificate of registration of vehicle No. ');
+  dline(doc,zx,z+0.5,140); bold(doc,zx+2,z,d.reg_no);
+  normal(doc,142,z,' is hereby renewed'); z+=8;
+  normal(doc,15,z,'up to ');
+  zx=15+doc.getTextWidth('up to ');
+  dline(doc,zx,z+0.5,100);
+  normal(doc,104,z,'subject to the conditions prescribed.'); z+=10;
+  z=lrowPair(doc,z,'Office of the:  ','','District:  ','');
+  z=lrowPair(doc,z,'No.:  ','','Date:  ',''); z+=14;
+  normal(doc,120,z,'Signature of Registering Authority'); z+=5;
+  normal(doc,120,z,'(Office Seal)'); z+=16;
+
+  // cut line
+  doc.setLineDashPattern([2,2],0); doc.setLineWidth(0.3);
+  doc.line(15,z,195,z);
+  doc.setLineDashPattern([],0);
+  normal(doc,98,z+4,'\u2702',9); z+=14;
+
+  z=secline(doc,z,'RECEIPT'); z+=4;
+  normal(doc,15,z,'Received the application in Form 25 for renewal of the certificate of registration of'); z+=7;
+  normal(doc,15,z,'vehicle No. ');
+  zx=15+doc.getTextWidth('vehicle No. ');
+  dline(doc,zx,z+0.5,100); bold(doc,zx+2,z,d.reg_no);
+  normal(doc,104,z,' from Shri / Smt. '); 
+  zx=104+doc.getTextWidth(' from Shri / Smt. ');
+  dline(doc,zx,z+0.5,193); bold(doc,zx+2,z,d.s_name); z+=10;
+  z=lrowPair(doc,z,'Fee received:  Rs. ','','Receipt No.:  ',''); z+=14;
+  normal(doc,15,z,'Date: _____________________');
+  normal(doc,120,z,'Signature of the Receiving Official');
 }
 
 /* ── FORM 26 — DUPLICATE RC ── */
