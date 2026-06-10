@@ -231,10 +231,10 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
       <div class="fset">
         <div class="fset-label"><span class="fset-num">0</span><h4>Forms to include in the PDF</h4></div>
         <div class="picks" id="picksWrap"></div>
-        <p class="pick-note">Every ticked form is filled from the same details below — no separate typing. Seller fields double as the owner / applicant; blank fields on the PDF (DL number, financier, dates) are left as dotted lines to fill by pen.</p>
+        <p class="pick-note">The sections below adjust automatically — owner-only forms (like Form 25) hide the purchaser fields; transfer forms show both parties. Blank fields on the PDF (DL number, financier, dates) stay as dotted lines to fill by pen.</p>
       </div>
 
-      <div class="fset">
+      <div class="fset" id="fsVehicle">
         <div class="fset-label"><span class="fset-num">1</span><h4>Vehicle details</h4></div>
         <div class="grid2">
           <div class="fld"><label>Registration No. *</label><input id="reg_no" placeholder="JH05AB1234" autocomplete="off"></div>
@@ -243,13 +243,13 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
           <div class="fld"><label>Model &amp; year</label><input id="model" placeholder="Swift 2018"></div>
           <div class="fld"><label>Engine No.</label><input id="eng_no" placeholder="K12M1234567"></div>
           <div class="fld"><label>Chassis No.</label><input id="ch_no" placeholder="MA3FJEB1S00123456"></div>
-          <div class="fld"><label>Date of sale</label><input type="date" id="sale_date"></div>
+          <div class="fld" id="fldSale"><label>Date of sale</label><input type="date" id="sale_date"></div>
           <div class="fld"><label>RTO / DTO office</label><input id="rto" placeholder="District Transport Office, Jamshedpur"></div>
         </div>
       </div>
 
-      <div class="fset">
-        <div class="fset-label"><span class="fset-num">2</span><h4>Seller (transferor)</h4></div>
+      <div class="fset" id="fsSeller">
+        <div class="fset-label"><span class="fset-num">2</span><h4 id="sellerH4">Seller (transferor)</h4></div>
         <div class="grid2">
           <div class="fld full"><label>Full name *</label><input id="s_name" placeholder="Ramesh Kumar Sharma"></div>
           <div class="fld full"><label>S/o — father's name</label><input id="s_father" placeholder="Shri Mohan Lal Sharma"></div>
@@ -259,7 +259,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         </div>
       </div>
 
-      <div class="fset">
+      <div class="fset" id="fsBuyer">
         <div class="fset-label"><span class="fset-num">3</span><h4>Purchaser (transferee)</h4></div>
         <div class="grid2">
           <div class="fld full"><label>Full name *</label><input id="b_name" placeholder="Suresh Kumar Yadav"></div>
@@ -270,7 +270,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         </div>
       </div>
 
-      <div class="fset">
+      <div class="fset" id="fsAdv">
         <div class="fset-label"><span class="fset-num">4</span><h4>Advocate / notary</h4></div>
         <div class="grid2">
           <div class="fld"><label>Advocate at</label><input id="adv_at" value="Jamshedpur"></div>
@@ -445,6 +445,7 @@ function fillNow(i){
   const f=FORMS[i];
   const ids=[].concat(f.fill);
   PICKS.forEach(p=>{const el=document.getElementById(p.id); if(el) el.checked=ids.includes(p.id);});
+  updateSections();
   document.getElementById('tool').scrollIntoView({behavior:'smooth'});
 }
 
@@ -1015,8 +1016,8 @@ const G=k=>(doc,d)=>addGeneric(doc,d,DEFS[k]);
 const PICKS=[
  {id:'pk29', gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true},
  {id:'pk30', gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true},
- {id:'pkAS', gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true},
- {id:'pkAP', gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true},
+ {id:'pkAS', gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true},
+ {id:'pkAP', gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true},
  {id:'pk28', gen:addForm28, label:'Form 28 \u2014 NOC'},
  {id:'pk25', gen:addForm25, label:'Form 25 \u2014 RC renewal'},
  {id:'pk26', gen:addForm26, label:'Form 26 \u2014 Duplicate RC'},
@@ -1043,10 +1044,33 @@ const PICKS=[
 
 function buildPicks(){
   document.getElementById('picksWrap').innerHTML = PICKS.map(p=>
-    `<label class="pick"><input type="checkbox" id="${p.id}"${p.def?' checked':''}> ${p.label}</label>`
+    `<label class="pick"><input type="checkbox" id="${p.id}"${p.def?' checked':''} onchange="updateSections()"> ${p.label}</label>`
   ).join('');
 }
+
+/* Show only the fields the selected forms actually need */
+function updateSections(){
+  const chosen=PICKS.filter(p=>document.getElementById(p.id)?.checked);
+  const anyB   = chosen.some(p=>p.needB);   // transfer / sale forms — need purchaser
+  const anyAdv = chosen.some(p=>p.adv);     // affidavits — need advocate
+  const any29_30 = ['pk29','pk30'].some(id=>document.getElementById(id)?.checked);
+
+  document.getElementById('sellerH4').textContent = anyB ? 'Seller (transferor)' : 'Owner / Applicant details';
+  document.getElementById('fsBuyer').style.display = anyB ? '' : 'none';
+  document.getElementById('fsAdv').style.display   = anyAdv ? '' : 'none';
+  document.getElementById('fldSale').style.display = (anyB||any29_30) ? '' : 'none';
+
+  /* renumber visible sections 0,1,2,... */
+  let n=0;
+  document.querySelectorAll('#tool .fset').forEach(fs=>{
+    if(fs.style.display==='none') return;
+    const numEl=fs.querySelector('.fset-num');
+    if(numEl) numEl.textContent=n++;
+  });
+}
+
 buildPicks();
+updateSections();
 
 function generatePDF(blank){
   const st=document.getElementById('statusMsg');
