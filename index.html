@@ -3,199 +3,718 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>RTO Forms — Vehicle Transfer</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>RTO Forms India — Vehicle Transfer Forms Online</title>
+<meta name="description" content="Fill RTO vehicle transfer forms online. Form 29, Form 30, Seller & Purchaser Affidavits — one form, four print-ready PDFs. Free.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
+:root{
+  --ink:#142850;        /* deep navy — official ink */
+  --ink-2:#1d3a6e;
+  --paper:#FAF8F3;      /* document paper */
+  --paper-2:#F1EDE3;
+  --stamp:#D6481F;      /* rubber stamp red-orange */
+  --stamp-soft:#FBEAE3;
+  --approve:#1A7A4A;    /* approved green */
+  --approve-soft:#E5F3EC;
+  --line:#D8D2C4;       /* form rule lines */
+  --txt:#1C2434;
+  --txt-2:#5B6478;
+  --txt-3:#9AA1B2;
+  --white:#FFFFFF;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
-.header{background:#1a3a6b;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px}
-.header h1{font-size:17px;font-weight:700}
-.header p{font-size:11px;opacity:.7;margin-top:2px}
-.container{max-width:680px;margin:0 auto;padding:20px 14px 60px}
-.card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:14px}
-.card-title{padding:12px 16px 0;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
-.card-body{padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:480px){.g2{grid-template-columns:1fr}}
-.fld{display:flex;flex-direction:column;gap:4px}
+html{scroll-behavior:smooth}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--txt);line-height:1.6;font-size:15px}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* ─── dotted-line motif (from real RTO forms) ─── */
+.dotrule{border:none;border-top:2px dotted var(--line);margin:0}
+
+/* ─── HEADER ─── */
+.hdr{background:var(--ink);position:sticky;top:0;z-index:200;box-shadow:0 1px 0 rgba(255,255,255,.08)}
+.hdr-in{max-width:1080px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.brand-mark{width:38px;height:38px;background:var(--stamp);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;color:#fff;letter-spacing:-.5px;transform:rotate(-3deg)}
+.brand-txt{color:#fff;font-weight:600;font-size:16px;letter-spacing:.2px}
+.brand-txt small{display:block;font-weight:400;font-size:10.5px;color:rgba(255,255,255,.55);letter-spacing:.8px;text-transform:uppercase;margin-top:-1px}
+.hdr-nav{display:flex;gap:4px}
+.hdr-nav a{color:rgba(255,255,255,.75);text-decoration:none;font-size:13.5px;font-weight:500;padding:7px 13px;border-radius:6px;transition:all .15s}
+.hdr-nav a:hover{color:#fff;background:rgba(255,255,255,.1)}
+.hdr-nav a.live-link{background:var(--stamp);color:#fff}
+@media(max-width:560px){.hdr-nav a:not(.live-link){display:none}}
+
+/* ─── HERO ─── */
+.hero{background:var(--ink);color:#fff;padding:54px 20px 0;position:relative;overflow:hidden}
+.hero-in{max-width:1080px;margin:0 auto;position:relative}
+.hero-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#F0A284;margin-bottom:16px}
+.hero h1{font-size:clamp(30px,5.4vw,52px);font-weight:700;line-height:1.12;letter-spacing:-1px;max-width:720px}
+.hero h1 .accent{color:#F0A284;position:relative}
+.hero-sub{font-size:16.5px;color:rgba(255,255,255,.68);max-width:560px;margin-top:18px;line-height:1.65}
+.hero-cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+.btn-stamp{display:inline-flex;align-items:center;gap:9px;background:var(--stamp);color:#fff;font-weight:600;font-size:15px;padding:13px 26px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;font-family:inherit;transition:transform .12s,box-shadow .12s}
+.btn-stamp:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(214,72,31,.4)}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:transparent;color:rgba(255,255,255,.85);font-weight:500;font-size:15px;padding:13px 22px;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,.25);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-ghost:hover{border-color:rgba(255,255,255,.55);color:#fff}
+.hero-stats{display:flex;gap:0;margin-top:48px;border-top:2px dotted rgba(255,255,255,.18);flex-wrap:wrap}
+.hstat{padding:20px 36px 26px 0;display:flex;flex-direction:column;gap:2px}
+.hstat+.hstat{padding-left:36px;border-left:2px dotted rgba(255,255,255,.18)}
+.hstat .n{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:#fff}
+.hstat .l{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase}
+@media(max-width:620px){.hstat{padding:14px 20px 18px 0}.hstat+.hstat{padding-left:20px}.hstat .n{font-size:20px}}
+
+/* ─── SECTION SHELL ─── */
+.sec{max-width:1080px;margin:0 auto;padding:60px 20px}
+.sec-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--stamp);margin-bottom:10px}
+.sec-title{font-size:clamp(22px,3.4vw,30px);font-weight:700;letter-spacing:-.5px;line-height:1.2}
+.sec-sub{color:var(--txt-2);margin-top:8px;max-width:600px;font-size:15px}
+
+/* ─── TOOL CARD (vehicle transfer) ─── */
+.tool-wrap{background:var(--white);border:1px solid var(--line);border-radius:14px;margin-top:30px;overflow:hidden;box-shadow:0 2px 16px rgba(20,40,80,.05)}
+.tool-head{background:var(--paper-2);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tool-head-l{display:flex;align-items:center;gap:14px}
+.tool-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:1px;background:var(--approve);color:#fff;padding:4px 10px;border-radius:4px;transform:rotate(-2deg)}
+.tool-head h3{font-size:17px;font-weight:600}
+.tool-head p{font-size:12.5px;color:var(--txt-2)}
+.tool-forms{display:flex;gap:7px;flex-wrap:wrap}
+.tf-chip{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;background:var(--white);border:1px solid var(--line);color:var(--txt-2);padding:4px 11px;border-radius:20px}
+
+.tool-body{padding:28px 24px}
+@media(max-width:560px){.tool-body{padding:20px 14px}}
+.fset{margin-bottom:26px}
+.fset-label{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.fset-num{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--stamp);background:var(--stamp-soft);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.fset-label h4{font-size:14px;font-weight:600;letter-spacing:.2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:5px}
 .fld.full{grid-column:1/-1}
-.fld label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.3px}
-.fld input,.fld select{padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:7px;font-size:13px;font-family:inherit;color:#1a202c;width:100%}
-.fld input:focus,.fld select:focus{outline:none;border-color:#3b82f6}
-.forms-chips{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px}
-.chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
-.btn{width:100%;padding:14px;background:#1a3a6b;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn:hover{background:#1e4080}
-.btn:disabled{background:#94a3b8;cursor:not-allowed}
-.status{text-align:center;font-size:13px;color:#64748b;padding:8px;min-height:28px}
-.status.err{color:#dc2626}
-.status.ok{color:#16a34a;font-weight:600}
-.top-info{background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;font-size:12px;color:#1e40af;line-height:1.6;margin-bottom:14px}
+.fld label{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.6px;text-transform:uppercase}
+.fld input{padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s,background .15s}
+.fld input:focus{outline:none;border-color:var(--ink);background:#fff}
+.fld input::placeholder{color:var(--txt-3)}
+
+.gen-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-top:8px;border-top:2px dotted var(--line);margin-top:6px;padding-top:22px}
+.btn-generate{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:#fff;font-weight:600;font-size:15.5px;padding:15px 32px;border-radius:9px;border:none;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.2px}
+.btn-generate:hover{background:var(--ink-2);transform:translateY(-1px)}
+.btn-generate:disabled{background:var(--txt-3);cursor:not-allowed;transform:none}
+.gen-note{font-size:12.5px;color:var(--txt-2)}
+.gen-note .mono{color:var(--approve);font-weight:600}
+.status{font-size:13.5px;min-height:22px;font-weight:500;padding-top:8px}
+.status.ok{color:var(--approve)}
+.status.err{color:var(--stamp)}
+
+/* ─── FORMS CATALOG ─── */
+.cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 22px}
+.cat-tab{font-family:inherit;font-size:13px;font-weight:500;padding:8px 18px;border-radius:24px;border:1.5px solid var(--line);background:var(--white);color:var(--txt-2);cursor:pointer;transition:all .15s}
+.cat-tab:hover{border-color:var(--ink);color:var(--ink)}
+.cat-tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.forms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+@media(max-width:520px){.forms-grid{grid-template-columns:1fr 1fr;gap:10px}}
+
+/* file-folder style form cards */
+.fcard{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:0;cursor:pointer;transition:all .18s;position:relative;overflow:visible;display:flex;flex-direction:column}
+.fcard:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(20,40,80,.1);border-color:var(--ink)}
+.fcard-tab{position:absolute;top:-9px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.8px;background:var(--ink);color:#fff;padding:3px 11px;border-radius:4px}
+.fcard.is-live .fcard-tab{background:var(--approve)}
+.fcard-body{padding:24px 16px 14px}
+.fcard-name{font-size:13.5px;font-weight:600;line-height:1.4;min-height:38px}
+.fcard-desc{font-size:11.5px;color:var(--txt-2);margin-top:4px;line-height:1.45}
+.fcard-foot{padding:10px 16px;border-top:1px dotted var(--line);display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.fcard-status{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+.fcard.is-live .fcard-status{color:var(--approve)}
+.fcard:not(.is-live) .fcard-status{color:var(--txt-3)}
+.fcard-arrow{font-size:14px;color:var(--txt-3);transition:transform .15s}
+.fcard:hover .fcard-arrow{transform:translateX(3px);color:var(--ink)}
+
+/* ─── HOW IT WORKS ─── */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:30px;border:1px solid var(--line);border-radius:12px;background:var(--white);overflow:hidden}
+@media(max-width:680px){.steps{grid-template-columns:1fr}}
+.step{padding:28px 24px;position:relative}
+.step+.step{border-left:2px dotted var(--line)}
+@media(max-width:680px){.step+.step{border-left:none;border-top:2px dotted var(--line)}}
+.step-num{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;color:var(--paper-2);-webkit-text-stroke:1.2px var(--stamp);line-height:1}
+.step h4{font-size:15px;font-weight:600;margin:14px 0 6px}
+.step p{font-size:13px;color:var(--txt-2);line-height:1.6}
+
+/* ─── FOOTER ─── */
+.ftr{background:var(--ink);color:rgba(255,255,255,.6);margin-top:40px}
+.ftr-in{max-width:1080px;margin:0 auto;padding:36px 20px 28px}
+.ftr-top{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:24px;border-bottom:2px dotted rgba(255,255,255,.15)}
+.ftr-brand{font-weight:600;color:#fff;font-size:15px}
+.ftr-brand small{display:block;font-weight:400;font-size:12px;color:rgba(255,255,255,.45);margin-top:4px;max-width:300px;line-height:1.6}
+.ftr-links{display:flex;gap:28px;flex-wrap:wrap}
+.ftr-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:13px;transition:color .15s}
+.ftr-links a:hover{color:#fff}
+.ftr-bottom{padding-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.35)}
+.ftr-bottom .mono{font-size:11px}
+
+/* focus visibility */
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var(--stamp);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <h1>🚗 RTO Forms — Vehicle Transfer</h1>
-    <p>Jamshedpur DTO | Ek baar bharo — charon forms taiyar</p>
+<!-- ════════ HEADER ════════ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="#top">
+      <span class="brand-mark">RTO</span>
+      <span class="brand-txt">RTO Forms India<small>Motor Vehicle Act Forms</small></span>
+    </a>
+    <nav class="hdr-nav">
+      <a href="#forms">All Forms</a>
+      <a href="#how">How it works</a>
+      <a href="#tool" class="live-link">Fill Forms →</a>
+    </nav>
   </div>
-</div>
+</header>
 
-<div class="container">
-
-  <div class="top-info">
-    <b>Kaunse forms generate honge:</b><br>
-    ✅ Form 29 &nbsp;|&nbsp; ✅ Form 30 &nbsp;|&nbsp; ✅ Affidavit Seller &nbsp;|&nbsp; ✅ Affidavit Purchaser
-  </div>
-
-  <div class="card">
-    <div class="card-title">Vehicle Details</div>
-    <div class="card-body">
-      <div class="g2">
-        <div class="fld"><label>Registration No. *</label><input id="reg_no" placeholder="JH05AB1234"></div>
-        <div class="fld"><label>Vehicle Type</label><input id="vehicle_type" placeholder="Motor Car / Motor Cycle"></div>
-        <div class="fld"><label>Make &amp; Model</label><input id="make" placeholder="Maruti Swift 2018"></div>
-        <div class="fld"><label>Engine No.</label><input id="engine_no" placeholder="K12M1234567"></div>
-        <div class="fld full"><label>Chassis No.</label><input id="chassis_no" placeholder="MA3FJEB1S00123456"></div>
-        <div class="fld"><label>Date of Sale</label><input type="date" id="sale_date"></div>
-        <div class="fld"><label>RTO / DTO Office</label><input id="rto" placeholder="District Transport Office, Jamshedpur"></div>
-      </div>
+<!-- ════════ HERO ════════ -->
+<section class="hero" id="top">
+  <div class="hero-in">
+    <div class="hero-eyebrow">// Government forms, filled in minutes</div>
+    <h1>Vehicle transfer ke <span class="accent">charon forms</span>,<br>ek baar bharo — print karo.</h1>
+    <p class="hero-sub">Form 29, Form 30, Seller Affidavit aur Purchaser Affidavit — sab ek saath, print-ready A4 PDF mein. Bilkul free, koi login nahi.</p>
+    <div class="hero-cta">
+      <a href="#tool" class="btn-stamp">Forms bharna shuru karo</a>
+      <a href="#forms" class="btn-ghost">Sare 40+ forms dekho</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><span class="n">4-in-1</span><span class="l">Forms per download</span></div>
+      <div class="hstat"><span class="n">&lt; 2 min</span><span class="l">Fill to print</span></div>
+      <div class="hstat"><span class="n">₹0</span><span class="l">Completely free</span></div>
+      <div class="hstat"><span class="n">A4</span><span class="l">Print-ready PDF</span></div>
     </div>
   </div>
+</section>
 
-  <div class="card">
-    <div class="card-title">Seller (Transferor) Details</div>
-    <div class="card-body">
-      <div class="g2">
-        <div class="fld full"><label>Seller Full Name *</label><input id="seller_name" placeholder="Ramesh Kumar Sharma"></div>
-        <div class="fld full"><label>S/o (Pita ka Naam)</label><input id="seller_father" placeholder="Shri Mohan Lal Sharma"></div>
-        <div class="fld full"><label>Address (House/Street)</label><input id="seller_addr" placeholder="H.No. 45, Station Road"></div>
-        <div class="fld"><label>Town</label><input id="seller_town" placeholder="Jamshedpur"></div>
-        <div class="fld"><label>District</label><input id="seller_dist" placeholder="East Singhbhum"></div>
+<!-- ════════ TOOL: VEHICLE TRANSFER ════════ -->
+<section class="sec" id="tool">
+  <div class="sec-eyebrow">Live tool</div>
+  <h2 class="sec-title">Vehicle Transfer Package</h2>
+  <p class="sec-sub">Seller, purchaser aur gaadi ki details ek baar bharo — neeche ke charon documents ek PDF mein download honge.</p>
+
+  <div class="tool-wrap">
+    <div class="tool-head">
+      <div class="tool-head-l">
+        <span class="tool-badge">LIVE</span>
+        <div>
+          <h3>Ownership Transfer — Full Set</h3>
+          <p>DTO / RTO submission ke liye complete file</p>
+        </div>
+      </div>
+      <div class="tool-forms">
+        <span class="tf-chip">FORM 29</span>
+        <span class="tf-chip">FORM 30</span>
+        <span class="tf-chip">AFFIDAVIT — SELLER</span>
+        <span class="tf-chip">AFFIDAVIT — PURCHASER</span>
       </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="card-title">Purchaser (Transferee) Details</div>
-    <div class="card-body">
-      <div class="g2">
-        <div class="fld full"><label>Purchaser Full Name *</label><input id="buyer_name" placeholder="Suresh Kumar Yadav"></div>
-        <div class="fld full"><label>S/o (Pita ka Naam)</label><input id="buyer_father" placeholder="Shri Ram Prasad Yadav"></div>
-        <div class="fld full"><label>Address (House/Street)</label><input id="buyer_addr" placeholder="Village Rampur, NH-33"></div>
-        <div class="fld"><label>Town</label><input id="buyer_town" placeholder="Baharagora"></div>
-        <div class="fld"><label>District</label><input id="buyer_dist" placeholder="East Singhbhum"></div>
+    <div class="tool-body">
+
+      <div class="fset">
+        <div class="fset-label"><span class="fset-num">1</span><h4>Vehicle details</h4></div>
+        <div class="grid2">
+          <div class="fld"><label>Registration No. *</label><input id="reg_no" placeholder="JH05AB1234" autocomplete="off"></div>
+          <div class="fld"><label>Vehicle type</label><input id="veh_type" placeholder="Motor Car / Motor Cycle"></div>
+          <div class="fld"><label>Make</label><input id="make" placeholder="Maruti / Honda / Tata"></div>
+          <div class="fld"><label>Model &amp; year</label><input id="model" placeholder="Swift 2018"></div>
+          <div class="fld"><label>Engine No.</label><input id="eng_no" placeholder="K12M1234567"></div>
+          <div class="fld"><label>Chassis No.</label><input id="ch_no" placeholder="MA3FJEB1S00123456"></div>
+          <div class="fld"><label>Date of sale</label><input type="date" id="sale_date"></div>
+          <div class="fld"><label>RTO / DTO office</label><input id="rto" placeholder="District Transport Office, Jamshedpur"></div>
+        </div>
       </div>
+
+      <div class="fset">
+        <div class="fset-label"><span class="fset-num">2</span><h4>Seller (transferor)</h4></div>
+        <div class="grid2">
+          <div class="fld full"><label>Full name *</label><input id="s_name" placeholder="Ramesh Kumar Sharma"></div>
+          <div class="fld full"><label>S/o — father's name</label><input id="s_father" placeholder="Shri Mohan Lal Sharma"></div>
+          <div class="fld full"><label>Address (house / street)</label><input id="s_addr" placeholder="H.No. 45, Station Road"></div>
+          <div class="fld"><label>Town</label><input id="s_town" placeholder="Jamshedpur"></div>
+          <div class="fld"><label>District</label><input id="s_dist" placeholder="East Singhbhum"></div>
+        </div>
+      </div>
+
+      <div class="fset">
+        <div class="fset-label"><span class="fset-num">3</span><h4>Purchaser (transferee)</h4></div>
+        <div class="grid2">
+          <div class="fld full"><label>Full name *</label><input id="b_name" placeholder="Suresh Kumar Yadav"></div>
+          <div class="fld full"><label>S/o — father's name</label><input id="b_father" placeholder="Shri Ram Prasad Yadav"></div>
+          <div class="fld full"><label>Address (house / street)</label><input id="b_addr" placeholder="Village Rampur, NH-33"></div>
+          <div class="fld"><label>Town</label><input id="b_town" placeholder="Baharagora"></div>
+          <div class="fld"><label>District</label><input id="b_dist" placeholder="East Singhbhum"></div>
+        </div>
+      </div>
+
+      <div class="fset">
+        <div class="fset-label"><span class="fset-num">4</span><h4>Advocate / notary</h4></div>
+        <div class="grid2">
+          <div class="fld"><label>Advocate at</label><input id="adv_at" value="Jamshedpur"></div>
+          <div class="fld"><label>State</label><input id="state" value="Jharkhand"></div>
+        </div>
+      </div>
+
+      <div class="gen-row">
+        <button class="btn-generate" id="genBtn" onclick="generatePDF()">Generate 4 forms — Download PDF</button>
+        <span class="gen-note">Output: <span class="mono">RTO_Transfer_[RegNo].pdf</span> — 4 pages, A4, print-ready</span>
+      </div>
+      <div class="status" id="statusMsg" role="status"></div>
+
     </div>
   </div>
+</section>
 
-  <div class="card">
-    <div class="card-title">Advocate / Notary Details</div>
-    <div class="card-body">
-      <div class="g2">
-        <div class="fld"><label>Advocate at (City)</label><input id="advocate_at" placeholder="Jamshedpur" value="Jamshedpur"></div>
-        <div class="fld"><label>Place (for affidavit)</label><input id="sign_place" placeholder="Jamshedpur" value="Jamshedpur"></div>
-        <div class="fld"><label>State</label><input id="state" placeholder="Jharkhand" value="Jharkhand"></div>
-      </div>
-    </div>
+<hr class="dotrule" style="max-width:1080px;margin:0 auto">
+
+<!-- ════════ FORMS CATALOG ════════ -->
+<section class="sec" id="forms">
+  <div class="sec-eyebrow">Catalog</div>
+  <h2 class="sec-title">Sare RTO forms — ek jagah</h2>
+  <p class="sec-sub">Motor Vehicles Act 1988 ke sabhi forms. Jo live hain unhe abhi bharo; baaki jald aa rahe hain.</p>
+
+  <div class="cat-tabs" id="catTabs">
+    <button class="cat-tab on" onclick="filterCat('all',this)">All</button>
+    <button class="cat-tab" onclick="filterCat('transfer',this)">Transfer &amp; NOC</button>
+    <button class="cat-tab" onclick="filterCat('registration',this)">Registration</button>
+    <button class="cat-tab" onclick="filterCat('licence',this)">Driving Licence</button>
+    <button class="cat-tab" onclick="filterCat('permit',this)">Fitness &amp; Permit</button>
   </div>
 
-  <button class="btn" id="genBtn" onclick="generateForms()">⚡ Charon Forms Generate Karo &amp; Download</button>
-  <div class="status" id="statusMsg"></div>
+  <div class="forms-grid" id="formsGrid"></div>
+</section>
 
-</div>
+<hr class="dotrule" style="max-width:1080px;margin:0 auto">
+
+<!-- ════════ HOW IT WORKS ════════ -->
+<section class="sec" id="how">
+  <div class="sec-eyebrow">Process</div>
+  <h2 class="sec-title">Teen kadam — file taiyar</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h4>Details bharo</h4>
+      <p>Seller, purchaser aur vehicle ki jaankari ek hi form mein. Sirf zaroori fields — koi lamba registration nahi.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h4>PDF download karo</h4>
+      <p>Ek click par charon forms ka A4 PDF turant download. Browser mein hi banta hai — data kahin upload nahi hota.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h4>Print karke jama karo</h4>
+      <p>Court fee stamp lagao, sign karwao, aur DTO / RTO mein file jama kar do. Format submission-ready hai.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ FOOTER ════════ -->
+<footer class="ftr">
+  <div class="ftr-in">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        RTO Forms India
+        <small>Motor Vehicles Act 1988 ke forms online bharne ka free tool. Data aapke browser mein hi rehta hai — kahin store nahi hota.</small>
+      </div>
+      <div class="ftr-links">
+        <a href="#tool">Vehicle Transfer</a>
+        <a href="#forms">All Forms</a>
+        <a href="#how">How it works</a>
+      </div>
+    </div>
+    <div class="ftr-bottom">
+      <span>Built in Jamshedpur, Jharkhand</span>
+      <span class="mono">v1.0 — Forms as per CMV Rules 1989</span>
+    </div>
+  </div>
+</footer>
 
 <script>
-function g(id){ return document.getElementById(id)?.value?.trim() || ''; }
+/* ════════ FORMS CATALOG DATA ════════ */
+const FORMS=[
+ {num:'29',name:'Notice of Transfer of Ownership',desc:'Seller notice to RTO',cat:'transfer',live:true},
+ {num:'30',name:'Report of Transfer of Ownership',desc:'Buyer report — Part I & II',cat:'transfer',live:true},
+ {num:'AFF-S',name:'Affidavit — Seller',desc:'Vehicle sale affidavit',cat:'transfer',live:true},
+ {num:'AFF-P',name:'Affidavit — Purchaser',desc:'Vehicle purchase affidavit',cat:'transfer',live:true},
+ {num:'28',name:'No Objection Certificate',desc:'NOC from original RTO',cat:'transfer',live:false},
+ {num:'35',name:'Hire Purchase / Hypothecation',desc:'Add HP agreement',cat:'transfer',live:false},
+ {num:'36',name:'HP Termination',desc:'Remove hypothecation',cat:'transfer',live:false},
+ {num:'20',name:'Registration of Motor Vehicle',desc:'New vehicle registration',cat:'registration',live:false},
+ {num:'21',name:'Sale Certificate',desc:'Dealer sale certificate',cat:'registration',live:false},
+ {num:'25',name:'Temporary Registration',desc:'TR for new vehicle',cat:'registration',live:false},
+ {num:'26',name:'Temporary RC',desc:'Temp registration certificate',cat:'registration',live:false},
+ {num:'27',name:'New Registration Mark',desc:'Re-assignment of number',cat:'registration',live:false},
+ {num:'31',name:'Alteration in Vehicle',desc:'Modification approval',cat:'registration',live:false},
+ {num:'33',name:'Cancellation of Registration',desc:'RC cancellation',cat:'registration',live:false},
+ {num:'34',name:'Duplicate RC',desc:'Lost RC replacement',cat:'registration',live:false},
+ {num:'37',name:'Change of Address',desc:'Address update in RC',cat:'registration',live:false},
+ {num:'1',name:'Learner\'s Licence Application',desc:'New LL application',cat:'licence',live:false},
+ {num:'1A',name:'Medical Certificate',desc:'Fitness for DL',cat:'licence',live:false},
+ {num:'4',name:'Driving Licence Application',desc:'New DL application',cat:'licence',live:false},
+ {num:'4A',name:'DL Renewal',desc:'Renew driving licence',cat:'licence',live:false},
+ {num:'5',name:'Additional Vehicle Class',desc:'Add class to DL',cat:'licence',live:false},
+ {num:'6',name:'Duplicate DL',desc:'Lost DL replacement',cat:'licence',live:false},
+ {num:'8',name:'International Driving Permit',desc:'IDP application',cat:'licence',live:false},
+ {num:'39',name:'Certificate of Fitness',desc:'Vehicle fitness',cat:'permit',live:false},
+ {num:'40',name:'Fitness Renewal',desc:'Renew fitness certificate',cat:'permit',live:false},
+ {num:'45',name:'Stage Carriage Permit',desc:'Bus permit',cat:'permit',live:false},
+ {num:'46',name:'Contract Carriage Permit',desc:'Taxi / cab permit',cat:'permit',live:false},
+ {num:'47',name:'Goods Carriage Permit',desc:'Truck permit',cat:'permit',live:false},
+ {num:'48',name:'National Permit',desc:'All-India permit',cat:'permit',live:false},
+];
 
-function formatDate(dateStr) {
-  if (!dateStr) return { day: '', year: '' };
-  const d = new Date(dateStr);
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const day = d.getDate();
-  const suffix = day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th';
-  return {
-    day: day + suffix + ' ' + months[d.getMonth()],
-    year: d.getFullYear().toString()
-  };
+let curCat='all';
+function renderForms(){
+  const grid=document.getElementById('formsGrid');
+  const list=FORMS.filter(f=>curCat==='all'||f.cat===curCat);
+  grid.innerHTML=list.map(f=>`
+    <div class="fcard ${f.live?'is-live':''}" onclick="${f.live?"document.getElementById('tool').scrollIntoView({behavior:'smooth'})":"comingSoon('"+f.num+"')"}">
+      <span class="fcard-tab">FORM ${f.num}</span>
+      <div class="fcard-body">
+        <div class="fcard-name">${f.name}</div>
+        <div class="fcard-desc">${f.desc}</div>
+      </div>
+      <div class="fcard-foot">
+        <span class="fcard-status">${f.live?'● Live — fill now':'Coming soon'}</span>
+        <span class="fcard-arrow">→</span>
+      </div>
+    </div>`).join('');
+}
+function filterCat(cat,btn){
+  curCat=cat;
+  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderForms();
+}
+function comingSoon(num){
+  alert('Form '+num+' jald aa raha hai!\nAbhi Vehicle Transfer package (Form 29, 30 + Affidavits) live hai.');
+}
+renderForms();
+
+/* ════════ PDF GENERATION (jsPDF) ════════ */
+const { jsPDF } = window.jspdf;
+function g(id){return (document.getElementById(id)?.value||'').trim();}
+
+function fmtDate(d){
+  if(!d) return '_______________';
+  const dt=new Date(d);
+  const m=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const n=dt.getDate();
+  const s=n===1?'st':n===2?'nd':n===3?'rd':'th';
+  return n+s+' day of '+m[dt.getMonth()]+', '+dt.getFullYear();
 }
 
-async function generateForms() {
-  const regNo = g('reg_no');
-  const sellerName = g('seller_name');
-  const buyerName = g('buyer_name');
+function dline(doc,x1,y,x2){
+  doc.setLineDashPattern([0.5,1],0);
+  doc.setLineWidth(0.3);
+  doc.line(x1,y,x2,y);
+  doc.setLineDashPattern([],0);
+}
+function bold(doc,x,y,t,sz){doc.setFont('times','bold');doc.setFontSize(sz||11);doc.text(String(t),x,y);doc.setFont('times','normal');}
+function normal(doc,x,y,t,sz){doc.setFont('times','normal');doc.setFontSize(sz||11);doc.text(String(t),x,y);}
+function center(doc,y,t,sz,b){doc.setFont('times',b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(t),105,y,{align:'center'});doc.setFont('times','normal');}
+function wrap(doc,x,y,t,w,sz){doc.setFont('times','normal');doc.setFontSize(sz||10);const L=doc.splitTextToSize(String(t),w);doc.text(L,x,y);return y+L.length*(sz?sz*0.46:4.6);}
+function lrow(doc,y,label,val,sz){
+  doc.setFont('times','normal');doc.setFontSize(sz||11);
+  doc.text(label,15,y);
+  const lx=15+doc.getTextWidth(label)+1;
+  dline(doc,lx,y+0.5,193);
+  if(val){doc.setFont('times','bold');doc.text(String(val),lx+2,y);doc.setFont('times','normal');}
+  return y+7;
+}
+function secline(doc,y,title){
+  doc.setLineWidth(0.5);doc.line(15,y,195,y);
+  center(doc,y+7,title,12,true);
+  return y+13;
+}
 
-  if (!regNo || !sellerName || !buyerName) {
-    document.getElementById('statusMsg').textContent = '❌ Registration No., Seller Name aur Buyer Name zaroori hain';
-    document.getElementById('statusMsg').className = 'status err';
+/* ── FORM 29 ── */
+function addForm29(doc,d){
+  center(doc,16,'FORM - 29',15,true);
+  center(doc,22,'[ See Rule 55(1) ]',9.5);
+  center(doc,28,'FORM OF NOTICE OF TRANSFER OF OWNERSHIP OF A MOTOR VEHICLE',10.5,true);
+  doc.setLineWidth(0.3);doc.line(15,31,195,31);
+  let y=37;
+  y=wrap(doc,15,y,'( To be made in duplicate and the duplicate copy with endorsement of the registering authority to be returned to the transferer immediately on making entries of transfer of ownership )',178,8.5);
+  y+=3;
+  normal(doc,15,y,'To,'); y+=5;
+  normal(doc,15,y,'The Registering Authority'); y+=6;
+  y=lrow(doc,y,'',d.rto);
+  y+=1;
+  doc.setFontSize(11);
+  normal(doc,15,y,'I/We ');
+  let x=15+doc.getTextWidth('I/We ');
+  dline(doc,x,y+0.5,150); bold(doc,x+2,y,d.s_name);
+  normal(doc,152,y,'residing at'); y+=7;
+  dline(doc,15,y+0.5,193); bold(doc,16,y,d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:'')); y+=8;
+  normal(doc,15,y,'have on the ');
+  x=15+doc.getTextWidth('have on the ');
+  dline(doc,x,y+0.5,110); bold(doc,x+2,y,fmtDate(d.sale_date));
+  normal(doc,112,y,'sold and delivered my/our vehicle:'); y+=8;
+  y=lrowPair(doc,y,'Vehicle No.  ',d.reg_no,'Make  ',(d.make+' '+d.model).trim());
+  y=lrowPair(doc,y,'Chassis No.  ',d.ch_no,'Engine No.  ',d.eng_no);
+  y+=2;
+  normal(doc,15,y,'to Shri/Smt. ');
+  x=15+doc.getTextWidth('to Shri/Smt. ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.b_name); y+=7;
+  normal(doc,15,y,'Son/Wife/Daughter of ');
+  x=15+doc.getTextWidth('Son/Wife/Daughter of ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.b_father); y+=7;
+  normal(doc,15,y,'residing at ');
+  x=15+doc.getTextWidth('residing at ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.b_addr); y+=7;
+  y=lrowPair(doc,y,'Town  ',d.b_town,'Dist.  ',d.b_dist);
+  y=lrow(doc,y,'State  ',d.state);
+  y+=2;
+  y=wrap(doc,15,y,'The registration certificate and insurance certificate have been handed over to him/her/them.',178,11);
+  y+=6;
+  normal(doc,15,y,'(P)');
+  normal(doc,135,y,'(S)'); y+=5;
+  normal(doc,135,y,'Signature of Registered Owner'); y+=5;
+  normal(doc,135,y,'(Transferee)'); y+=10;
+  normal(doc,15,y,'Date: _____________________'); y+=7;
+  normal(doc,15,y,'I, ');
+  x=15+doc.getTextWidth('I, ');
+  dline(doc,x,y+0.5,170); bold(doc,x+2,y,d.s_name);
+  normal(doc,172,y,'(Transferor)'); y+=8;
+  normal(doc,15,y,'Copy to the registered Authority in whose jurisdiction the transferor resides.'); y+=6;
+  bold(doc,15,y,'Note:',9.5); normal(doc,28,y,'To be sent to Registered Authority by Regd. Acknowledgment Due',9.5); y+=9;
+  y=secline(doc,y,'OFFICE  ENDORSEMENT');
+  y+=2;
+  y=lrowPair(doc,y,'No.  ','','Date  ','');
+  y=lrow(doc,y,'Office of the  ','');
+  y=wrap(doc,15,y,'The ownership of vehicle has been transferred to the name of',178,11);
+  dline(doc,15,y+0.5,193); y+=8;
+  dline(doc,15,y+0.5,115);
+  normal(doc,117,y,'with effect from');
+  dline(doc,152,y+0.5,193); y+=9;
+  normal(doc,15,y,'(S)'); y+=6;
+  normal(doc,15,y,'(S)'); y+=8;
+  normal(doc,15,y,'To'); y+=6;
+  dline(doc,15,y+0.5,120); y+=7;
+  dline(doc,15,y+0.5,120); y+=7;
+  normal(doc,15,y,'(The Transferee)'); y+=10;
+  normal(doc,15,y,'By registered post or under proper acknowledgement.');
+  normal(doc,135,y,'Registering Authority'); y+=5;
+  normal(doc,15,y,'* Strike out whichever is inapplicable',8.5);
+  normal(doc,135,y,'(Office Seal)');
+}
+
+function lrowPair(doc,y,l1,v1,l2,v2){
+  doc.setFont('times','normal');doc.setFontSize(11);
+  doc.text(l1,15,y);
+  let x1=15+doc.getTextWidth(l1)+1;
+  dline(doc,x1,y+0.5,100);
+  if(v1){doc.setFont('times','bold');doc.text(String(v1),x1+2,y);doc.setFont('times','normal');}
+  doc.text(l2,105,y);
+  let x2=105+doc.getTextWidth(l2)+1;
+  dline(doc,x2,y+0.5,193);
+  if(v2){doc.setFont('times','bold');doc.text(String(v2),x2+2,y);doc.setFont('times','normal');}
+  return y+7;
+}
+
+/* ── FORM 30 ── */
+function addForm30(doc,d){
+  center(doc,16,'FORM - 30',15,true);
+  center(doc,22,'[ See Rule 56(2) and (3) ]',9.5);
+  center(doc,28,'REPORT OF TRANSFER OF OWNERSHIP OF A MOTOR VEHICLE',10.5,true);
+  center(doc,34,'PART - I  :  FOR THE USE OF THE TRANSFERER',10.5,true);
+  doc.setLineWidth(0.3);doc.line(15,37,195,37);
+  let y=43;
+  y=wrap(doc,15,y,'( To be made in duplicate and if the vehicle is held under an agreement of hire purchase / lease / hypothecation, the duplicate copy with the endorsement of the registering authority to be returned to the financer simultaneously on making the entry of transfer of ownership in the certificate of registration )',178,8.5);
+  y+=3;
+  normal(doc,15,y,'To,  The Registering Authority'); y+=6;
+  y=lrow(doc,y,'',d.rto);
+  y+=1;
+  y=lrow(doc,y,'Name of the Transferer:  ',d.s_name);
+  y=lrow(doc,y,'Son / Wife / Daughter of:  ',d.s_father);
+  y=lrow(doc,y,'Full Address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
+  y+=1;
+  normal(doc,15,y,'I hereby declare that I/We have on the ');
+  let x=15+doc.getTextWidth('I hereby declare that I/We have on the ');
+  dline(doc,x,y+0.5,165); bold(doc,x+2,y,fmtDate(d.sale_date)); y+=7;
+  normal(doc,15,y,'sold my/our motor vehicle bearing registration mark ');
+  x=15+doc.getTextWidth('sold my/our motor vehicle bearing registration mark ');
+  dline(doc,x,y+0.5,160); bold(doc,x+2,y,d.reg_no); y+=7;
+  y=lrow(doc,y,'to Shri/Smt.:  ',d.b_name);
+  y=lrow(doc,y,'Son / Wife / Daughter of:  ',d.b_father);
+  y=lrow(doc,y,'residing at:  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''));
+  y+=1;
+  y=wrap(doc,15,y,'( Full address — and handed over the certificate of registration and the certificate of insurance to him/her/them )',178,8.5);
+  y=wrap(doc,15,y,'I/We hereby declare that to the best of my/our knowledge the certificate of registration of the vehicle has been / has not been suspended or cancelled.',178,9.5);
+  y=wrap(doc,15,y,'\u2756\u2756  I enclose the No Objection Certificate issued by the Registering Authority.',178,9.5);
+  y=wrap(doc,15,y,'\u2756\u2756  If the No Objection Certificate is not enclosed, the transferer should file along with this application a declaration as required under sub-section (1) of section 50.',178,9.5);
+  y+=4;
+  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
+  normal(doc,120,y,'Signature of the Transferer'); y+=8;
+  normal(doc,15,y,'Date: _____________________'); y+=5;
+  normal(doc,15,y,'\u2756 Details of suspension or cancellation    \u2756 Strike out whichever is inapplicable',8.5); y+=8;
+  y=secline(doc,y,'PART - II  :  FOR THE USE OF TRANSFEREE');
+  y+=2;
+  normal(doc,15,y,'To,  The Registering Authority'); y+=6;
+  y=lrow(doc,y,'',d.rto);
+  y+=1;
+  y=lrow(doc,y,'Name of the Transferee:  ',d.b_name);
+  y=lrow(doc,y,'Son / Wife / Daughter of:  ',d.b_father);
+  y=lrow(doc,y,'Full Address:  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', Dist. '+d.b_dist:''));
+  y+=1;
+  normal(doc,15,y,'I hereby declare that I/We have on the ');
+  x=15+doc.getTextWidth('I hereby declare that I/We have on the ');
+  dline(doc,x,y+0.5,165); bold(doc,x+2,y,fmtDate(d.sale_date)); y+=7;
+  normal(doc,15,y,'purchased the motor vehicle bearing registration number ');
+  x=15+doc.getTextWidth('purchased the motor vehicle bearing registration number ');
+  dline(doc,x,y+0.5,165); bold(doc,x+2,y,d.reg_no); y+=7;
+  y=lrow(doc,y,'from:  ',d.s_name);
+  y=lrow(doc,y,'Name & full address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''));
+  y+=1;
+  y=wrap(doc,15,y,'and request that necessary entries regarding the transfer of ownership of the vehicle in my/our name may be recorded in the Certificate of Registration / Certificate of Fitness of the vehicle which is enclosed.',178,9.5);
+  normal(doc,15,y,'The Certificate of Insurance is also enclosed.'); y+=6;
+  normal(doc,15,y,'Specimen signature of the Transferee:'); y+=10;
+  normal(doc,15,y,'(P) 1.');
+  normal(doc,120,y,'(P)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=9;
+  normal(doc,15,y,'(P) 2.');
+  normal(doc,120,y,'Signature of the Transferee');
+}
+
+/* ── AFFIDAVIT ── */
+function addAffidavit(doc,d,forType){
+  const isS=forType==='SELLER';
+  doc.setLineWidth(0.5);
+  doc.rect(139,10,54,19);
+  normal(doc,166,17,'Affix here Court Fee',8);
+  normal(doc,166,23,'Stamp Rs. 5 Only',8);
+  doc.setFont('times','normal');
+  center(doc,32,'AFFIDAVIT',19,true);
+  center(doc,40,'(FOR '+forType+')',12);
+  doc.setLineWidth(0.3);doc.line(15,44,195,44);
+
+  const dn=isS?d.s_name:d.b_name, df=isS?d.s_father:d.b_father;
+  const da=isS?d.s_addr:d.b_addr, dt2=isS?d.s_town:d.b_town, dd=isS?d.s_dist:d.b_dist;
+  const on=isS?d.b_name:d.s_name, of=isS?d.b_father:d.s_father;
+  const oa=isS?d.b_addr:d.s_addr, ot=isS?d.b_town:d.s_town, od=isS?d.b_dist:d.s_dist;
+
+  let y=53;
+  normal(doc,15,y,'I, ');
+  let x=15+doc.getTextWidth('I, ');
+  dline(doc,x,y+0.5,108); bold(doc,x+2,y,dn);
+  normal(doc,110,y,' S/o ');
+  x=110+doc.getTextWidth(' S/o ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,df); y+=8;
+  y=lrow(doc,y,'resident of:  ',da);
+  y=lrowPair(doc,y,'Town:  ',dt2,'District:  ',dd);
+  normal(doc,15,y,'do hereby solemnly affirm and declare as follows :-'); y+=10;
+
+  if(isS){
+    normal(doc,25,y,'1.  That I sold my ');
+    x=25+doc.getTextWidth('1.  That I sold my ');
+    dline(doc,x,y+0.5,140); bold(doc,x+2,y,d.veh_type||'Motor Vehicle');
+    normal(doc,142,y,' bearing'); y+=8;
+  } else {
+    normal(doc,25,y,'1.  That I have purchased my ');
+    x=25+doc.getTextWidth('1.  That I have purchased my ');
+    dline(doc,x,y+0.5,150); bold(doc,x+2,y,d.veh_type||'Motor Vehicle');
+    normal(doc,152,y,' bearing'); y+=8;
+  }
+  normal(doc,25,y,'Regd. No. ');
+  x=25+doc.getTextWidth('Regd. No. ');
+  dline(doc,x,y+0.5,98); bold(doc,x+2,y,d.reg_no);
+  normal(doc,100,y,isS?' to Mr./Ms. ':' from Mr./Ms. ');
+  x=100+doc.getTextWidth(isS?' to Mr./Ms. ':' from Mr./Ms. ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,on); y+=8;
+  normal(doc,25,y,'S/o ');
+  x=25+doc.getTextWidth('S/o ');
+  dline(doc,x,y+0.5,105); bold(doc,x+2,y,of);
+  normal(doc,107,y,' resident of ');
+  x=107+doc.getTextWidth(' resident of ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,oa); y+=8;
+  normal(doc,25,y,'Town ');
+  x=25+doc.getTextWidth('Town ');
+  dline(doc,x,y+0.5,100); bold(doc,x+2,y,ot);
+  normal(doc,102,y,' District ');
+  x=102+doc.getTextWidth(' District ');
+  dline(doc,x,y+0.5,193); bold(doc,x+2,y,od); y+=11;
+
+  normal(doc,25,y,'2.  That the said vehicle is not involved in any civil or criminal case.'); y+=9;
+
+  if(isS){
+    y=wrap(doc,25,y,'3.  That I have got no objection if the ownership of the said vehicle is transferred in the name of the above purchaser.',168,11);
+  } else {
+    normal(doc,25,y,'3.  That I will be responsible for any dues or taxes of the said vehicle.'); y+=9;
+    y=wrap(doc,25,y,'4.  That the ownership of the said vehicle may kindly be transferred in my name; the above seller has no objection.',168,11);
+  }
+
+  /* signature block — fixed bottom area */
+  let ly=212;
+  normal(doc,15,ly,'Solemnly affirmed and declared'); ly+=6;
+  normal(doc,15,ly,'before me to be true by the deponent'); ly+=6;
+  normal(doc,15,ly,'who is identified by'); ly+=10;
+  normal(doc,15,ly,'Sri '); dline(doc,23,ly+0.5,88); ly+=10;
+  normal(doc,15,ly,'Advocate at ');
+  let ax=15+doc.getTextWidth('Advocate at ');
+  dline(doc,ax,ly+0.5,88); bold(doc,ax+2,ly,d.adv_at); ly+=16;
+  bold(doc,15,ly,'NOTARY PUBLIC',11.5);
+
+  let ry=212;
+  bold(doc,118,ry,'Verification',11.5); ry+=7;
+  normal(doc,118,ry,'The statements made above are true to'); ry+=5.5;
+  normal(doc,118,ry,'the best of my knowledge, belief and'); ry+=5.5;
+  normal(doc,118,ry,'information, and I sign this affidavit'); ry+=5.5;
+  normal(doc,118,ry,'at ');
+  let vx=118+doc.getTextWidth('at ');
+  dline(doc,vx,ry+0.5,160); bold(doc,vx+2,ry,d.adv_at);
+  normal(doc,162,ry,' on 20____'); ry+=10;
+  bold(doc,118,ry,isS?'SELLER':'PURCHASER',11.5); ry+=14;
+  bold(doc,118,ry,'Deponent',10.5); ry+=6;
+  normal(doc,118,ry,'The deponent is known to me and has'); ry+=5.5;
+  normal(doc,118,ry,'signed in my presence.'); ry+=10;
+  bold(doc,118,ry,'Advocate.',11);
+}
+
+/* ── MAIN ── */
+function generatePDF(){
+  const sn=g('s_name'),bn=g('b_name'),rn=g('reg_no');
+  const st=document.getElementById('statusMsg');
+  if(!sn||!bn||!rn){
+    st.textContent='Registration No., Seller name aur Purchaser name zaroori hain.';
+    st.className='status err';
     return;
   }
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;btn.textContent='PDF ban raha hai…';
+  st.textContent='';st.className='status';
 
-  const btn = document.getElementById('genBtn');
-  const status = document.getElementById('statusMsg');
-  btn.disabled = true;
-  btn.textContent = '⏳ Generating PDF...';
-  status.textContent = 'Charon forms ban rahe hain...';
-  status.className = 'status';
-
-  const dateInfo = formatDate(g('sale_date'));
-
-  const data = {
-    reg_no: regNo,
-    vehicle_type: g('vehicle_type') || 'Motor Vehicle',
-    make: g('make'),
-    engine_no: g('engine_no'),
-    chassis_no: g('chassis_no'),
-    sale_day: dateInfo.day,
-    sale_year: dateInfo.year,
-    rto: g('rto') || 'District Transport Office, Jamshedpur',
-    state: g('state') || 'Jharkhand',
-    seller_name: sellerName,
-    seller_father: g('seller_father'),
-    seller_addr: g('seller_addr'),
-    seller_town: g('seller_town'),
-    seller_dist: g('seller_dist'),
-    buyer_name: buyerName,
-    buyer_father: g('buyer_father'),
-    buyer_addr: g('buyer_addr'),
-    buyer_town: g('buyer_town'),
-    buyer_dist: g('buyer_dist'),
-    advocate_at: g('advocate_at') || 'Jamshedpur',
-    sign_place: g('sign_place') || 'Jamshedpur',
+  const d={
+    reg_no:rn,veh_type:g('veh_type')||'Motor Vehicle',make:g('make'),model:g('model'),
+    eng_no:g('eng_no'),ch_no:g('ch_no'),sale_date:g('sale_date'),
+    rto:g('rto')||'District Transport Office, Jamshedpur',state:g('state')||'Jharkhand',
+    s_name:sn,s_father:g('s_father'),s_addr:g('s_addr'),s_town:g('s_town'),s_dist:g('s_dist'),
+    b_name:bn,b_father:g('b_father'),b_addr:g('b_addr'),b_town:g('b_town'),b_dist:g('b_dist'),
+    adv_at:g('adv_at')||'Jamshedpur',
   };
 
-  try {
-    const resp = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error || 'Server error');
+  setTimeout(()=>{
+    try{
+      const doc=new jsPDF({unit:'mm',format:'a4'});
+      doc.setFont('times','normal');
+      addForm29(doc,d);
+      doc.addPage(); addForm30(doc,d);
+      doc.addPage(); addAffidavit(doc,d,'SELLER');
+      doc.addPage(); addAffidavit(doc,d,'PURCHASER');
+      doc.save('RTO_Transfer_'+rn.replace(/\s+/g,'')+'.pdf');
+      st.textContent='PDF download ho gaya — 4 forms ready. Print karo aur stamp lagao.';
+      st.className='status ok';
+    }catch(e){
+      st.textContent='Error: '+e.message;
+      st.className='status err';
     }
-
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `RTO_Forms_${regNo}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    status.textContent = '✅ PDF Download ho gaya! Seedha print karo.';
-    status.className = 'status ok';
-  } catch(err) {
-    status.textContent = '❌ Error: ' + err.message;
-    status.className = 'status err';
-  }
-
-  btn.disabled = false;
-  btn.textContent = '⚡ Charon Forms Generate Karo & Download';
+    btn.disabled=false;btn.textContent='Generate 4 forms — Download PDF';
+  },80);
 }
 </script>
 </body>
