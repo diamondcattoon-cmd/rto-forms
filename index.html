@@ -231,52 +231,10 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
       <div class="fset">
         <div class="fset-label"><span class="fset-num">0</span><h4>Forms to include in the PDF</h4></div>
         <div class="picks" id="picksWrap"></div>
-        <p class="pick-note">The sections below adjust automatically — owner-only forms (like Form 25) hide the purchaser fields; transfer forms show both parties. Blank fields on the PDF (DL number, financier, dates) stay as dotted lines to fill by pen.</p>
+        <p class="pick-note">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms and every needed field is added once, shared across all of them.</p>
       </div>
 
-      <div class="fset" id="fsVehicle">
-        <div class="fset-label"><span class="fset-num">1</span><h4>Vehicle details</h4></div>
-        <div class="grid2">
-          <div class="fld"><label>Registration No. *</label><input id="reg_no" placeholder="JH05AB1234" autocomplete="off"></div>
-          <div class="fld"><label>Vehicle type</label><input id="veh_type" placeholder="Motor Car / Motor Cycle"></div>
-          <div class="fld"><label>Make</label><input id="make" placeholder="Maruti / Honda / Tata"></div>
-          <div class="fld"><label>Model &amp; year</label><input id="model" placeholder="Swift 2018"></div>
-          <div class="fld"><label>Engine No.</label><input id="eng_no" placeholder="K12M1234567"></div>
-          <div class="fld"><label>Chassis No.</label><input id="ch_no" placeholder="MA3FJEB1S00123456"></div>
-          <div class="fld" id="fldSale"><label>Date of sale</label><input type="date" id="sale_date"></div>
-          <div class="fld"><label>RTO / DTO office</label><input id="rto" placeholder="District Transport Office, Jamshedpur"></div>
-        </div>
-      </div>
-
-      <div class="fset" id="fsSeller">
-        <div class="fset-label"><span class="fset-num">2</span><h4 id="sellerH4">Seller (transferor)</h4></div>
-        <div class="grid2">
-          <div class="fld full"><label>Full name *</label><input id="s_name" placeholder="Ramesh Kumar Sharma"></div>
-          <div class="fld full"><label>S/o — father's name</label><input id="s_father" placeholder="Shri Mohan Lal Sharma"></div>
-          <div class="fld full"><label>Address (house / street)</label><input id="s_addr" placeholder="H.No. 45, Station Road"></div>
-          <div class="fld"><label>Town</label><input id="s_town" placeholder="Jamshedpur"></div>
-          <div class="fld"><label>District</label><input id="s_dist" placeholder="East Singhbhum"></div>
-        </div>
-      </div>
-
-      <div class="fset" id="fsBuyer">
-        <div class="fset-label"><span class="fset-num">3</span><h4>Purchaser (transferee)</h4></div>
-        <div class="grid2">
-          <div class="fld full"><label>Full name *</label><input id="b_name" placeholder="Suresh Kumar Yadav"></div>
-          <div class="fld full"><label>S/o — father's name</label><input id="b_father" placeholder="Shri Ram Prasad Yadav"></div>
-          <div class="fld full"><label>Address (house / street)</label><input id="b_addr" placeholder="Village Rampur, NH-33"></div>
-          <div class="fld"><label>Town</label><input id="b_town" placeholder="Baharagora"></div>
-          <div class="fld"><label>District</label><input id="b_dist" placeholder="East Singhbhum"></div>
-        </div>
-      </div>
-
-      <div class="fset" id="fsAdv">
-        <div class="fset-label"><span class="fset-num">4</span><h4>Advocate / notary</h4></div>
-        <div class="grid2">
-          <div class="fld"><label>Advocate at</label><input id="adv_at" value="Jamshedpur"></div>
-          <div class="fld"><label>State</label><input id="state" value="Jharkhand"></div>
-        </div>
-      </div>
+      <div id="dynFields"></div>
 
       <div class="gen-row">
         <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate selected forms — Download PDF</button>
@@ -378,21 +336,22 @@ const FORMS=[
  {num:'15',name:'Register of Driving Hours',desc:'Daily instruction register of driving school — Rule 27',cat:'misc',fmt:true,pdfs:['FORM-15.pdf']},
  {num:'16',name:'Trade Certificate Application',desc:'Dealer / manufacturer trade certificate — Rule 34',cat:'misc',fill:'pk16',pdfs:['FORM-16.pdf']},
  {num:'17',name:'Trade Certificate',desc:'Form of trade certificate issued to dealer — Rule 35',cat:'misc',fmt:true,pdfs:['FORM-17.pdf']},
- {num:'20',name:'Registration of Motor Vehicle',desc:'Application to register a new motor vehicle — Rule 47',cat:'registration',fill:'pk20',pdfs:['FORM-20.pdf']},
- {num:'21',name:'Sale Certificate',desc:'Issued by dealer / manufacturer at the time of sale — Rule 47',cat:'registration',fill:'pk21',pdfs:['FORM-21.pdf']},
- {num:'22',name:'Roadworthiness Certificate',desc:'Initial road-worthiness by manufacturer — Rule 47',cat:'registration',fmt:true,pdfs:['FORM-22.PDF']},
+ {num:'20',name:'Registration of Motor Vehicle',desc:'Register / temporarily register a vehicle — Rules 47, 53A (official 4-page format)',cat:'registration',fill:'pk20',pdfs:['FORM-20.pdf']},
+ {num:'21',name:'Sale Certificate',desc:'By dealer / manufacturer — Rule 47(a),(d) (official Parts I\u2013IV)',cat:'registration',fill:'pk21',pdfs:['FORM-21.pdf']},
+ {num:'22',name:'Roadworthiness Certificate',desc:'Emission & noise compliance by manufacturer — Rule 47(1)(g) (official format)',cat:'registration',fill:'pk22',pdfs:['FORM-22.PDF']},
  {num:'23',name:'Certificate of Registration',desc:'RC book form issued by authority — Rule 48',cat:'registration',fmt:true,pdfs:['FORM-23.pdf']},
  {num:'24',name:'Register of Motor Vehicles',desc:'Vehicle register maintained by RA — Rule 49',cat:'registration',fmt:true,pdfs:['FORM-24.pdf']},
  {num:'25',name:'Renewal of Registration',desc:'Renew RC of non-transport vehicle — Rule 52 (full 2-page format)',cat:'registration',fill:'pk25',pdfs:['FORM-25.pdf']},
- {num:'26',name:'Duplicate RC',desc:'Lost / torn / mutilated RC replacement — Rule 53',cat:'registration',fill:'pk26',pdfs:['FORM-26.pdf']},
- {num:'27',name:'New Registration Mark',desc:'Assignment of new mark on migration to another state — Rule 54',cat:'registration',fill:'pk27',pdfs:['FORM-27.pdf']},
- {num:'28',name:'No Objection Certificate',desc:'NOC for transfer or migration of vehicle — Rule 54',cat:'transfer',fill:'pk28',pdfs:['FORM-28.pdf']},
- {num:'29 + 30',name:'Vehicle Transfer Package',desc:'Form 29 (seller notice, Rule 55) + Form 30 (transfer report) + both affidavits — one PDF',cat:'transfer',fill:['pk29','pk30','pkAS','pkAP'],pdfs:['FORM-29.pdf','FORM-30.pdf']},
- {num:'31',name:'Transfer on Death of Owner',desc:'Ownership transfer to legal heir — Rule 56',cat:'transfer',fill:'pk31',pdfs:['FORM-31.pdf']},
+ {num:'26',name:'Duplicate RC',desc:'Lost / torn / mutilated RC — Rule 53 (official 2-page format)',cat:'registration',fill:'pk26',pdfs:['FORM-26.pdf']},
+ {num:'27',name:'New Registration Mark',desc:'New mark on migration to another state — Rule 54 (official 2-page format)',cat:'registration',fill:'pk27',pdfs:['FORM-27.pdf']},
+ {num:'27A',name:'New Registration Mark — BH-Series',desc:'BH-Series assignment for eligible owners — Rule 51B(4) (official format)',cat:'registration',fill:'pk27A',pdfs:[]},
+ {num:'28',name:'No Objection Certificate',desc:'NOC — Rules 54, 58 (official 3-part format with financier consent)',cat:'transfer',fill:'pk28',pdfs:['FORM-28.pdf']},
+ {num:'29 + 30',name:'Vehicle Transfer Package',desc:'Form 29 + Form 30 (official formats) + both affidavits — one PDF',cat:'transfer',fill:['pk29','pk30','pkAS','pkAP'],pdfs:['FORM-29.pdf','FORM-30.pdf']},
+ {num:'31',name:'Transfer on Death of Owner',desc:'To nominee / successor — Rule 56(3) (official 2-page format)',cat:'transfer',fill:'pk31',pdfs:['FORM-31.pdf']},
  {num:'32',name:'Transfer — Public Auction',desc:'Transfer of vehicle bought in public auction — Rule 57',cat:'transfer',fill:'pk32',pdfs:['FORM-32.pdf']},
- {num:'33',name:'Change of Address',desc:'Intimation of address change for RC update — Rule 59',cat:'registration',fill:'pk33',pdfs:['FORM-33.pdf']},
- {num:'34',name:'Hire-Purchase Endorsement',desc:'Record HP / lease / hypothecation in RC — Rule 60',cat:'transfer',fill:'pk34',pdfs:['FORM-34.pdf']},
- {num:'35',name:'Termination of Hire-Purchase',desc:'Remove HP / hypothecation entry — Rule 61',cat:'transfer',fill:'pk35',pdfs:['FORM-35.pdf']},
+ {num:'33',name:'Change of Address',desc:'Address change in RC & Form 24 — Rule 59 (official 2-page format)',cat:'registration',fill:'pk33',pdfs:['FORM-33.pdf']},
+ {num:'34',name:'Hire-Purchase Endorsement',desc:'HP / lease / hypothecation entry — Rule 60 (official format)',cat:'transfer',fill:'pk34',pdfs:['FORM-34.pdf']},
+ {num:'35',name:'Termination of Hire-Purchase',desc:'Cancel HP entry — Rule 61(1) (official format)',cat:'transfer',fill:'pk35',pdfs:['FORM-35.pdf']},
  {num:'36',name:'Fresh RC by Financier',desc:'When financier takes possession of vehicle — Rule 61(2)',cat:'transfer',fill:'pk36',pdfs:['FORM-36.pdf']},
  {num:'38',name:'Certificate of Fitness',desc:'Fitness certificate for transport vehicle — Rule 62',cat:'permit',fmt:true,pdfs:['FORM-38.pdf']},
  {num:'45',name:'Tourist Permit Application',desc:'Permit for tourist vehicle — Rule 82',cat:'permit',fill:'pk45',pdfs:['FORM-45.pdf']},
@@ -503,74 +462,53 @@ function secline(doc,y,title){
 
 /* ── FORM 29 ── */
 function addForm29(doc,d){
-  center(doc,16,'FORM - 29',15,true);
-  center(doc,22,'[ See Rule 55(1) ]',9.5);
-  center(doc,28,'FORM OF NOTICE OF TRANSFER OF OWNERSHIP OF A MOTOR VEHICLE',10.5,true);
-  doc.setLineWidth(0.3);doc.line(15,31,195,31);
-  let y=37;
-  y=wrap(doc,15,y,'( To be made in duplicate and the duplicate copy with endorsement of the registering authority to be returned to the transferer immediately on making entries of transfer of ownership )',178,8.5);
-  y+=3;
-  normal(doc,15,y,'To,'); y+=5;
-  normal(doc,15,y,'The Registering Authority'); y+=6;
-  y=lrow(doc,y,'',d.rto);
-  y+=1;
-  doc.setFontSize(11);
-  normal(doc,15,y,'I/We ');
-  let x=15+doc.getTextWidth('I/We ');
-  dline(doc,x,y+0.5,150); bold(doc,x+2,y,d.s_name);
-  normal(doc,152,y,'residing at'); y+=7;
-  dline(doc,15,y+0.5,193); bold(doc,16,y,d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:'')); y+=8;
-  normal(doc,15,y,'have on the ');
-  x=15+doc.getTextWidth('have on the ');
-  dline(doc,x,y+0.5,110); bold(doc,x+2,y,fmtDate(d.sale_date));
-  normal(doc,112,y,'sold and delivered my/our vehicle:'); y+=8;
-  y=lrowPair(doc,y,'Vehicle No.  ',d.reg_no,'Make  ',(d.make+' '+d.model).trim());
-  y=lrowPair(doc,y,'Chassis No.  ',d.ch_no,'Engine No.  ',d.eng_no);
-  y+=2;
-  normal(doc,15,y,'to Shri/Smt. ');
-  x=15+doc.getTextWidth('to Shri/Smt. ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.b_name); y+=7;
-  normal(doc,15,y,'Son/Wife/Daughter of ');
-  x=15+doc.getTextWidth('Son/Wife/Daughter of ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.b_father); y+=7;
-  normal(doc,15,y,'residing at ');
-  x=15+doc.getTextWidth('residing at ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.b_addr); y+=7;
-  y=lrowPair(doc,y,'Town  ',d.b_town,'Dist.  ',d.b_dist);
-  y=lrow(doc,y,'State  ',d.state);
-  y+=2;
-  y=wrap(doc,15,y,'The registration certificate and insurance certificate have been handed over to him/her/them.',178,11);
-  y+=6;
-  normal(doc,15,y,'(P)');
-  normal(doc,135,y,'(S)'); y+=5;
-  normal(doc,135,y,'Signature of Registered Owner'); y+=5;
-  normal(doc,135,y,'(Transferee)'); y+=8;
-  normal(doc,15,y,'Date: _____________________'); y+=7;
-  normal(doc,15,y,'I, ');
-  x=15+doc.getTextWidth('I, ');
-  dline(doc,x,y+0.5,170); bold(doc,x+2,y,d.s_name);
-  normal(doc,172,y,'(Transferor)'); y+=8;
-  normal(doc,15,y,'Copy to the registered Authority in whose jurisdiction the transferor resides.'); y+=6;
-  bold(doc,15,y,'Note:',9.5); normal(doc,28,y,'To be sent to Registered Authority by Regd. Acknowledgment Due',9.5); y+=7;
-  y=secline(doc,y,'OFFICE  ENDORSEMENT');
-  y+=2;
-  y=lrowPair(doc,y,'No.  ','','Date  ','');
-  y=lrow(doc,y,'Office of the  ','');
-  y=wrap(doc,15,y,'The ownership of vehicle has been transferred to the name of',178,11);
-  dline(doc,15,y+0.5,193); y+=8;
-  dline(doc,15,y+0.5,115);
-  normal(doc,117,y,'with effect from');
-  dline(doc,152,y+0.5,193); y+=8;
-  normal(doc,15,y,'(S)'); y+=5;
-  normal(doc,15,y,'(S)'); y+=6;
-  normal(doc,15,y,'To'); y+=5;
-  dline(doc,15,y+0.5,120); y+=6;
-  dline(doc,15,y+0.5,120); y+=6;
-  normal(doc,15,y,'(The Transferee)'); y+=8;
-  normal(doc,15,y,'By registered post or under proper acknowledgement.');
-  normal(doc,135,y,'Registering Authority'); y+=5;
-  normal(doc,15,y,'* Strike out whichever is inapplicable',8.5);
-  normal(doc,135,y,'(Office Seal)');
+  let y=hHead(doc,'FORM 29','[ Refer Rule 55(1) ]',['NOTICE OF TRANSFER OF OWNERSHIP OF A MOTOR VEHICLE']);
+  y=hWrap(doc,15,y+1,'( To be made in duplicate and the duplicate copy with the endorsement of the registering authority to be returned to the transferor immediately on making entries of transfer of ownership in certificate of registration and Form 24. )',180,8.5);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=9;
+  hT(doc,15,y,'To,',11); y+=6;
+  y=hRow(doc,y,'The Registering Authority :  ',d.rto,6.5);
+  hT(doc,22,y,'( in whose jurisdiction the transferee resides )',8.5); y+=9;
+
+  y=hRow(doc,y,'I / We :  ',d.s_name,8.5);
+  y=hRow(doc,y,'resident of :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''),8.5);
+  hT(doc,15,y,'have on the ',11);
+  let x=15+hTW(doc,'have on the ',11)+1;
+  dline(doc,x,y+0.6,115);
+  if(d.sale_date){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(fmtDate(d.sale_date),x+2,y);}
+  hT(doc,119,y,'( day of the year )',8.5); y+=8.5;
+  y=hPair(doc,y,'sold and delivered my / our vehicle No. :  ',d.reg_no,'Make :  ',d.make,8.5);
+  y=hPair(doc,y,'Chassis No. :  ',d.ch_no,'Engine No. / Motor No. ( BOV ) :  ',d.eng_no,8.5);
+  y=hRow(doc,y,'to Shri / Smt. ( Name ) :  ',d.b_name,8.5);
+  y=hRow(doc,y,'Son / wife / daughter of :  ',d.b_father,8.5);
+  y=hRow(doc,y,'residing at ( house No. / street, village / town, distt. and State ) :  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:'')+(d.state?', '+d.state:''),8.5);
+  y=hRow(doc,y,'under an agreement of hire / purchase / lease / hypothecation with :  ','',9);
+  y=hWrap(doc,15,y,'The registration certificate and insurance certificate have been handed over to him / her / them.',180,10.5); y+=1;
+  y=hWrap(doc,15,y,'To the best of my / our knowledge and belief the vehicle is not superdari and free from all encumbrances and the information furnished is true. I / We undertake to hold my / our self responsible for any inaccuracy or suppression of information.',180,10.5); y+=3;
+
+  hT(doc,15,y,'Signature of the financier',10.5); y+=5;
+  hT(doc,15,y,'( to give his consent )',9); y+=9;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,112,y,'Signature / digital signature / e-signature of owner of',9.5); y+=4.5;
+  hT(doc,112,y,'motor vehicle or authorised dealer of registered vehicle',9.5); y+=10;
+  hT(doc,130,y,'Date : ____________________',11); y+=8;
+  hT(doc,15,y,'I / We ',11);
+  x=15+hTW(doc,'I / We ',11)+1;
+  dline(doc,x,y+0.6,150);
+  hT(doc,154,y,'( Transferee )',10.5); y+=8.5;
+  y=hWrap(doc,15,y,'Copy to the registering authority .................... in whose jurisdiction the transferor resides.',180,10.5); y+=1;
+  hT(doc,15,y,'Note :',10,true);
+  hT(doc,30,y,'To be sent to the registering authority by registered post acknowledgment due.',10); y+=10;
+
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=8;
+  hTC(doc,y,'OFFICE  ENDORSEMENT',13,true); y+=11;
+  y=hPair(doc,y,'Ref. No. :  ','','Office of the :  ',d.rto,9.5);
+  y=hWrap(doc,15,y,'The ownership of the vehicle has been transferred to the name of ........................................ with the note of the above said agreement with effect from .................... ( date ).',180,10.5); y+=3;
+  y=hRow(doc,y,'Date :  ','',9);
+  hT(doc,112,y,'Signature of the registering authority with office seal',9.5); y+=8;
+  hT(doc,15,y,'*  Strike out whichever is inapplicable.',9); y+=9;
+  hT(doc,15,y,'To,',11); y+=6.5;
+  y=hRow(doc,y,'The transferor :  ','',6.5);
+  hT(doc,22,y,'( to be sent by Regd. post acknowledgement due )',8.5);
 }
 
 function lrowPair(doc,y,l1,v1,l2,v2){
@@ -588,65 +526,78 @@ function lrowPair(doc,y,l1,v1,l2,v2){
 
 /* ── FORM 30 ── */
 function addForm30(doc,d){
-  center(doc,16,'FORM - 30',15,true);
-  center(doc,22,'[ See Rule 56(2) and (3) ]',9.5);
-  center(doc,28,'REPORT OF TRANSFER OF OWNERSHIP OF A MOTOR VEHICLE',10.5,true);
-  center(doc,34,'PART - I  :  FOR THE USE OF THE TRANSFERER',10.5,true);
-  doc.setLineWidth(0.3);doc.line(15,37,195,37);
-  let y=43;
-  y=wrap(doc,15,y,'( To be made in duplicate and if the vehicle is held under an agreement of hire purchase / lease / hypothecation, the duplicate copy with the endorsement of the registering authority to be returned to the financer simultaneously on making the entry of transfer of ownership in the certificate of registration )',178,8.5);
-  y+=3;
-  normal(doc,15,y,'To,  The Registering Authority'); y+=6;
-  y=lrow(doc,y,'',d.rto);
-  y+=1;
-  y=lrow(doc,y,'Name of the Transferer:  ',d.s_name);
-  y=lrow(doc,y,'Son / Wife / Daughter of:  ',d.s_father);
-  y=lrow(doc,y,'Full Address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
-  y+=1;
-  normal(doc,15,y,'I hereby declare that I/We have on the ');
-  let x=15+doc.getTextWidth('I hereby declare that I/We have on the ');
-  dline(doc,x,y+0.5,165); bold(doc,x+2,y,fmtDate(d.sale_date)); y+=7;
-  normal(doc,15,y,'sold my/our motor vehicle bearing registration mark ');
-  x=15+doc.getTextWidth('sold my/our motor vehicle bearing registration mark ');
-  dline(doc,x,y+0.5,160); bold(doc,x+2,y,d.reg_no); y+=7;
-  y=lrow(doc,y,'to Shri/Smt.:  ',d.b_name);
-  y=lrow(doc,y,'Son / Wife / Daughter of:  ',d.b_father);
-  y=lrow(doc,y,'residing at:  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''));
-  y+=1;
-  y=wrap(doc,15,y,'( Full address — and handed over the certificate of registration and the certificate of insurance to him/her/them )',178,8.5);
-  y=wrap(doc,15,y,'I/We hereby declare that to the best of my/our knowledge the certificate of registration of the vehicle has been / has not been suspended or cancelled.',178,9.5);
-  y=wrap(doc,15,y,'\u2756\u2756  I enclose the No Objection Certificate issued by the Registering Authority.',178,9.5);
-  y=wrap(doc,15,y,'\u2756\u2756  If the No Objection Certificate is not enclosed, the transferer should file along with this application a declaration as required under sub-section (1) of section 50.',178,9.5);
-  y+=2;
-  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=4;
-  normal(doc,120,y,'Signature of the Transferer'); y+=6;
-  normal(doc,15,y,'Date: _____________________'); y+=4;
-  normal(doc,15,y,'\u2756 Details of suspension or cancellation    \u2756 Strike out whichever is inapplicable',8.5); y+=5;
-  y=secline(doc,y,'PART - II  :  FOR THE USE OF TRANSFEREE');
-  y+=2;
-  normal(doc,15,y,'To,  The Registering Authority'); y+=6;
-  y=lrow(doc,y,'',d.rto);
-  y+=1;
-  y=lrow(doc,y,'Name of the Transferee:  ',d.b_name);
-  y=lrow(doc,y,'Son / Wife / Daughter of:  ',d.b_father);
-  y=lrow(doc,y,'Full Address:  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', Dist. '+d.b_dist:''));
-  y+=1;
-  normal(doc,15,y,'I hereby declare that I/We have on the ');
-  x=15+doc.getTextWidth('I hereby declare that I/We have on the ');
-  dline(doc,x,y+0.5,165); bold(doc,x+2,y,fmtDate(d.sale_date)); y+=7;
-  normal(doc,15,y,'purchased the motor vehicle bearing registration number ');
-  x=15+doc.getTextWidth('purchased the motor vehicle bearing registration number ');
-  dline(doc,x,y+0.5,165); bold(doc,x+2,y,d.reg_no); y+=7;
-  y=lrow(doc,y,'from:  ',d.s_name);
-  y=lrow(doc,y,'Name & full address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''));
-  y+=1;
-  y=wrap(doc,15,y,'and request that necessary entries regarding the transfer of ownership of the vehicle in my/our name may be recorded in the Certificate of Registration / Certificate of Fitness of the vehicle which is enclosed.',178,9.5);
-  normal(doc,15,y,'The Certificate of Insurance is also enclosed.'); y+=5;
-  normal(doc,15,y,'Specimen signature of the Transferee:'); y+=7;
-  normal(doc,15,y,'(P) 1.');
-  normal(doc,120,y,'(P)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=7;
-  normal(doc,15,y,'(P) 2.');
-  normal(doc,120,y,'Signature of the Transferee');
+  let y=hHead(doc,'FORM 30','[ Refer Rule 55(2) and (3) ]',['APPLICATION FOR INTIMATION AND TRANSFER OF','OWNERSHIP OF MOTOR VEHICLE']);
+  y=hWrap(doc,15,y+1,'( To be made in duplicate if the vehicle is held under an agreement of hire-purchase / lease / hypothecation. The duplicate copy with the endorsement of the registering authority to be returned to the financier simultaneously on making the entry of the transfer of ownership in the certificate of registration and registration record in Form 24. )',180,8);
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=6.5;
+  hT(doc,15,y,'To,   The Registering Authority :',11);
+  let x=15+hTW(doc,'To,   The Registering Authority :',11)+2;
+  dline(doc,x,y+0.6,193);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.rto||'',x+2,y); y+=8;
+
+  hTC(doc,y,'PART I \u2014 FOR THE USE OF THE TRANSFEROR',11,true); y+=8;
+  y=hPair(doc,y,'Name of the transferor :  ',d.s_name,'son / wife / daughter of :  ',d.s_father,8);
+  y=hRow(doc,y,'Full address :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),8);
+  hT(doc,15,y,'I / We hereby declare that I / We have on this ',10.5);
+  x=15+hTW(doc,'I / We hereby declare that I / We have on this ',10.5)+1;
+  dline(doc,x,y+0.6,165);
+  if(d.sale_date){doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.text(fmtDate(d.sale_date),x+2,y);}
+  hT(doc,168,y,'( day, year )',8); y+=8;
+  y=hRow(doc,y,'sold my / our motor vehicle bearing registration mark :  ',d.reg_no,8);
+  y=hPair(doc,y,'to Sh. / Smt. :  ',d.b_name,'son / wife / daughter of :  ',d.b_father,8);
+  y=hRow(doc,y,'residing at ( full address ) :  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''),8);
+  y=hWrap(doc,15,y,'and handed over the certificate of registration and the certificate of insurance to him / her / them.',180,10); y+=1;
+  y=hWrap(doc,15,y,'I / We hereby declare that to the best of my / our knowledge the certificate of registration of the vehicle has not been suspended* or cancelled.',180,10); y+=1;
+  y=hWrap(doc,15,y,'*  I / We enclose the \u201CNo Objection Certificate\u201D issued by the registering authority.',180,10);
+  y=hWrap(doc,15,y,'**  If the \u201CNo Objection Certificate\u201D from the registering authority is not enclosed, the transferor should file along with this application a declaration as required under sub-section (1) of section 50.',180,10); y+=2;
+  hT(doc,15,y,'Date : ________________',10.5);
+  hT(doc,108,y,'Signature / digital signature / e-signature of owner of',9); y+=4.5;
+  hT(doc,108,y,'motor vehicle or authorised dealer of registered vehicle',9); y+=6;
+  hT(doc,15,y,'*  Details of suspension or cancellation.    **  Strike out whichever is inapplicable.',8.5); y+=8;
+
+  hTC(doc,y,'PART II \u2014 FOR THE USE OF TRANSFEREE',11,true); y+=8;
+  y=hPair(doc,y,'Name of the transferee :  ',d.b_name,'son / wife / daughter of :  ',d.b_father,8);
+  y=hPair(doc,y,'Age :  ','','Mobile number :  ',d.mobile,8);
+  y=hRow(doc,y,'Full address ( proof of address to be enclosed ) :  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''),8);
+  y=hRow(doc,y,'I / We hereby declare ............................ as the nominee for this vehicle, who is my / our :  ','',8);
+  hT(doc,15,y,'I / We hereby declare that I / We have on this ',10.5);
+  x=15+hTW(doc,'I / We hereby declare that I / We have on this ',10.5)+1;
+  dline(doc,x,y+0.6,165);
+  if(d.sale_date){doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.text(fmtDate(d.sale_date),x+2,y);}
+  hT(doc,168,y,'( day, year )',8); y+=8;
+  y=hPair(doc,y,'purchased the motor vehicle bearing registration No. :  ',d.reg_no,'from :  ',d.s_name,8);
+  y=hRow(doc,y,'( name and full address ) :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''),8);
+  y=hWrap(doc,15,y,'and request that necessary entries regarding the transfer of ownership of the vehicle in my / our name may be recorded in the certificate of registration / certificate of fitness of the vehicle, which is enclosed.',180,10); y+=1;
+  y=hWrap(doc,15,y,'The certificate of insurance is also enclosed. To the best of my knowledge and belief I / we have not suppressed any facts and information furnished is true. The vehicle is not superdari and free from all encumbrances. I / we undertake to hold myself responsible for any inaccuracy.',180,10); y+=2;
+  hT(doc,15,y,'Date : ________________',10.5);
+  hT(doc,116,y,'Signature or thumb impression of the transferee',9.5);
+
+  /* PAGE 2 — financier consent + office endorsement + specimen */
+  doc.addPage(); let z=18;
+  hTC(doc,z,'CONSENT OF THE FINANCIER IN THE CASE OF MOTOR VEHICLE SUBJECT',11,true); z+=6;
+  hTC(doc,z,'TO AN AGREEMENT OF HIRE-PURCHASE / LEASE / HYPOTHECATION',11,true); z+=10;
+  z=hWrap(doc,15,z,'I / We, being a party to an agreement of hire-purchase / lease / hypothecation in respect of the motor vehicle specified above, give consent to the transfer of ownership of the said motor vehicle in the name of the transferee named above, with whom I / we have entered into an agreement of hire-purchase / lease / hypothecation.',180,10.5); z+=4;
+  z=hRow(doc,z,'( Full name and address of the financier ) :  ','',12);
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,118,z,'Signature of the financier',10.5); z+=7;
+  hT(doc,118,z,'Date : ____________________',11); z+=14;
+
+  doc.setLineWidth(0.4);doc.line(15,z,195,z); z+=8;
+  hTC(doc,z,'OFFICE  ENDORSEMENT',13,true); z+=11;
+  z=hPair(doc,z,'Ref. No. :  ','','Office of the :  ',d.rto,9.5);
+  z=hWrap(doc,15,z,'The transfer of ownership of vehicle under continuation of an endorsement of hire-purchase / lease / hypothecation agreement has been recorded with effect from .................... in the registration certificate of the vehicle .................... and in the registration record of this office in Form 24.',180,10.5); z+=4;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,118,z,'Signature of the registering authority',10.5); z+=12;
+  hT(doc,15,z,'To,',11); z+=7;
+  z=hRow(doc,z,'The owner of motor vehicle / authorised dealer of registered vehicle :  ','',9);
+  z=hRow(doc,z,'The Financier :  ','',9);
+  hT(doc,15,z,'( To be sent to both the above parties by registered post acknowledgement due )',9); z+=11;
+  z=hWrap(doc,15,z,'Specimen signature or thumb impression of the registered owner and the financier are to be obtained in the original application for affixing and attestation by the registering authority with the office seal in Forms 23 and 24, in such manner that the parts of impression of seal or stamp and attestation shall fall upon each signature.',180,9.5); z+=8;
+  hT(doc,15,z,'Specimen signatures of financier',10.5,true);
+  hT(doc,112,z,'Specimen signatures of registered owner',10.5,true); z+=11;
+  hT(doc,15,z,'1.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'1.',11); dline(doc,122,z+0.6,193); z+=12;
+  hT(doc,15,z,'2.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'2.',11); dline(doc,122,z+0.6,193);
 }
 
 /* ── AFFIDAVIT ── */
@@ -741,51 +692,70 @@ function addAffidavit(doc,d,forType){
   bold(doc,118,ry,'Advocate.',11);
 }
 
-/* ── FORM 28 — NOC ── */
+/* ── FORM 28 — NOC (official: Rules 54, 58 — 3 Parts) ── */
 function addForm28(doc,d){
-  center(doc,16,'FORM - 28',15,true);
-  center(doc,22,'[ See Rule 54 ]',9.5);
-  center(doc,28,'APPLICATION FOR GRANT OF NO OBJECTION CERTIFICATE',10.5,true);
-  doc.setLineWidth(0.3);doc.line(15,31,195,31);
-  let y=40;
-  normal(doc,15,y,'To,'); y+=5;
-  normal(doc,15,y,'The Registering Authority'); y+=6;
-  y=lrow(doc,y,'',d.rto);
-  y+=3;
-  normal(doc,15,y,'I / We ');
-  let x=15+doc.getTextWidth('I / We ');
-  dline(doc,x,y+0.5,120); bold(doc,x+2,y,d.s_name);
-  normal(doc,122,y,' S/o ');
-  x=122+doc.getTextWidth(' S/o ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
-  y=lrow(doc,y,'resident of:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
+  let y=hHead(doc,'FORM 28','[ Refer Rules 54, 58(1), (3) and (4) ]',['APPLICATION FOR AND GRANT OF NO OBJECTION CERTIFICATE']);
+  y=hWrap(doc,15,y+1,'( To be made in quadruplicate if the vehicle is held under an agreement of hire-purchase / lease / hypothecation; the duplicate, triplicate and quadruplicate copies with the endorsement of the registering authority to be returned to the registered owner, the registering authority in whose jurisdiction the vehicle is to be removed, and the financier simultaneously on grant / refusal of NOC. )',180,8);
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=7;
+  hTC(doc,y,'PART I  \u2014  APPLICATION',11.5,true); y+=9;
+  hT(doc,15,y,'To,   The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,9);
+  y=hWrap(doc,15,y,'I / We intend to transfer the vehicle to the jurisdiction of the registering authority :',180,10.5);
+  dline(doc,15,y+0.6,193);
+  if(d.dest_rto){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.dest_rto+(d.dest_state?', '+d.dest_state:''),17,y);}
+  y+=8;
+  hT(doc,15,y,'I / We intend to sell the vehicle to Shri / Smt. / Kumari : ',10.5);
+  let x=15+hTW(doc,'I / We intend to sell the vehicle to Shri / Smt. / Kumari : ',10.5)+1;
+  dline(doc,x,y+0.6,193);
+  if(d.b_name){doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.text(d.b_name,x+2,y);}
+  y+=8;
+  y=hWrap(doc,15,y,'who resides in the jurisdiction of the registering authority .................................... of the State .................... . I / We, therefore, request the issue of a \u201CNo Objection Certificate\u201D for my / our vehicle, the particulars of which are furnished below :\u2014',180,10);
   y+=2;
-  y=wrap(doc,15,y,'being the registered owner of the motor vehicle described below, hereby apply for the grant of a No Objection Certificate in respect of the said vehicle:',178,11);
-  y+=4;
-  y=lrowPair(doc,y,'Registration mark:  ',d.reg_no,'Vehicle type:  ',d.veh_type);
-  y=lrowPair(doc,y,'Chassis No.:  ',d.ch_no,'Engine No.:  ',d.eng_no);
-  y=lrow(doc,y,'Make / Model:  ',(d.make+' '+d.model).trim());
-  y+=2;
-  normal(doc,15,y,'The vehicle is proposed to be transferred to the jurisdiction of:'); y+=7;
-  dline(doc,15,y+0.5,193); y+=10;
-  bold(doc,15,y,'I / We hereby declare that:',11); y+=8;
-  normal(doc,25,y,'1.  The vehicle is not involved in any case of theft.'); y+=7;
-  normal(doc,25,y,'2.  No government dues or taxes are pending against the vehicle.'); y+=7;
-  normal(doc,25,y,'3.  The vehicle is not involved in any pending court case or challan.'); y+=7;
-  normal(doc,25,y,'4.  The certificate of registration has not been suspended or cancelled.'); y+=10;
-  y=wrap(doc,15,y,'I / We request that a No Objection Certificate may kindly be granted for the said vehicle.',178,11);
-  y+=10;
-  normal(doc,15,y,'Date: _____________________');
-  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
-  normal(doc,120,y,'Signature of the Owner'); y+=12;
-  y=secline(doc,y,'OFFICE  ENDORSEMENT');
-  y+=3;
-  y=wrap(doc,15,y,'The No Objection Certificate in respect of the above vehicle is hereby granted / refused.',178,11);
-  y+=4;
-  y=lrowPair(doc,y,'No.:  ','','Date:  ','');
-  y+=12;
-  normal(doc,120,y,'Registering Authority'); y+=5;
-  normal(doc,120,y,'(Office Seal)');
+  y=hRow(doc,y,'1.    Name and address :  ',d.s_name+', '+d.s_addr+(d.s_town?', '+d.s_town:''),8.5);
+  y=hRow(doc,y,'2.    Son / wife / daughter of :  ',d.s_father,8.5);
+  y=hRow(doc,y,'2a.  Mobile number of the owner :  ',d.mobile,8.5);
+  y=hPair(doc,y,'3.    Registration number :  ',d.reg_no,'4.  Class of vehicle :  ',d.veh_type,8.5);
+  y=hRow(doc,y,'5.    Registering authority which originally registered the vehicle :  ','',8.5);
+  y=hPair(doc,y,'6.    Engine No. / Motor No. ( BOV ) :  ',d.eng_no,'7.  Chassis No. ( pencil print ) :  ',d.ch_no,8.5);
+  y=hPair(doc,y,'8.    Period of stay in the State :  ','','9.  Tax paid up to :  ','',8.5);
+  y=hRow(doc,y,'10.  Whether any demand for tax is pending — if so, details :  ','',8.5);
+  y=hRow(doc,y,'11.  Whether the vehicle is involved in any theft case — if so, details :  ','',8.5);
+  y=hWrap(doc,15,y,'12.  Whether any action under sections 53, 54 or 58 of the Motor Vehicles Act, 1988 is pending before any registering authority or other prescribed authority — if so, details :',180,10);
+  dline(doc,22,y+0.6,193); y+=8;
+  y=hRow(doc,y,'13.  Whether involved in any case of transport of prohibited goods — details :  ','',8.5);
+  y=hRow(doc,y,'14.  Whether held under HP / lease / hypothecation — financier name & address :  ','',9);
+  hT(doc,15,y,'We solemnly declare that the above statement is true.',11,true); y+=11;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,112,y,'Signature / digital signature / e-signature of owner',9.5); y+=5;
+  hT(doc,112,y,'of motor vehicle or authorised dealer',9.5);
+
+  /* PAGE 2 — Parts II & III */
+  doc.addPage(); let z=18;
+  hTC(doc,z,'PART II \u2014 CONSENT OF THE FINANCIERS IN THE CASE OF MOTOR',11,true); z+=6;
+  hTC(doc,z,'VEHICLE SUBJECT TO AN AGREEMENT',11,true); z+=10;
+  z=hWrap(doc,15,z,'I / We, being a party to an agreement of hire-purchase / lease / hypothecation in respect of the above said vehicle, hereby :',180,10.5); z+=2;
+  z=hWrap(doc,22,z,'1.  Give consent to issue the \u201CNo Objection Certificate\u201D for the said vehicle only for the purpose referred above.',172,10.5); z+=1;
+  z=hWrap(doc,22,z,'2.  Refuse to give consent for issue of \u201CNo Objection Certificate\u201D for the said vehicle due to the reasons furnished hereunder :',172,10.5); z+=1;
+  dline(doc,22,z+0.6,193); z+=12;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,130,z,'Signature of the financier',10.5); z+=14;
+
+  doc.setLineWidth(0.4);doc.line(15,z,195,z); z+=8;
+  hTC(doc,z,'PART III \u2014 OFFICE ENDORSEMENT',12,true); z+=6;
+  hTC(doc,z,'Grant / refusal of \u201CNo Objection Certificate\u201D under section 48(3) of',9.5); z+=5;
+  hTC(doc,z,'Motor Vehicles Act, 1988',9.5); z+=9;
+  z=hWrap(doc,22,z,'(1)  No Objection Certificate in respect of the vehicle, the detailed particulars whereof are recorded over above, is hereby granted under section 48(3) of the Act ( valid for use at the registering authority on whom it is issued ).',172,10.5); z+=2;
+  z=hWrap(doc,22,z,'(2)  No Objection Certificate in respect of the motor vehicle, the detailed particulars whereof recorded over above, is hereby refused under section 48(3) of the Motor Vehicles Act, 1988, for the reasons recorded as under :',172,10.5); z+=1;
+  dline(doc,22,z+0.6,193); z+=12;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,112,z,'Signature with seal of registering authority',10.5); z+=8;
+  z=hRow(doc,z,'Address :  ','',10);
+  hT(doc,15,z,'*  Strike out whichever is inapplicable.',9); z+=10;
+  hT(doc,15,z,'To,',11); z+=7;
+  z=hRow(doc,z,'The owner of motor vehicle / authorised dealer :  ','',9);
+  z=hRow(doc,z,'The Financier :  ','',9);
+  z=hRow(doc,z,'The Registering Authority :  ','',9);
+  hT(doc,15,z,'( To be sent to the parties by Regd. post acknowledgement due )',9);
 }
 
 /* ── FORM 25 — RC RENEWAL (full official content, 2 pages) ── */
@@ -890,51 +860,690 @@ function addForm25(doc,d){
   normal(doc,120,z,'Signature of the Receiving Official');
 }
 
-/* ── FORM 26 — DUPLICATE RC ── */
+/* ── FORM 26 — DUPLICATE RC (official 2-page) ── */
 function addForm26(doc,d){
-  center(doc,16,'FORM - 26',15,true);
-  center(doc,22,'[ See Rule 53 ]',9.5);
-  center(doc,28,'APPLICATION FOR ISSUE OF DUPLICATE CERTIFICATE OF REGISTRATION',10.5,true);
-  doc.setLineWidth(0.3);doc.line(15,31,195,31);
-  let y=40;
-  normal(doc,15,y,'To,'); y+=5;
-  normal(doc,15,y,'The Registering Authority'); y+=6;
-  y=lrow(doc,y,'',d.rto);
-  y+=3;
-  normal(doc,15,y,'I / We ');
-  let x=15+doc.getTextWidth('I / We ');
-  dline(doc,x,y+0.5,120); bold(doc,x+2,y,d.s_name);
-  normal(doc,122,y,' S/o ');
-  x=122+doc.getTextWidth(' S/o ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
-  y=lrow(doc,y,'resident of:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
-  y+=2;
-  y=wrap(doc,15,y,'hereby declare that the certificate of registration of my / our vehicle described below has been lost / destroyed / completely written off / soiled / torn / mutilated:  ( strike out whichever is inapplicable )',178,10.5);
-  y+=4;
-  y=lrowPair(doc,y,'Registration mark:  ',d.reg_no,'Vehicle type:  ',d.veh_type);
-  y=lrowPair(doc,y,'Chassis No.:  ',d.ch_no,'Engine No.:  ',d.eng_no);
-  y=lrow(doc,y,'Make / Model:  ',(d.make+' '+d.model).trim());
-  y+=4;
-  bold(doc,15,y,'I / We hereby declare that:',11); y+=8;
-  normal(doc,25,y,'1.  The certificate has not been impounded or suspended by any authority.'); y+=7;
-  normal(doc,25,y,'2.  The vehicle is not involved in any pending court case or police case.'); y+=7;
-  normal(doc,25,y,'3.  A report of the loss has been lodged at Police Station:'); y+=7;
-  dline(doc,30,y+0.5,160); y+=10;
-  y=wrap(doc,15,y,'I / We request that a duplicate certificate of registration may kindly be issued.',178,11);
-  y+=10;
-  normal(doc,15,y,'Date: _____________________');
-  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
-  normal(doc,120,y,'Signature of the Owner'); y+=12;
-  y=secline(doc,y,'OFFICE  ENDORSEMENT');
-  y+=3;
-  y=wrap(doc,15,y,'A duplicate certificate of registration is hereby issued in respect of the above vehicle.',178,11);
-  y+=4;
-  y=lrowPair(doc,y,'No.:  ','','Date:  ','');
-  y+=12;
-  normal(doc,120,y,'Registering Authority'); y+=5;
-  normal(doc,120,y,'(Office Seal)');
+  let y=hHead(doc,'FORM 26','[ Refer Rule 53 ]',['APPLICATION FOR ISSUE OF DUPLICATE CERTIFICATE','OF REGISTRATION']);
+  y=hWrap(doc,15,y+1,'( To be made in duplicate if the vehicle is held under an agreement of hire-purchase / lease / hypothecation and in triplicate if the original registering authority is different; the duplicate and triplicate copies with the endorsement of the registering authority to be returned to the financier and registering authority simultaneously on issue of duplicate certificate )',180,8);
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=8;
+  hT(doc,15,y,'To,',11); y+=6;
+  hT(doc,15,y,'The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,10);
+  hT(doc,15,y,'The certificate of registration of my / our motor vehicle, the registration mark of',11); y+=7;
+  hT(doc,15,y,'which is ',11);
+  let x=15+hTW(doc,'which is ',11)+1;
+  dline(doc,x,y+0.6,85);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.reg_no||'',x+2,y);
+  hT(doc,89,y,'has been *lost / destroyed / completely written-off /',11); y+=7;
+  hT(doc,15,y,'soiled / torn / mutilated in the following circumstances :',11); y+=8;
+  dline(doc,15,y+0.6,193); y+=8;
+  dline(doc,15,y+0.6,193); y+=10;
+  y=hWrap(doc,15,y,'*  I / We hereby declare that to the best of my / our knowledge the registration of the vehicle has not been suspended or cancelled under the provisions of the Act or Rules made thereunder, and the circumstances explained above are true.',180,10.5); y+=2;
+  y=hWrap(doc,15,y,'\u2022  I / We do hereby apply for the issue of a duplicate certificate of registration.',180,10.5); y+=1;
+  y=hWrap(doc,15,y,'\u2022  The *written-off / soiled / torn / mutilated certificate of registration is enclosed.',180,10.5); y+=1;
+  y=hWrap(doc,15,y,'\u2022  The vehicle is not held under any agreement of hire-purchase / lease / hypothecation. The vehicle is also not superdari and free from all encumbrances.',180,10.5); y+=1;
+  y=hWrap(doc,15,y,'\u2022  I declare that the certificate of registration is lost / destroyed and it has not been impounded by any agency nor has it been suspended or cancelled by any authority.',180,10.5); y+=3;
+  y=hRow(doc,y,'My / Our mobile number is :  ',d.mobile,13);
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,112,y,'Signature / digital signature / e-signature of owner',9.5); y+=5;
+  hT(doc,112,y,'of motor vehicle or authorised dealer of registered vehicles',9.5); y+=8;
+  hT(doc,15,y,'*  Strike out whichever is inapplicable.',9); y+=10;
+  y=hWrap(doc,15,y,'The vehicle is held under *hire-purchase / lease / hypothecation agreement with ........................ and the \u201CNo Objection Certificate\u201D has been *granted / refused by the financier hereunder. Where \u201CNo Objection Certificate\u201D is refused, the applicant shall make a declaration as required under sub-section (8) of section 51.',180,10.5); y+=6;
+  hT(doc,118,y,'Signature or thumb impression of the owner',10.5); y+=9;
+  y=hRow(doc,y,'Name :  ','',9);
+  y=hRow(doc,y,'Full address :  ','',9);
+  y=hRow(doc,y,'Date :  ','',10);
+  y=hWrap(doc,15,y,'Note : (1) Full particulars of the circumstances shall be furnished in the case of loss or destruction of the registration certificate.',180,9);
+
+  /* PAGE 2 — financier consent + office endorsement + specimen */
+  doc.addPage(); let z=18;
+  hTC(doc,z,'CONSENT OF THE FINANCIER FOR GRANT OF \u201CNO OBJECTION',11.5,true); z+=6;
+  hTC(doc,z,'CERTIFICATE\u201D UNDER SECTION 51(6)',11.5,true); z+=10;
+  z=hWrap(doc,15,z,'I / We, being a party to an agreement of hire-purchase / lease / hypothecation in respect of the motor vehicle specified above :',180,10.5); z+=2;
+  z=hWrap(doc,22,z,'(1)  have \u201CNo Objection\u201D in issue of the duplicate certificate of registration of the said vehicle.',172,10.5); z+=1;
+  z=hWrap(doc,22,z,'(2)  have \u201CObjection\u201D in issue of the duplicate registration certificate of the said vehicle, for the reasons given hereunder :',172,10.5); z+=1;
+  dline(doc,22,z+0.6,193); z+=12;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,130,z,'Signature of the financier',10.5); z+=14;
+
+  doc.setLineWidth(0.4);doc.line(15,z,195,z); z+=8;
+  hTC(doc,z,'OFFICE  ENDORSEMENT',13,true); z+=11;
+  z=hPair(doc,z,'Ref. Number :  ','','Office of the :  ',d.rto,10);
+  z=hWrap(doc,15,z,'A duplicate certificate of registration as requested above is issued with the note of agreement of hire-purchase / lease / hypothecation on ........................ and is noted in the original registration records in Form 24.',180,10.5); z+=4;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,118,z,'Signature of the registering authority',10.5); z+=14;
+  hT(doc,15,z,'To,',11); z+=7;
+  z=hRow(doc,z,'The Financier :  ','',9);
+  z=hRow(doc,z,'The Registering Authority :  ','',9);
+  hT(doc,15,z,'( To be sent to both the above parties by registered post acknowledgement due )',9); z+=11;
+  z=hWrap(doc,15,z,'Specimen signature or thumb impression of the registered owner and financier are to be obtained in original application for affixing and attestation by the registering authority with the office seal in Forms 23 and 24 in such a manner that the part of impression of seal or stamp and attestation shall fall upon each signature.',180,9.5); z+=8;
+  hT(doc,15,z,'Specimen signature of the financier',10.5,true);
+  hT(doc,112,z,'Specimen signature of the registered owner',10.5,true); z+=11;
+  hT(doc,15,z,'1.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'1.',11); dline(doc,122,z+0.6,193); z+=12;
+  hT(doc,15,z,'2.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'2.',11); dline(doc,122,z+0.6,193);
 }
 
+/* ── SHARED HELVETICA HELPERS (official-style forms) ── */
+function hT(doc,x,y,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(s),x,y);}
+function hTC(doc,y,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(s),105,y,{align:'center'});}
+function hTW(doc,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);return doc.getTextWidth(String(s));}
+function hWrap(doc,x,y,s,w,sz){doc.setFont('helvetica','normal');doc.setFontSize(sz||9);const L=doc.splitTextToSize(String(s),w);doc.text(L,x,y);return y+L.length*(sz?sz*0.42:3.8);}
+function hRow(doc,y,label,val,R){hT(doc,15,y,label,11);const lx=15+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,193);if(val){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(val),lx+2,y);}return y+(R||9.5);}
+function hPair(doc,y,l1,v1,l2,v2,R){hT(doc,15,y,l1,11);let x1=15+hTW(doc,l1,11)+1;dline(doc,x1,y+0.6,100);if(v1){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(v1),x1+2,y);}hT(doc,105,y,l2,11);let x2=105+hTW(doc,l2,11)+1;dline(doc,x2,y+0.6,193);if(v2){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(v2),x2+2,y);}return y+(R||9.5);}
+function hInline(doc,x,y,label,val,lineEnd){hT(doc,x,y,label,11);const lx=x+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,lineEnd);if(val){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(val),lx+2,y);}return lineEnd+2;}
+function hHead(doc,num,rule,titleLines){
+  hTC(doc,17,num,17,true);
+  hTC(doc,24,rule,10);
+  let y=31;
+  titleLines.forEach(t=>{hTC(doc,y,t,12,true);y+=6;});
+  return y;
+}
+
+/* ── FORM 23B — TEMPORARY CERTIFICATE OF REGISTRATION (official) ── */
+function addForm23B(doc,d){
+  let y=hHead(doc,'FORM 23B','[ Refer Rule 53B (1) and (3) ]',['TEMPORARY CERTIFICATE OF REGISTRATION']);
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=10;
+  y=hRow(doc,y,'Temporary Registration Mark :  ','',10);
+  y=hRow(doc,y,'Application No. :  ','',10);
+  y=hRow(doc,y,'Owner Name :  ',d.s_name,10);
+  y=hRow(doc,y,'Son / wife / daughter of :  ',d.s_father,10);
+  y=hRow(doc,y,'Address :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),10);
+  y=hRow(doc,y,'Mobile Number :  ',d.mobile,10);
+  y=hRow(doc,y,'Description of Vehicle :  ','',10);
+  y=hRow(doc,y,'Class of Vehicle :  ',d.veh_type,10);
+  y=hPair(doc,y,'Maker\u2019s Name :  ',d.make,'Maker\u2019s Model Name :  ',d.model,10);
+  y=hPair(doc,y,'Type of Body :  ','','Colour :  ',d.colour,10);
+  y=hPair(doc,y,'Seating capacity ( incl. driver ) :  ','','Standing capacity :  ','',10);
+  y=hRow(doc,y,'Sleeper capacity :  ','',10);
+  y=hPair(doc,y,'Engine Number :  ',d.eng_no,'Chassis Number :  ',d.ch_no,10);
+  y=hRow(doc,y,'Place where Vehicle shall be Permanently Registered :  ','',10);
+  y=hRow(doc,y,'Reason for Temporary Registration ( body building / permanent regn. in another State ) :  ','',11);
+  y=hWrap(doc,15,y,'Note : The Motor Vehicle above described is under Hire-Purchase / Lease Agreement / Hypothecation in favour of :',180,10); y+=2;
+  dline(doc,15,y+0.6,193); y+=11;
+  y=hWrap(doc,15,y,'Under the provisions of section 43 of the Motor Vehicles Act, 1988, the vehicle described above has been Temporarily Registered, and the Temporary Registration is valid :',180,10.5); y+=2;
+  y=hPair(doc,y,'From :  ','','To :  ','',12);
+  hT(doc,15,y,'This certificate is extended :',11,true); y+=9;
+  y=hPair(doc,y,'From :  ','','To :  ','',8);
+  y=hRow(doc,y,'Date :  ','',10);
+  y=hPair(doc,y,'From :  ','','To :  ','',8);
+  y=hRow(doc,y,'Date :  ','',11);
+  y=hPair(doc,y,'Fee Paid Details :  ','','Tax Paid Details :  ','',16);
+  hT(doc,15,y,'Specimen Signature of the Owner',10.5);
+  hT(doc,122,y,'Signature of Registering Authority',10.5);
+}
+
+/* ── FORM 27 — NEW REGISTRATION MARK (official 2-page) ── */
+function addForm27(doc,d){
+  let y=hHead(doc,'FORM 27','[ Refer Rule 54 ]',['APPLICATION FOR ASSIGNMENT OF NEW REGISTRATION','MARK TO A MOTOR VEHICLE']);
+  y=hWrap(doc,15,y+2,'( To be made in triplicate if the vehicle is held under an agreement of hire-purchase / lease / hypothecation; the duplicate and triplicate copies with the endorsement of the registering authority to be returned to the financier and the original registering authority simultaneously, on the assignment of a new registration mark. )',180,8.5);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=9;
+  hT(doc,15,y,'To,',11); y+=6;
+  hT(doc,15,y,'The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,10);
+  y=hRow(doc,y,'I / We :  ',d.s_name,9);
+  y=hRow(doc,y,'son / wife / daughter* of :  ',d.s_father,9);
+  y=hPair(doc,y,'being the registered owner of vehicle No. :  ',d.reg_no,'Chassis No. :  ',d.ch_no,9);
+  y=hPair(doc,y,'Engine No. / Motor No. ( BOV ) :  ',d.eng_no,'Type of vehicle :  ',d.veh_type,9);
+  y=hRow(doc,y,'registered in the State of :  ',d.prev_state,9);
+  y=hWrap(doc,15,y,'hereby declare that I / We have, since the .................. day of .................. , kept the said motor vehicle in this State and hereby apply for the assignment of a new registration mark to the said motor vehicle.',180,10.5); y+=3;
+  y=hRow(doc,y,'I / We hereby declare that the registration is valid up to :  ','',8);
+  y=hWrap(doc,15,y,'and it has not been suspended or cancelled under the provisions of the Act.',180,10.5); y+=2;
+  y=hWrap(doc,15,y,'\u2022  I / We enclose the certificate of registration and the certificate of fitness* of the motor vehicle.',180,10.5);
+  y=hWrap(doc,15,y,'\u2022  I / We enclose a \u201CNo Objection Certificate\u201D from the registering authority.',180,10.5);
+  y=hWrap(doc,15,y,'\u2022  If the \u201CNo Objection Certificate\u201D is not enclosed, the applicant should file along with this application a declaration as required under the first proviso to sub-section (1) of section 47.',180,10.5); y+=2;
+  y=hWrap(doc,15,y,'*  The vehicle is not subject to an agreement of hire-purchase / lease / hypothecation.',180,10.5);
+  y=hRow(doc,y,'*  The vehicle is subject to such an agreement with :  ','',8);
+  y=hWrap(doc,15,y,'and the NOC has been *granted / refused by the financier thereunder. If refused, the applicant should file a declaration as required under sub-section (8) of section 51.',180,10.5); y+=3;
+  y=hRow(doc,y,'My / Our mobile number is :  ',d.mobile,12);
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,112,y,'Signature or thumb impression of the applicant',10.5); y+=7;
+  hT(doc,15,y,'*  Strike out whichever is inapplicable.',9); y+=11;
+
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=8;
+  hTC(doc,y,'CONSENT OF THE FINANCIER FOR GRANT OF',11.5,true); y+=6;
+  hTC(doc,y,'\u201CNO OBJECTION CERTIFICATE\u201D UNDER SECTION 51(6)',11.5,true); y+=9;
+  y=hWrap(doc,15,y,'I / We, being a party to an agreement of hire-purchase / lease / hypothecation in respect of the motor vehicle specified above :',180,10.5); y+=2;
+  y=hWrap(doc,22,y,'(1)  have \u201CNo Objection\u201D in assigning the new registration mark to the said vehicle.',172,10.5);
+  y=hWrap(doc,22,y,'(2)  have \u201CObjection\u201D in assigning the new registration mark to the said vehicle for the reasons given hereunder :',172,10.5); y+=1;
+  dline(doc,22,y+0.6,193); y+=12;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,130,y,'Signature of the financier',10.5);
+
+  /* PAGE 2 — OFFICE ENDORSEMENT */
+  doc.addPage(); let z=20;
+  doc.setLineWidth(0.5);doc.line(15,z,195,z); z+=9;
+  hTC(doc,z,'OFFICE  ENDORSEMENT',13,true); z+=12;
+  z=hPair(doc,z,'Ref. Number :  ','','Office of the :  ',d.rto,11);
+  hT(doc,15,z,'The vehicle No. ',11);
+  let zx=15+hTW(doc,'The vehicle No. ',11)+1;
+  dline(doc,zx,z+0.6,90);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.reg_no||'',zx+2,z);
+  hT(doc,94,z,'on removal to this State has been assigned a new',11); z+=9;
+  hT(doc,15,z,'registration mark ',11);
+  zx=15+hTW(doc,'registration mark ',11)+1;
+  dline(doc,zx,z+0.6,120);
+  hT(doc,124,z,'( here enter the registration mark ).',9); z+=14;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,118,z,'Signature of the registering authority',10.5); z+=16;
+  z=hRow(doc,z,'To,  The Financier :  ','',10);
+  z=hRow(doc,z,'The Registering Authority :  ','',9);
+  hT(doc,15,z,'( To be sent to both the above parties by registered post acknowledgement due )',9);
+}
+
+/* ── FORM 27A — BH-SERIES REGISTRATION MARK (official) ── */
+function addForm27A(doc,d){
+  let y=hHead(doc,'FORM 27A','[ See Rule 51B (4) ]',['APPLICATION FOR ASSIGNMENT OF NEW REGISTRATION','MARK IN BH-SERIES']);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=10;
+  hT(doc,15,y,'To,',11); y+=6;
+  hT(doc,15,y,'The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,11);
+  y=hRow(doc,y,'I / We :  ',d.s_name,9.5);
+  y=hRow(doc,y,'son / wife / daughter of :  ',d.s_father,9.5);
+  y=hPair(doc,y,'being the Registered Owner of Motor Vehicle No. :  ',d.reg_no,'Chassis No. :  ',d.ch_no,9.5);
+  y=hPair(doc,y,'[ Engine No. / Motor No. ( BOV ) ] :  ',d.eng_no,'Type of vehicle :  ',d.veh_type,9.5);
+  y=hWrap(doc,15,y,'hereby declare that I am eligible for getting my vehicle registered in BH-Series.',180,11); y+=4;
+  y=hRow(doc,y,'I hereby declare that the registration is valid up to :  ','',8);
+  y=hWrap(doc,15,y,'and it has not been suspended or cancelled under the provisions of this Act.',180,10.5); y+=4;
+  y=hWrap(doc,15,y,'\u2022  I enclose the certificate of registration of this motor vehicle.',180,10.5); y+=1;
+  y=hWrap(doc,15,y,'\u2022  I enclose my working certificate in Form 60 or official identity card / Service Certificate.',180,10.5); y+=4;
+  y=hWrap(doc,15,y,'*  The vehicle is not subject to an agreement of hire-purchase / lease / hypothecation.',180,10.5); y+=1;
+  y=hRow(doc,y,'*  The vehicle is subject to such an agreement with :  ','',8);
+  y=hWrap(doc,15,y,'and the NOC has been granted / refused by the Financier thereunder. If \u201CNo Objection Certificate\u201D has been refused by the Financier, the applicant should file along with this application a declaration as required under sub-section (8) of section 51.',180,10.5); y+=4;
+  y=hPair(doc,y,'My mobile number is :  ',d.mobile,'Email ( if any ) :  ',d.email,12);
+  y=hRow(doc,y,'Date :  ','',16);
+  hT(doc,118,y,'Signature / e-signature of the Applicant',10.5); y+=8;
+  hT(doc,15,y,'*  Strike out whichever is inapplicable.',9);
+}
+
+
+/* ── FORM 31 — TRANSFER ON DEATH (official 2-page) ── */
+function addForm31(doc,d){
+  let y=hHead(doc,'FORM 31','[ Refer Rule 56(3) ]',['APPLICATION FOR TRANSFER OF OWNERSHIP IN THE NAME OF THE','PERSON NOMINATED / SUCCEEDING TO THE POSSESSION OF VEHICLE']);
+  y=hWrap(doc,15,y+1,'( To be made in duplicate if the vehicle is held under an agreement of hire-purchase / lease / hypothecation and the duplicate copy with an endorsement of the registering authority to be returned to the financier simultaneously on making the entry of transfer of ownership in the certificate of registration and office record in Form 24. )',180,8);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=10;
+  hT(doc,15,y,'To,',11); y+=6;
+  hT(doc,15,y,'The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,11);
+  y=hRow(doc,y,'1.  Vehicle registration No. :  ',d.reg_no,10);
+  y=hRow(doc,y,'     Make and model :  ',(d.make+' '+d.model).trim(),10);
+  y=hPair(doc,y,'     Chassis No. :  ',d.ch_no,'Engine No. / Motor No. ( BOV ) :  ',d.eng_no,10);
+  y=hRow(doc,y,'     Type of vehicle :  ',d.veh_type,11);
+  y=hRow(doc,y,'2.  Name of the deceased registered owner :  ',d.deceased,11);
+  y=hRow(doc,y,'3.  Name and age of the nominee / person succeeding to the possession :  ',d.s_name,9);
+  y=hRow(doc,y,'     son / wife / daughter of :  ',d.s_father,11);
+  y=hRow(doc,y,'4.  Relationship with the deceased registered owner :  ',d.relation,11);
+  y=hRow(doc,y,'5.  Proof of his nomination / succession :  ',d.succession,11);
+  y=hRow(doc,y,'6.  Mobile number of the new owner :  ',d.mobile,12);
+  y=hWrap(doc,15,y,'Certificate of registration is enclosed herewith. Kindly transfer the ownership of the vehicle in my name.',180,11); y+=8;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,125,y,'Signature of the applicant',10.5); y+=16;
+
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=8;
+  hTC(doc,y,'CONSENT OF THE FINANCIER IN THE CASE OF MOTOR VEHICLE',11.5,true); y+=6;
+  hTC(doc,y,'HELD UNDER ANY OF THE AGREEMENTS',11.5,true); y+=10;
+  y=hWrap(doc,15,y,'I / We, being a party to an agreement of hire-purchase / lease / hypothecation in respect of the motor vehicle specified above, consent to the transfer of ownership of the said motor vehicle in the name of the applicant named above, with whom I / we have entered into an agreement of hire-purchase / lease / hypothecation.',180,10.5);
+  y+=10;
+  hT(doc,118,y,'Signature of the Financier',10.5); y+=9;
+  dline(doc,15,y+0.6,193); y+=6;
+  hT(doc,15,y,'( Full name and address of the financier )',9); y+=10;
+  hT(doc,15,y,'Date : ____________________',11);
+
+  /* PAGE 2 */
+  doc.addPage(); let z=20;
+  doc.setLineWidth(0.5);doc.line(15,z,195,z); z+=9;
+  hTC(doc,z,'OFFICE  ENDORSEMENT',13,true); z+=12;
+  z=hPair(doc,z,'Ref. Number :  ','','Office of the :  ',d.rto,11);
+  z=hWrap(doc,15,z,'The transfer of ownership of the motor vehicle under continuation of an endorsement of hire-purchase / lease / hypothecation agreement has been recorded with effect from ........................ in the certificate of registration of the vehicle and the registration record of this office in Form 24.',180,10.5);
+  z+=6;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,118,z,'Signature of the registering authority',10.5); z+=10;
+  hT(doc,15,z,'*  Strike out whichever is inapplicable.',9); z+=12;
+  hT(doc,15,z,'To,',11); z+=7;
+  z=hRow(doc,z,'The Financier :  ','',9);
+  hT(doc,15,z,'( To be sent by registered post acknowledgement due )',9); z+=12;
+  z=hWrap(doc,15,z,'Specimen signatures or thumb impression of the registered owner and financier are to be obtained in original application for affixing and attestation by the registering authority with office seal in Forms 23 and 24, in such a manner that the part of impression of seal or stamp and attestation shall fall upon each signature :',180,9.5);
+  z+=8;
+  hT(doc,15,z,'Specimen signatures of the financier',10.5,true);
+  hT(doc,112,z,'Specimen signatures of the registered owner',10.5,true); z+=11;
+  hT(doc,15,z,'1.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'1.',11); dline(doc,122,z+0.6,193); z+=12;
+  hT(doc,15,z,'2.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'2.',11); dline(doc,122,z+0.6,193);
+}
+
+/* ── FORM 33 — CHANGE OF ADDRESS (official 2-page) ── */
+function addForm33(doc,d){
+  let y=hHead(doc,'FORM 33','[ Refer Rule 59 ]',['INTIMATION OF CHANGE OF ADDRESS RECORDED IN THE','CERTIFICATE OF REGISTRATION AND OFFICE RECORDS']);
+  y=hWrap(doc,15,y+1,'( To be made in triplicate if the vehicle is held under agreement of hire-purchase / lease / hypothecation; the duplicate copy and the triplicate copy with the endorsement of the registering authority to be returned to the financier and the registering authority ( from whose jurisdiction the vehicle is removed ) simultaneously, on making the entry of change of address in the certificate of registration and Form 24. )',180,8);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=10;
+  hT(doc,15,y,'To,',11); y+=6;
+  hT(doc,15,y,'The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,11);
+  y=hRow(doc,y,'I / We :  ',d.s_name,9.5);
+  y=hRow(doc,y,'son / wife / daughter of :  ',d.s_father,9.5);
+  y=hRow(doc,y,'( full address ) :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),9.5);
+  y=hRow(doc,y,'registered owner of motor vehicle No. :  ',d.reg_no,9.5);
+  y=hWrap(doc,15,y,'have ceased to reside / do not have the place of business at the address recorded in the certificate of registration with effect from ........................ . The present address is given below ( evidence to be enclosed ) :',180,10.5); y+=2;
+  dline(doc,15,y+0.6,193);
+  if(d.new_addr){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.new_addr,17,y);}
+  y+=9;
+  dline(doc,15,y+0.6,193); y+=11;
+  y=hRow(doc,y,'My / Our mobile number is :  ',d.mobile,11);
+  y=hWrap(doc,15,y,'*  The vehicle is not held under any agreement of hire-purchase / lease / hypothecation.',180,10.5); y+=1;
+  y=hWrap(doc,15,y,'*  The vehicle is held under an agreement of hire-purchase / lease / hypothecation with :',180,10.5); y+=1;
+  dline(doc,15,y+0.6,193);
+  if(d.fin_name){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.fin_name,17,y);}
+  y+=6;
+  hT(doc,15,y,'( Name and full address of the financier )',9); y+=9;
+  y=hWrap(doc,15,y,'The certificate of registration is enclosed. I / We request that the change of address may be recorded in the certificate of registration and Form 24.',180,10.5); y+=7;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,112,y,'Signature or thumb impression of the',10.5); y+=5;
+  hT(doc,112,y,'registered owner of the vehicle',10.5); y+=7;
+  hT(doc,15,y,'*  Strike out whichever is inapplicable.',9); y+=12;
+
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=8;
+  hTC(doc,y,'CONSENT OF THE FINANCIER IN THE CASE OF MOTOR VEHICLE',11.5,true); y+=6;
+  hTC(doc,y,'HELD UNDER AN AGREEMENT',11.5,true); y+=10;
+  y=hWrap(doc,15,y,'I / We, being a party to an agreement of hire-purchase / lease / hypothecation in respect of the above said vehicle, hereby :',180,10.5); y+=2;
+  y=hWrap(doc,22,y,'1.  Give consent for effecting the above change of address with the note of an agreement in my / our favour in Forms 23 and 24 by the registering authority.',172,10.5); y+=1;
+  y=hWrap(doc,22,y,'2.  Refuse to give consent for effecting the above change of address by the registering authority, due to the reasons furnished hereunder :',172,10.5); y+=1;
+  dline(doc,22,y+0.6,193); y+=12;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,130,y,'Signature of the financier',10.5);
+
+  /* PAGE 2 */
+  doc.addPage(); let z=20;
+  doc.setLineWidth(0.5);doc.line(15,z,195,z); z+=9;
+  hTC(doc,z,'OFFICE  ENDORSEMENT',13,true); z+=12;
+  z=hPair(doc,z,'Ref. Number :  ','','Office of the :  ',d.rto,11);
+  z=hWrap(doc,15,z,'The above change of address has been entered with the note of agreement of hire-purchase / lease / hypothecation in favour of the financier in the certificate of registration and in Form 24.',180,10.5);
+  z+=6;
+  hT(doc,15,z,'Date : ____________________',11);
+  hT(doc,118,z,'Signature of the registering authority',10.5); z+=14;
+  hT(doc,15,z,'To,',11); z+=7;
+  z=hRow(doc,z,'The Financier :  ','',9);
+  z=hRow(doc,z,'The Registering Authority :  ','',9);
+  hT(doc,15,z,'( To be sent to both the parties by registered post acknowledgement due )',9); z+=12;
+  z=hWrap(doc,15,z,'Specimen signatures or thumb impressions of the registered owner and financier are to be obtained for affixing and attestation by the registering authority with official seal in Forms 23 and 24, in such a manner that part of impression of the seal or stamp and attestation shall fall upon each signature :',180,9.5);
+  z+=8;
+  hT(doc,15,z,'Specimen signatures of financier',10.5,true);
+  hT(doc,112,z,'Specimen signatures of registered owner',10.5,true); z+=11;
+  hT(doc,15,z,'1.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'1.',11); dline(doc,122,z+0.6,193); z+=12;
+  hT(doc,15,z,'2.',11); dline(doc,25,z+0.6,92);
+  hT(doc,112,z,'2.',11); dline(doc,122,z+0.6,193);
+}
+
+/* ── FORM 34 — HP ENTRY (official) ── */
+function addForm34(doc,d){
+  let y=hHead(doc,'FORM 34','[ Refer Rule 60 ]',['APPLICATION FOR MAKING AN ENTRY OF AN AGREEMENT OF HIRE-','PURCHASE / LEASE / HYPOTHECATION SUBSEQUENT TO REGISTRATION']);
+  y=hWrap(doc,15,y+1,'( To be made in duplicate and in triplicate where the original registering authority is different; the duplicate copy and the triplicate copy with the endorsement of the registering authority to be returned to the financier and the registering authority simultaneously on making the entry in the certificate of registration and in Form 24. )',180,8);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=10;
+  hT(doc,15,y,'To,',11); y+=6;
+  hT(doc,15,y,'The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,11);
+  hT(doc,15,y,'The motor vehicle bearing registration number ',11);
+  let x=15+hTW(doc,'The motor vehicle bearing registration number ',11)+1;
+  dline(doc,x,y+0.6,193);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.reg_no||'',x+2,y); y+=9;
+  hT(doc,15,y,'is the subject of an agreement of hire-purchase / lease / hypothecation between',11); y+=9;
+  dline(doc,15,y+0.6,140);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.s_name||'',17,y);
+  hT(doc,143,y,'the registered owner /',11); y+=8;
+  hT(doc,15,y,'person to be registered as owner*  and',11); y+=9;
+  dline(doc,15,y+0.6,193);
+  if(d.fin_name){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.fin_name,17,y);}
+  y+=7;
+  hT(doc,15,y,'( fill the name and full address of the financier )',9); y+=10;
+  y=hRow(doc,y,'having agreement number / loan account number :  ',d.loan_no,11);
+  y=hWrap(doc,15,y,'We request that an entry of the agreement be made in the certificate of registration and the relevant records in your office.',180,11); y+=3;
+  y=hRow(doc,y,'My / Our mobile number is :  ',d.mobile,10);
+  hT(doc,15,y,'The certificate of registration together with the fee is enclosed.',11); y+=14;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,105,y,'Signature or thumb impression of registered owner',10.5); y+=14;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,130,y,'Signature of the financier',10.5); y+=10;
+  hT(doc,15,y,'*  Strike out whichever is inapplicable.',9); y+=14;
+
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=8;
+  hTC(doc,y,'OFFICE  ENDORSEMENT',13,true); y+=12;
+  y=hPair(doc,y,'Ref. Number :  ','','Office of the :  ',d.rto,11);
+  y=hWrap(doc,15,y,'The entry of the agreement of hire-purchase / lease / hypothecation as requested above is recorded in this office registration record in Form 24 and certificate of registration on ........................ ( date ).',180,10.5);
+  y+=6;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,118,y,'Signature of the registering authority',10.5); y+=13;
+  hT(doc,15,y,'To,',11); y+=7;
+  y=hRow(doc,y,'The Financier :  ','',9);
+  y=hRow(doc,y,'The Registering Authority :  ','',9);
+  hT(doc,15,y,'( To be sent to both the above parties by registered post acknowledgment due )',9); y+=11;
+  y=hWrap(doc,15,y,'Specimen signatures of the financier are to be obtained in original application for affixing and attestation by the registering authority with official seal in Forms 23 and 24 in such a manner that part of impression of the seal or a stamp and attestation shall fall upon each signature :',180,9.5);
+  y+=8;
+  hT(doc,15,y,'Specimen signatures of the financier',10.5,true); y+=11;
+  hT(doc,15,y,'1.',11); dline(doc,25,y+0.6,110); y+=12;
+  hT(doc,15,y,'2.',11); dline(doc,25,y+0.6,110);
+}
+
+/* ── FORM 35 — HP TERMINATION (official) ── */
+function addForm35(doc,d){
+  let y=hHead(doc,'FORM 35','[ Refer Rule 61(1) ]',['NOTICE OF TERMINATION OF AGREEMENT OF','*HIRE-PURCHASE / LEASE / HYPOTHECATION']);
+  y=hWrap(doc,15,y+1,'( To be made in duplicate and in triplicate where the original registering authority is different; the duplicate copy and the triplicate copy with the endorsement of the registering authority to be returned to the financier and registering authority simultaneously on making the termination entry in the certificate of the registration and in Form 24. )',180,8);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=10;
+  hT(doc,15,y,'To,',11); y+=6;
+  hT(doc,15,y,'The Registering Authority,',11); y+=7;
+  y=hRow(doc,y,'',d.rto,11);
+  y=hWrap(doc,15,y,'We hereby declare that the agreement of hire-purchase / lease / hypothecation entered into between us has been terminated. We, therefore, request that the note endorsed in the certificate of registration of',180,11); y+=1;
+  hT(doc,15,y,'vehicle No. ',11);
+  let x=15+hTW(doc,'vehicle No. ',11)+1;
+  dline(doc,x,y+0.6,95);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.reg_no||'',x+2,y);
+  hT(doc,99,y,'in respect of the said agreement between us be',11); y+=8;
+  hT(doc,15,y,'cancelled.',11); y+=10;
+  y=hRow(doc,y,'My / Our mobile number is :  ',d.mobile,10);
+  hT(doc,15,y,'The certificate of registration together with the fee is enclosed.',11); y+=14;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,100,y,'Signature or thumb impression of the registered owner',10.5); y+=14;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,100,y,'Signature of the financier with official seal and address',10.5); y+=10;
+  hT(doc,15,y,'*  Strike out whichever is inapplicable.',9); y+=14;
+
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=8;
+  hTC(doc,y,'OFFICE  ENDORSEMENT',13,true); y+=12;
+  y=hPair(doc,y,'Ref. Number :  ','','Office of the :  ',d.rto,11);
+  y=hWrap(doc,15,y,'The cancellation of the entry of an agreement as requested above is recorded in this office registration record in Form 24 and registration certificate on ........................ ( date ).',180,10.5);
+  y+=6;
+  hT(doc,15,y,'Date : ____________________',11);
+  hT(doc,118,y,'Signature of the registering authority',10.5); y+=13;
+  hT(doc,15,y,'To,',11); y+=7;
+  y=hRow(doc,y,'The Financier :  ','',9);
+  y=hRow(doc,y,'The Registering Authority :  ','',9);
+  hT(doc,15,y,'( To be sent to both the above parties by registered post acknowledgement due )',9); y+=11;
+  y=hWrap(doc,15,y,'Specimen signature of the financier are to be obtained in original application for affixing and attestation by the registering authority with his office seal in Forms 23 and 24 in such a manner that the part of impression of seal or stamp and attestation shall fall upon each signature.',180,9.5);
+  y+=8;
+  hT(doc,15,y,'Specimen signatures of Financier',10.5,true); y+=11;
+  hT(doc,15,y,'1.',11); dline(doc,25,y+0.6,110); y+=12;
+  hT(doc,15,y,'2.',11); dline(doc,25,y+0.6,110);
+}
+
+/* ── FORM 20 — REGISTRATION (official 4-page content) ── */
+function addForm20(doc,d){
+  /* Helvetica, bigger type, pages filled edge to edge */
+  const F='helvetica';
+  function T(x,y,s,sz,b){doc.setFont(F,b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(s),x,y);}
+  function TC(y,s,sz,b){doc.setFont(F,b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(s),105,y,{align:'center'});}
+  function TW(s,sz,b){doc.setFont(F,b?'bold':'normal');doc.setFontSize(sz||11);return doc.getTextWidth(String(s));}
+  function WRAP(x,y,s,w,sz){doc.setFont(F,'normal');doc.setFontSize(sz||9);const L=doc.splitTextToSize(String(s),w);doc.text(L,x,y);return y+L.length*(sz?sz*0.42:3.8);}
+  function ROW(y,label,val,R){T(15,y,label,11);const lx=15+TW(label,11)+1;dline(doc,lx,y+0.6,193);if(val){doc.setFont(F,'bold');doc.setFontSize(11);doc.text(String(val),lx+2,y);}return y+(R||10);}
+  function PAIR(y,l1,v1,l2,v2,R){T(15,y,l1,11);let x1=15+TW(l1,11)+1;dline(doc,x1,y+0.6,100);if(v1){doc.setFont(F,'bold');doc.setFontSize(11);doc.text(String(v1),x1+2,y);}T(105,y,l2,11);let x2=105+TW(l2,11)+1;dline(doc,x2,y+0.6,193);if(v2){doc.setFont(F,'bold');doc.setFontSize(11);doc.text(String(v2),x2+2,y);}return y+(R||10);}
+
+  /* ───── PAGE 1 ───── */
+  TC(17,'FORM 20',17,true);
+  TC(24,'( Refer Rule 47 and Rule 53A )',10);
+  TC(31,'APPLICATION FOR REGISTRATION OR TEMPORARY',12,true);
+  TC(37,'REGISTRATION OF A MOTOR VEHICLE',12,true);
+  let y=43;
+  y=WRAP(15,y,'( To be made in duplicate if the vehicle is held under an agreement of Hire-Purchase / Lease / Hypothecation and duplicate copy with the endorsement of the Registering Authority to be returned to the Financier simultaneously on Registration of motor vehicle )',180,8.5);
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=9;
+
+  T(15,y,'To,',11); y+=6;
+  T(15,y,'The Licensing Authority,',11); y+=8;
+  dline(doc,15,y+0.6,193);
+  doc.setFont(F,'bold');doc.setFontSize(11);doc.text(d.rto||'',17,y); y+=12;
+
+  T(15,y,'1.   Full name of person to be registered as Registered Owner :',11); y+=8;
+  dline(doc,22,y+0.6,193);
+  doc.setFont(F,'bold');doc.setFontSize(11.5);doc.text(d.s_name||'',24,y); y+=10;
+  y=ROW(y,'      Son / Wife / Daughter of :  ',d.s_father,11);
+  y=ROW(y,'2.   Age of person to be registered as Registered Owner :  ','',11);
+  y=ROW(y,'3.   Permanent address :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),8);
+  y=WRAP(22,y,'( Electoral Roll / LIC Policy / Passport / Pay slip of Central or State Government office or local body / any other prescribed document / Affidavit sworn before a Magistrate or Notary Public to be enclosed )',170,8);
+  y+=5;
+  y=ROW(y,'4.   Temporary address / Official address, if any :  ','',11);
+
+  T(15,y,'4A.  Ownership type ( tick one ) :',11,true); y+=8;
+  doc.setFont(F,'normal');doc.setFontSize(9.5);
+  const own1=['1.  AUTONOMOUS BODY','2.  CENTRAL GOVERNMENT','3.  CHARITABLE TRUST','4.  DRIVING TRAINING SCHOOL','5.  DIVYANGJAN','     (a) with GST concession','     (b) without GST concession','6.  EDUCATIONAL INSTITUTE'];
+  const own2=['7.  FIRM','8.  GOVERNMENT UNDERTAKING','9.  INDIVIDUAL','10. LOCAL AUTHORITY','11. MULTIPLE OWNER','12. OTHERS','13. POLICE DEPARTMENT','14. STATE GOVERNMENT / 15. STC'];
+  let oy=y; own1.forEach(t=>{doc.text(t,24,oy);oy+=6.5;});
+  let oy2=y; own2.forEach(t=>{doc.text(t,112,oy2);oy2+=6.5;});
+  y=Math.max(oy,oy2)+4;
+
+  y=ROW(y,'5.   Duration of stay at the present address :  ','',10.5);
+  y=ROW(y,'5A. Mobile number of the owner of the vehicle :  ',d.mobile,10.5);
+  y=PAIR(y,'6.   PAN number ( optional ) :  ','','7.  Place of birth :  ','',10.5);
+  y=ROW(y,'8.   If place of birth is outside India, when migrated to India :  ','',10.5);
+  y=PAIR(y,'9A. Name of the nominee :  ','','9B. Relationship :  ','',10.5);
+
+  /* ───── PAGE 2 ───── */
+  doc.addPage(); y=18;
+  TC(y,'FORM 20  —  VEHICLE PARTICULARS',13,true); y+=4;
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=11;
+
+  T(15,y,'10.  Name and address of the Dealer or Manufacturer from whom purchased',11); y+=6;
+  T(22,y,'( sale certificate and road-worthiness certificate to be enclosed ) :',8.5); y+=8;
+  dline(doc,22,y+0.6,193); y+=11;
+  y=ROW(y,'11.  If ex-army or imported vehicle, enclose proof :  ','',10.5);
+  y=ROW(y,'12.  Class of vehicle ( if motor cycle — with / without gear ) :  ',d.veh_type,10.5);
+  T(15,y,'13.  The motor vehicle is :   (a) new vehicle    (b) ex-army    (c) imported',11); y+=7;
+  T(22,y,'(d) in-use E-rickshaw / E-cart          ( strike out whichever is inapplicable )',9.5); y+=10;
+  y=PAIR(y,'14.  Type of body :  ','','15.  Type of vehicle :  ','',10.5);
+  y=ROW(y,'16.  Maker\'s name :  ',d.make,10.5);
+  y=ROW(y,'17.  Month and year of manufacture :  ',d.model,10.5);
+  y=PAIR(y,'18.  Number of cylinders :  ','','19.  Horse power :  ','',10.5);
+  y=PAIR(y,'20.  Cubic capacity :  ','','21.  Wheel base :  ','',10.5);
+  y=ROW(y,'22.  Chassis No. ( affix pencil print ) :  ',d.ch_no,10.5);
+  y=ROW(y,'23.  Engine No. / Motor No. ( Battery Operated Vehicles ) :  ',d.eng_no,10.5);
+  y=ROW(y,'24.  Seating capacity ( including driver ) :  ','',10.5);
+  y=PAIR(y,'24A. Standing capacity :  ','','24B. Sleeper capacity :  ','',10.5);
+  y=ROW(y,'25.  Fuel used in the engine :  ','',10.5);
+  y=ROW(y,'26.  Unladen weight :  ','',10.5);
+  y=ROW(y,'27.  Previous registration particulars and number ( if any ) :  ','',10.5);
+  y=ROW(y,'28.  Colour or colours of body, wings and front end :  ',d.colour,10.5);
+  y+=4;
+  doc.setFont(F,'bold');doc.setFontSize(11.5);
+  doc.text('I hereby declare that the motor vehicle has not been registered in any State in India.',15,y);
+
+  /* ───── PAGE 3 ───── */
+  doc.addPage(); y=18;
+  TC(y,'ADDITIONAL PARTICULARS — TRANSPORT VEHICLE',12.5,true); y+=6;
+  TC(y,'( other than Motor Cab )',10); y+=4;
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=11;
+
+  T(15,y,'29.  Number, description, size and ply rating of tyres ( as declared by manufacturer ) :',11); y+=9;
+  y=PAIR(y,'       (a) Front axle :  ','','(b) Rear axle :  ','',10);
+  y=PAIR(y,'       (c) Any other axle :  ','','(d) Tandem axle :  ','',11);
+  T(15,y,'30.  Gross vehicle weight :',11); y+=9;
+  y=PAIR(y,'       (a) Certified by manufacturer ( Kgms. ) :  ','','(b) To be registered ( Kgms. ) :  ','',11);
+  T(15,y,'31.  Maximum axle weight ( Kgms. ) :',11); y+=9;
+  y=PAIR(y,'       (a) Front axle :  ','','(b) Rear axle :  ','',10);
+  y=PAIR(y,'       (c) Any other axle :  ','','(d) Tandem axle :  ','',11);
+  T(15,y,'32.  Dimensions :',11); y+=9;
+  y=PAIR(y,'       (a) Overall length :  ','','(b) Overall width :  ','',10);
+  y=PAIR(y,'       (c) Overall height :  ','','(d) Overhang :  ','',11);
+  y=WRAP(15,y,'( For each semi-trailer registered with an articulated motor vehicle, furnish the following : )',180,8.5); y+=3;
+  y=PAIR(y,'33.  Type of body :  ','','34.  Unladen weight :  ','',10.5);
+  y=ROW(y,'35.  Number, description and size of tyres on each axle :  ','',10.5);
+  y=ROW(y,'36.  Maximum axle weight in respect of each axle :  ','',12);
+  T(15,y,'37.  The vehicle is covered by a valid certificate of insurance under Chapter XI :',11); y+=9;
+  y=PAIR(y,'       Certificate / Cover Note No. :  ','','Date :  ','',10);
+  y=PAIR(y,'       Name of company :  ','','Valid from / to :  ','',11);
+  y=ROW(y,'38.  Exempted from insurance — relevant order enclosed :  ','',10.5);
+  y=ROW(y,'39.  I have paid the prescribed fee of Rs. :  ','',13);
+  T(15,y,'Date : ____________________',11);
+  T(105,y,'Signature / thumb impression of the dealer along',10); y+=5.5;
+  T(105,y,'with the specimen signature of the owner',10); y+=12;
+  doc.setFont(F,'bold');doc.setFontSize(11);doc.text('Note :',15,y);
+  T(31,y,'The motor vehicle above described is —',11); y+=9;
+  y=ROW(y,'(i)   Subject to Hire-Purchase / Lease agreement with :  ','',10);
+  y=ROW(y,'(ii)  Subject to hypothecation in favour of :  ','',10);
+  T(15,y,'(iii) Not held under Hire-Purchase, lease or hypothecation.',11); y+=8;
+  y=WRAP(15,y,'Strike out whatever is inapplicable. If the vehicle is subject to any such agreement, the signature of the Financier is to be obtained below.',180,9); y+=10;
+  dline(doc,15,y,90); dline(doc,118,y,193); y+=6;
+  T(15,y,'Signature of Financier',9.5);
+  T(118,y,'Signature / thumb impression of Registered Owner',9.5);
+
+  /* ───── PAGE 4 ───── */
+  doc.addPage(); y=18;
+  TC(y,'CERTIFICATE OF INSPECTION OF MOTOR VEHICLE WHOSE BODY',11.5,true); y+=6;
+  TC(y,'HAS BEEN FABRICATED SEPARATELY TO THE PURCHASED CHASSIS',11.5,true); y+=4;
+  doc.setLineWidth(0.4);doc.line(15,y+1,195,y+1); y+=12;
+  doc.setFont(F,'normal');doc.setFontSize(11);
+  const insp=doc.splitTextToSize('Certified that the particulars contained in the application are true and that the vehicle complies with the requirements of the Motor Vehicles Act, 1988, and the Rules made thereunder.',180);
+  doc.text(insp,15,y); y+=insp.length*5.5+8;
+  y=PAIR(y,'Date :  ','','Ref. No. :  ','',11);
+  y=PAIR(y,'Name :  ','','Designation :  ','',13);
+  T(118,y,'Signature of the Inspecting Authority',10.5); y+=18;
+
+  doc.setLineWidth(0.5);doc.line(15,y,195,y); y+=8;
+  TC(y,'OFFICE  ENDORSEMENT',13,true); y+=12;
+  y=ROW(y,'Office of the :  ',d.rto,11);
+  T(15,y,'The above said motor vehicle has been assigned the Registration Number',11); y+=9;
+  dline(doc,15,y+0.6,105);
+  T(109,y,'and registered in the',11); y+=8;
+  y=WRAP(15,y,'name of the applicant and the vehicle is subject to an agreement of Hire-Purchase / Lease / Hypothecation with the Financier referred above.',180,11);
+  y+=10;
+  T(15,y,'Date : ____________________',11);
+  T(118,y,'Signature of the Registering Authority',10.5); y+=14;
+  y=ROW(y,'To, The Financier :  ','',8);
+  T(15,y,'( To be sent by registered post acknowledgement due )',9); y+=12;
+  y=WRAP(15,y,'Specimen signature or thumb-impression of the person to be registered as Registered Owner and the Financier are to be obtained in the original application for affixing and attestation by the Registering Authority with office seal in Forms 23 and 24, in such a manner that part of the impression of the seal or stamp and attestation shall fall upon each signature.',180,9.5);
+  y+=12;
+  doc.setFont(F,'bold');doc.setFontSize(10.5);
+  doc.text('Specimen signature of the Financier',15,y);
+  doc.text('Specimen signature of the Registered Owner',112,y); y+=12;
+  doc.setFont(F,'normal');doc.setFontSize(11);
+  doc.text('(1)',15,y); dline(doc,25,y+0.6,92);
+  doc.text('(1)',112,y); dline(doc,122,y+0.6,193); y+=14;
+  doc.text('(2)',15,y); dline(doc,25,y+0.6,92);
+  doc.text('(2)',112,y); dline(doc,122,y+0.6,193);
+}
+
+/* ── FORM 21 — SALE CERTIFICATE (official Parts I–IV) ── */
+function addForm21(doc,d){
+  center(doc,14,'FORM 21',14,true);
+  center(doc,20,'[ Refer Rule 47(a) and (d) ]',9);
+  center(doc,26,'SALE CERTIFICATE',12,true);
+  let y=31;
+  y=wrap(doc,15,y,'To be issued by manufacturer or dealer or registered E-rickshaw or E-cart Association ( in case of E-rickshaw or E-cart ) or officer of Defence Department ( in case of military auctioned vehicles ) for presentation along with the application for registration of a motor vehicle.',178,8);
+  doc.setLineWidth(0.3);doc.line(15,y,195,y); y+=7;
+
+  bold(doc,15,y,'Part I :  In case of application for registration of fully built motor vehicle made by owner',9.5); y+=6;
+  normal(doc,15,y,'Certified that ');
+  let x=15+doc.getTextWidth('Certified that ');
+  dline(doc,x,y+0.5,110); bold(doc,x+2,y,(d.make+' '+d.model).trim());
+  normal(doc,112,y,' ( brand name ) has been delivered'); y+=7;
+  normal(doc,15,y,'by us to ');
+  x=15+doc.getTextWidth('by us to ');
+  dline(doc,x,y+0.5,120); bold(doc,x+2,y,d.b_name);
+  normal(doc,124,y,' on ');
+  x=124+doc.getTextWidth(' on ');
+  dline(doc,x,y+0.5,193);
+  normal(doc,180,y,'( date )',8); y+=9;
+
+  bold(doc,15,y,'Part II :  In case of application for registration of fully built motor vehicle made by dealer',9.5); y+=6;
+  y=wrap(doc,15,y,'Certified that the above vehicle has been agreed to be sold by us on the date noted and will be delivered only after the registration mark assigned by the registering authority under Section 41(6) is displayed on the motor vehicle as per proviso to sub-section (6) of Section 41.',178,9);
+  y+=3;
+
+  bold(doc,15,y,'Part III :  In case of purchase of chassis',9.5); y+=6;
+  normal(doc,15,y,'Certified that the chassis has been temporarily delivered by us on ');
+  x=15+doc.getTextWidth('Certified that the chassis has been temporarily delivered by us on ');
+  dline(doc,x,y+0.5,193); y+=9;
+
+  bold(doc,15,y,'Part IV :  Applicable in case of Part I, Part II and Part III',9.5); y+=7;
+  y=lrow(doc,y,'Name of the buyer:  ',d.b_name);
+  y=lrow(doc,y,'Mobile number:  ','');
+  y=lrow(doc,y,'Son / wife / daughter of:  ',d.b_father);
+  y=lrow(doc,y,'Address ( permanent ):  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', Dist. '+d.b_dist:''));
+  y=lrow(doc,y,'Address ( temporary ):  ','');
+  y=lrow(doc,y,'The vehicle is held under agreement of HP / lease / hypothecation with:  ','');
+  y+=2;
+  bold(doc,15,y,'The details of the vehicle are given below :',10); y+=7;
+  y=lrowPair(doc,y,'1.  Class of vehicle:  ',d.veh_type,'2.  Maker\'s name:  ',d.make);
+  y=lrowPair(doc,y,'3.  Chassis No.:  ',d.ch_no,'4.  Engine / Motor No.:  ',d.eng_no);
+  y=lrowPair(doc,y,'5.  Horse power / cubic capacity:  ','','6.  Fuel used:  ','');
+  y=lrowPair(doc,y,'7.  Number of cylinders:  ','','8.  Month & year of manufacture:  ',d.model);
+  y=lrowPair(doc,y,'9.  Seating capacity ( incl. driver ):  ','','10. Unladen weight:  ','');
+  y=lrowPair(doc,y,'9A. Standing capacity:  ','','9B. Sleeper capacity:  ','');
+  normal(doc,15,y,'11. Maximum axle weight and number & description of tyres ( transport vehicle ):'); y+=7;
+  y=lrowPair(doc,y,'      (a) Front axle:  ','','(b) Rear axle:  ','');
+  y=lrowPair(doc,y,'      (c) Any other axle:  ','','(d) Tandem axle:  ','');
+  y=lrowPair(doc,y,'12. Colour or colours of the body:  ','','13. Gross vehicle weight:  ','');
+  y=lrow(doc,y,'14. Type of body:  ','');
+  normal(doc,15,y,'* Strike out whichever is inapplicable.',8.5); y+=12;
+  dline(doc,110,y,193); y+=5;
+  normal(doc,110,y,'Signature of the manufacturer or dealer or officer of',8.5); y+=4.5;
+  normal(doc,110,y,'Defence Department or registered E-rickshaw / E-cart Association',8.5);
+}
+
+/* ── FORM 22 — ROADWORTHINESS (official, with emission table) ── */
+function addForm22(doc,d){
+  center(doc,14,'FORM 22',14,true);
+  center(doc,20,'[ Refer rule 47(1)(g) ]',9);
+  center(doc,26,'ROAD-WORTHINESS CERTIFICATE',12,true);
+  center(doc,31,'For Compliance to Emission and Noise Standards',9.5);
+  let y=36;
+  y=wrap(doc,15,y,'( To be issued by the Manufacturer or Importer or Registered Association in case of E-rickshaw or E-cart, along with the vehicle )',178,8);
+  doc.setLineWidth(0.3);doc.line(15,y,195,y); y+=6;
+  y=wrap(doc,15,y,'It is certified that the following vehicle complies with the provisions of the Motor Vehicles Act, 1988, and the rules made thereunder :',178,10.5);
+  y+=3;
+  y=lrow(doc,y,'1.  Model / Commercial name of the vehicle:  ',(d.make+' '+d.model).trim());
+  y=lrow(doc,y,'2.  Chassis number ( VIN / ATIN / PIN / Trailer Identification No. ):  ',d.ch_no);
+  y=lrow(doc,y,'3.  Engine number ( Motor No. for Battery-Operated Vehicles ):  ',d.eng_no);
+  y=lrow(doc,y,'4.  Applicable emission norms ( e.g. BS-IV / BS-VI / TREM-III; NA for BOV ):  ','');
+  y+=1;
+  y=wrap(doc,15,y,'5.  Emission, sound level for horn and pass-by noise values of the above vehicle model, obtained during Type Approval Testing as per Central Motor Vehicle Rules, 1989, are given below :',178,10);
+  y+=2;
+  y=lrowPair(doc,y,'(i)  Type Approval certificate No.:  ','','(ii)  Type of fuel:  ','');
+  normal(doc,15,y,'(iii)  Emission values for vehicles :'); y+=5;
+
+  /* emission table */
+  const rows=[
+    ['1.','Carbon Monoxide (CO)','mg/km or mg/kWh or g/kWh'],
+    ['2.','Hydrocarbon (THC / HC)','mg/km or mg/kWh or g/kWh'],
+    ['3.','Non-Methane Hydrocarbon (NMHC)','mg/km or mg/kWh or g/kWh'],
+    ['4.','Oxides of Nitrogen (NOx)','mg/km or mg/kWh or g/kWh'],
+    ['5a.','HC + NOx','mg/km or mg/kWh or g/kWh'],
+    ['5b.','THC + NOx','mg/km or mg/kWh'],
+    ['6.','Methane (CH4)','mg/kWh'],
+    ['7.','Ammonia (NH3)','PPM'],
+    ['8.','Mass of Particulate Matter (PM)','mg/km or mg/kWh or g/kWh'],
+    ['9.','Number of Particles (PN)','Numbers/km or Numbers/kWh'],
+  ];
+  const tx=15, tw=180, c1=12, c2=72, c3=62, c4=tw-c1-c2-c3, rh=7;
+  doc.setLineWidth(0.3);
+  // header row
+  doc.rect(tx,y,c1,rh); doc.rect(tx+c1,y,c2,rh); doc.rect(tx+c1+c2,y,c3,rh); doc.rect(tx+c1+c2+c3,y,c4,rh);
+  doc.setFont('times','bold');doc.setFontSize(8);
+  doc.text('Sr.',tx+2,y+4.7); doc.text('Pollutant ( as applicable )',tx+c1+2,y+4.7);
+  doc.text('Units ( as applicable )',tx+c1+c2+2,y+4.7); doc.text('Value',tx+c1+c2+c3+2,y+4.7);
+  doc.setFont('times','normal');
+  y+=rh;
+  rows.forEach(r=>{
+    doc.rect(tx,y,c1,rh); doc.rect(tx+c1,y,c2,rh); doc.rect(tx+c1+c2,y,c3,rh); doc.rect(tx+c1+c2+c3,y,c4,rh);
+    doc.setFontSize(8);
+    doc.text(r[0],tx+2,y+4.7); doc.text(r[1],tx+c1+2,y+4.7); doc.text(r[2],tx+c1+c2+2,y+4.7);
+    y+=rh;
+  });
+  y+=5;
+
+  normal(doc,15,y,'(iv)  Noise level ( as applicable ) :',10); y+=7;
+  normal(doc,22,y,'(a)  Horn ( as installed on the vehicle ): ');
+  let nx=22+doc.getTextWidth('(a)  Horn ( as installed on the vehicle ): ');
+  dline(doc,nx,y+0.5,150); normal(doc,154,y,'dB(A)'); y+=7;
+  normal(doc,22,y,'(b)  Pass-by or Bystander\'s position: ');
+  nx=22+doc.getTextWidth('(b)  Pass-by or Bystander\'s position: ');
+  dline(doc,nx,y+0.5,150); normal(doc,154,y,'dB(A)'); y+=7;
+  normal(doc,22,y,'(c)  Driver-perceived / Operator\'s ear level ( tractors & CEV ): ');
+  nx=22+doc.getTextWidth('(c)  Driver-perceived / Operator\'s ear level ( tractors & CEV ): ');
+  dline(doc,nx,y+0.5,150); normal(doc,154,y,'dB(A)'); y+=12;
+
+  dline(doc,105,y,193); y+=5;
+  normal(doc,105,y,'( Facsimile Signature of Manufacturer or Importer or',8.5); y+=4.5;
+  normal(doc,105,y,'Registered Association, in case of E-rickshaw or E-cart )',8.5); y+=8;
+  y=wrap(doc,15,y,'Note 1 : This Form shall be issued with the signature of the manufacturer / importer / registered association duly printed in the Form itself by affixing facsimile signature in ink under the hand and seal, as applicable.',178,7.5);
+  y=wrap(doc,15,y,'Note 2 : In case of multiple combinations, values pertaining to any one test result in the test report to be provided.',178,7.5);
+  y=wrap(doc,15,y,'Note 3 : While printing Form 22, only the relevant pollutants applicable for the subject vehicle may be listed.',178,7.5);
+}
 
 /* ── GENERIC FORM ENGINE ── */
 function addGeneric(doc,d,def){
@@ -1070,33 +1679,122 @@ const DEFS={
 const G=k=>(doc,d)=>addGeneric(doc,d,DEFS[k]);
 
 /* ── MAIN ── */
+/* ---- Field registry ---- */
+const SECTIONS=[
+ {id:'vehicle', title:'Vehicle details'},
+ {id:'owner',   title:'Owner / Applicant details'},
+ {id:'buyer',   title:'Purchaser (transferee)'},
+ {id:'extra',   title:'Form-specific details'},
+ {id:'advocate',title:'Advocate / notary'},
+];
+
+const FIELDS={
+ reg_no:   {sec:'vehicle',label:'Registration No. *',ph:'JH05AB1234'},
+ veh_type: {sec:'vehicle',label:'Vehicle type',ph:'Motor Car / Motor Cycle'},
+ make:     {sec:'vehicle',label:'Make',ph:'Maruti / Honda / Tata'},
+ model:    {sec:'vehicle',label:'Model & year',ph:'Swift 2018'},
+ eng_no:   {sec:'vehicle',label:'Engine No.',ph:'K12M1234567'},
+ ch_no:    {sec:'vehicle',label:'Chassis No.',ph:'MA3FJEB1S00123456'},
+ sale_date:{sec:'vehicle',label:'Date of sale',type:'date'},
+ colour:   {sec:'vehicle',label:'Vehicle colour',ph:'Pearl White'},
+ rto:      {sec:'vehicle',label:'RTO / DTO office',ph:'District Transport Office, Jamshedpur'},
+
+ s_name:   {sec:'owner',label:'Full name *',ph:'Ramesh Kumar Sharma'},
+ s_father: {sec:'owner',label:"S/o — father's name",ph:'Shri Mohan Lal Sharma'},
+ s_addr:   {sec:'owner',label:'Address (house / street)',ph:'H.No. 45, Station Road',full:true},
+ s_town:   {sec:'owner',label:'Town',ph:'Jamshedpur'},
+ s_dist:   {sec:'owner',label:'District',ph:'East Singhbhum'},
+ mobile:   {sec:'owner',label:'Mobile number',ph:'98XXXXXXXX'},
+
+ b_name:   {sec:'buyer',label:'Full name *',ph:'Suresh Kumar Yadav'},
+ b_father: {sec:'buyer',label:"S/o — father's name",ph:'Shri Ram Prasad Yadav'},
+ b_addr:   {sec:'buyer',label:'Address (house / street)',ph:'Village Rampur, NH-33',full:true},
+ b_town:   {sec:'buyer',label:'Town',ph:'Baharagora'},
+ b_dist:   {sec:'buyer',label:'District',ph:'East Singhbhum'},
+
+ deceased:  {sec:'extra',label:'Deceased owner name — Form 31',ph:'Late Shri ...'},
+ relation:  {sec:'extra',label:'Relationship with deceased — Form 31',ph:'Son / Wife / Daughter'},
+ succession:{sec:'extra',label:'Proof of nomination / succession — Form 31',ph:'Succession certificate / Nomination in RC'},
+ new_addr:  {sec:'extra',label:'New address — Form 33',ph:'Full new address with district',full:true},
+ fin_name:  {sec:'extra',label:'Financier name & address — Form 33/34',ph:'HDFC Bank Ltd., Main Branch, Jamshedpur',full:true},
+ loan_no:   {sec:'extra',label:'Agreement / loan account No. — Form 34',ph:'LN-000123'},
+ dest_rto:  {sec:'extra',label:'Destination RTO — Form 28',ph:'RTO Ranchi'},
+ dest_state:{sec:'extra',label:'Destination state — Form 28',ph:'Jharkhand'},
+ prev_state:{sec:'extra',label:'Previously registered in state — Form 27',ph:'Bihar'},
+ email:     {sec:'extra',label:'Email — Form 27A',ph:'name@example.com'},
+
+ adv_at: {sec:'advocate',label:'Advocate at'},
+ state:  {sec:'advocate',label:'State'},
+};
+
+let VALS={adv_at:'Jamshedpur',state:'Jharkhand'};
+function el(id){return document.getElementById(id);}
+function g(id){return (VALS[id]||'').trim();}
+
+/* ---- Forms → fields mapping ---- */
+const VEH=['reg_no','veh_type','make','model','eng_no','ch_no','rto'];
+const OWN=['s_name','s_father','s_addr','s_town','s_dist'];
+const BUY=['b_name','b_father','b_addr','b_town','b_dist'];
+
 const PICKS=[
- {id:'pk29', gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true},
- {id:'pk30', gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true},
- {id:'pkAS', gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true},
- {id:'pkAP', gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true},
- {id:'pk28', gen:addForm28, label:'Form 28 \u2014 NOC'},
- {id:'pk25', gen:addForm25, label:'Form 25 \u2014 RC renewal'},
- {id:'pk26', gen:addForm26, label:'Form 26 \u2014 Duplicate RC'},
- {id:'pk20', gen:G('f20'), label:'Form 20 \u2014 New registration'},
- {id:'pk21', gen:G('f21'), label:'Form 21 \u2014 Sale certificate', needB:true},
- {id:'pk27', gen:G('f27'), label:'Form 27 \u2014 New regn. mark'},
- {id:'pk31', gen:G('f31'), label:'Form 31 \u2014 Transfer on death'},
- {id:'pk32', gen:G('f32'), label:'Form 32 \u2014 Auction transfer'},
- {id:'pk33', gen:G('f33'), label:'Form 33 \u2014 Change of address'},
- {id:'pk34', gen:G('f34'), label:'Form 34 \u2014 HP endorsement'},
- {id:'pk35', gen:G('f35'), label:'Form 35 \u2014 HP termination'},
- {id:'pk36', gen:G('f36'), label:'Form 36 \u2014 Fresh RC (financier)'},
- {id:'pk1',  gen:G('f1'),  label:'Form 1 \u2014 Fitness declaration'},
- {id:'pk2',  gen:G('f2'),  label:'Form 2 \u2014 LL / DL application'},
- {id:'pk4A', gen:G('f4A'), label:'Form 4A \u2014 IDP'},
- {id:'pk8',  gen:G('f8'),  label:'Form 8 \u2014 Add vehicle class'},
- {id:'pk9',  gen:G('f9'),  label:'Form 9 \u2014 DL renewal'},
- {id:'pkLLD',gen:G('fLLD'),label:'Form LLD \u2014 Duplicate licence'},
- {id:'pk16', gen:G('f16'), label:'Form 16 \u2014 Trade certificate'},
- {id:'pk45', gen:G('f45'), label:'Form 45 \u2014 Tourist permit'},
- {id:'pk46', gen:G('f46'), label:'Form 46 \u2014 National permit'},
- {id:'pk48', gen:G('f48'), label:'Form 48 \u2014 Tourist authorisation'},
+ {id:'pk29', gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true,
+  fields:[...VEH,'sale_date',...OWN,...BUY,'state']},
+ {id:'pk30', gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true,
+  fields:[...VEH,'sale_date',...OWN,...BUY,'mobile']},
+ {id:'pkAS', gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true,
+  fields:['reg_no','veh_type',...OWN,...BUY,'adv_at']},
+ {id:'pkAP', gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true,
+  fields:['reg_no','veh_type',...OWN,...BUY,'adv_at']},
+ {id:'pk28', gen:addForm28, label:'Form 28 \u2014 NOC',
+  fields:[...VEH,...OWN,'mobile','b_name','dest_rto','dest_state']},
+ {id:'pk25', gen:addForm25, label:'Form 25 \u2014 RC renewal',
+  fields:[...VEH,...OWN]},
+ {id:'pk26', gen:addForm26, label:'Form 26 \u2014 Duplicate RC',
+  fields:['reg_no','rto',...OWN,'mobile']},
+ {id:'pk20', gen:addForm20, label:'Form 20 \u2014 New registration',
+  fields:[...VEH,'colour',...OWN,'mobile']},
+ {id:'pk21', gen:addForm21, label:'Form 21 \u2014 Sale certificate', needB:true,
+  fields:[...VEH,...BUY,'s_name']},
+ {id:'pk22', gen:addForm22, label:'Form 22 \u2014 Roadworthiness',
+  fields:['make','model','ch_no','eng_no']},
+ {id:'pk23B',gen:addForm23B,label:'Form 23B \u2014 Temporary RC',
+  fields:[...VEH,'colour',...OWN,'mobile']},
+ {id:'pk27', gen:addForm27, label:'Form 27 \u2014 New regn. mark',
+  fields:[...VEH,'s_name','s_father','mobile','prev_state']},
+ {id:'pk27A',gen:addForm27A,label:'Form 27A \u2014 BH-Series',
+  fields:[...VEH,'s_name','s_father','mobile','email']},
+ {id:'pk31', gen:addForm31, label:'Form 31 \u2014 Transfer on death',
+  fields:[...VEH,...OWN,'mobile','deceased','relation','succession']},
+ {id:'pk32', gen:G('f32'), label:'Form 32 \u2014 Auction transfer',
+  fields:[...VEH,...OWN]},
+ {id:'pk33', gen:addForm33, label:'Form 33 \u2014 Change of address',
+  fields:['reg_no','rto',...OWN,'mobile','new_addr','fin_name']},
+ {id:'pk34', gen:addForm34, label:'Form 34 \u2014 HP endorsement',
+  fields:['reg_no','rto','s_name','mobile','fin_name','loan_no']},
+ {id:'pk35', gen:addForm35, label:'Form 35 \u2014 HP termination',
+  fields:['reg_no','rto','mobile']},
+ {id:'pk36', gen:G('f36'), label:'Form 36 \u2014 Fresh RC (financier)',
+  fields:[...VEH,...OWN,'fin_name']},
+ {id:'pk1',  gen:G('f1'),  label:'Form 1 \u2014 Fitness declaration',
+  fields:['rto',...OWN]},
+ {id:'pk2',  gen:G('f2'),  label:'Form 2 \u2014 LL / DL application',
+  fields:['rto',...OWN]},
+ {id:'pk4A', gen:G('f4A'), label:'Form 4A \u2014 IDP',
+  fields:['rto',...OWN]},
+ {id:'pk8',  gen:G('f8'),  label:'Form 8 \u2014 Add vehicle class',
+  fields:['rto',...OWN]},
+ {id:'pk9',  gen:G('f9'),  label:'Form 9 \u2014 DL renewal',
+  fields:['rto',...OWN]},
+ {id:'pkLLD',gen:G('fLLD'),label:'Form LLD \u2014 Duplicate licence',
+  fields:['rto',...OWN]},
+ {id:'pk16', gen:G('f16'), label:'Form 16 \u2014 Trade certificate',
+  fields:['rto',...OWN]},
+ {id:'pk45', gen:G('f45'), label:'Form 45 \u2014 Tourist permit',
+  fields:[...VEH,...OWN]},
+ {id:'pk46', gen:G('f46'), label:'Form 46 \u2014 National permit',
+  fields:[...VEH,...OWN]},
+ {id:'pk48', gen:G('f48'), label:'Form 48 \u2014 Tourist authorisation',
+  fields:[...VEH,...OWN]},
 ];
 
 function buildPicks(){
@@ -1105,25 +1803,29 @@ function buildPicks(){
   ).join('');
 }
 
-/* Show only the fields the selected forms actually need */
+function fieldHTML(id){
+  const f=FIELDS[id];
+  const v=(VALS[id]||'').replace(/"/g,'&quot;');
+  return `<div class="fld ${f.full?'full':''}"><label>${f.label}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" oninput="VALS['${id}']=this.value"></div>`;
+}
+
+/* Build the input sections from the union of selected forms' fields */
 function updateSections(){
-  const chosen=PICKS.filter(p=>document.getElementById(p.id)?.checked);
-  const anyB   = chosen.some(p=>p.needB);   // transfer / sale forms — need purchaser
-  const anyAdv = chosen.some(p=>p.adv);     // affidavits — need advocate
-  const any29_30 = ['pk29','pk30'].some(id=>document.getElementById(id)?.checked);
+  const chosen=PICKS.filter(p=>el(p.id)?.checked);
+  const need=new Set();
+  chosen.forEach(p=>(p.fields||[]).forEach(f=>need.add(f)));
+  const anyB=chosen.some(p=>p.needB);
 
-  document.getElementById('sellerH4').textContent = anyB ? 'Seller (transferor)' : 'Owner / Applicant details';
-  document.getElementById('fsBuyer').style.display = anyB ? '' : 'none';
-  document.getElementById('fsAdv').style.display   = anyAdv ? '' : 'none';
-  document.getElementById('fldSale').style.display = (anyB||any29_30) ? '' : 'none';
-
-  /* renumber visible sections 0,1,2,... */
-  let n=0;
-  document.querySelectorAll('#tool .fset').forEach(fs=>{
-    if(fs.style.display==='none') return;
-    const numEl=fs.querySelector('.fset-num');
-    if(numEl) numEl.textContent=n++;
+  let html=''; let n=1;
+  const fieldOrder=Object.keys(FIELDS);
+  SECTIONS.forEach(s=>{
+    const ids=fieldOrder.filter(k=>FIELDS[k].sec===s.id && need.has(k));
+    if(!ids.length) return;
+    const title=(s.id==='owner') ? (anyB?'Seller (transferor)':'Owner / Applicant details') : s.title;
+    html+=`<div class="fset"><div class="fset-label"><span class="fset-num">${n++}</span><h4>${title}</h4></div><div class="grid2">${ids.map(fieldHTML).join('')}</div></div>`;
   });
+  document.getElementById('dynFields').innerHTML = html ||
+    '<p style="color:var(--txt-2);font-size:13.5px;padding:6px 0 14px">Select at least one form above to see its fields.</p>';
 }
 
 buildPicks();
@@ -1134,39 +1836,37 @@ function generatePDF(blank){
   const btn=document.getElementById('genBtn');
   const bbtn=document.getElementById('blankBtn');
 
-  const chosen=PICKS.filter(p=>document.getElementById(p.id)?.checked);
+  const chosen=PICKS.filter(p=>el(p.id)?.checked);
   if(!chosen.length){
     st.textContent='Select at least one form to include.';
     st.className='status err';
     return;
   }
 
-  let d;
+  const need=new Set();
+  chosen.forEach(p=>(p.fields||[]).forEach(f=>need.add(f)));
+
+  let d={};
+  const allIds=Object.keys(FIELDS);
   if(blank){
-    d={reg_no:'',veh_type:'',make:'',model:'',eng_no:'',ch_no:'',sale_date:'',
-       rto:'',state:'',s_name:'',s_father:'',s_addr:'',s_town:'',s_dist:'',
-       b_name:'',b_father:'',b_addr:'',b_town:'',b_dist:'',adv_at:''};
+    allIds.forEach(k=>d[k]='');
   } else {
-    const sn=g('s_name'),rn=g('reg_no'),bn=g('b_name');
+    const needsReg=need.has('reg_no');
     const needsBuyer=chosen.some(p=>p.needB);
-    if(!sn||!rn){
-      st.textContent='Registration No. and Seller / Owner name are required.';
-      st.className='status err';
-      return;
+    if(!g('s_name')){
+      st.textContent='Owner / Seller name is required.'; st.className='status err'; return;
     }
-    if(needsBuyer && !bn){
-      st.textContent='Purchaser name is required for the selected transfer / sale forms.';
-      st.className='status err';
-      return;
+    if(needsReg && !g('reg_no')){
+      st.textContent='Registration No. is required for the selected forms.'; st.className='status err'; return;
     }
-    d={
-      reg_no:rn,veh_type:g('veh_type')||'Motor Vehicle',make:g('make'),model:g('model'),
-      eng_no:g('eng_no'),ch_no:g('ch_no'),sale_date:g('sale_date'),
-      rto:g('rto')||'District Transport Office, Jamshedpur',state:g('state')||'Jharkhand',
-      s_name:sn,s_father:g('s_father'),s_addr:g('s_addr'),s_town:g('s_town'),s_dist:g('s_dist'),
-      b_name:bn,b_father:g('b_father'),b_addr:g('b_addr'),b_town:g('b_town'),b_dist:g('b_dist'),
-      adv_at:g('adv_at')||'Jamshedpur',
-    };
+    if(needsBuyer && !g('b_name')){
+      st.textContent='Purchaser name is required for the selected transfer / sale forms.'; st.className='status err'; return;
+    }
+    allIds.forEach(k=>d[k]=g(k));
+    d.veh_type=d.veh_type||'Motor Vehicle';
+    d.rto=d.rto||'District Transport Office, Jamshedpur';
+    d.state=d.state||'Jharkhand';
+    d.adv_at=d.adv_at||'Jamshedpur';
   }
 
   btn.disabled=true; if(bbtn) bbtn.disabled=true;
@@ -1175,15 +1875,15 @@ function generatePDF(blank){
   setTimeout(()=>{
     try{
       const doc=new jsPDF({unit:'mm',format:'a4'});
-      doc.setFont('times','normal');
+      doc.setFont('helvetica','normal');
       chosen.forEach((p,i)=>{
         if(i>0) doc.addPage();
-        doc.setFont('times','normal');
+        doc.setFont('helvetica','normal');
         p.gen(doc,d);
       });
       const fname = blank
         ? 'RTO_Blank_Forms.pdf'
-        : 'RTO_Forms_'+(d.reg_no||'set').replace(/\s+/g,'')+'.pdf';
+        : 'RTO_Forms_'+(d.reg_no||d.s_name||'set').replace(/\s+/g,'_')+'.pdf';
       doc.save(fname);
       st.textContent = blank
         ? 'Blank forms downloaded \u2014 '+chosen.length+' empty form(s) ready to print and fill by hand.'
