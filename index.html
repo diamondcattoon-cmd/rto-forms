@@ -933,6 +933,12 @@ function addForm25(doc,d){
   x=22+doc.getTextWidth('son / wife / daughter of ');
   dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
 
+  // Mobile number
+  normal(doc,15,y,'Mobile No.: ');
+  x=15+doc.getTextWidth('Mobile No.: ');
+  dline(doc,x,y+0.5,80); if(d.mobile){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.mobile,x+2,y);doc.setFont('helvetica','normal');}
+  y+=8;
+
   y=lrow(doc,y,'2.  Full address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
   y=lrow(doc,y,'3.  Registration mark of the vehicle:  ',d.reg_no);
   y=lrow(doc,y,'4.  Class of vehicle:  ',d.veh_type);
@@ -1900,7 +1906,7 @@ const PICKS=[
  {id:'pk28', pages:2, gen:addForm28, label:'Form 28 \u2014 NOC',
   fields:[...VEH,...OWN,'mobile','b_name','dest_rto','dest_state']},
  {id:'pk25', pages:2, gen:addForm25, label:'Form 25 \u2014 RC renewal',
-  fields:[...VEH,...OWN]},
+  fields:['reg_no','veh_type','make','model','eng_no','ch_no','rto',...OWN,'mobile']},
  {id:'pk26', pages:2, gen:addForm26, label:'Form 26 \u2014 Duplicate RC',
   fields:['reg_no','rto',...OWN,'mobile']},
  {id:'pk20', pages:4, gen:addForm20, label:'Form 20 \u2014 New registration',
