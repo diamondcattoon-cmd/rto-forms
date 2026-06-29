@@ -912,110 +912,142 @@ function addForm28(doc,d){
 
 /* ── FORM 25 — RC RENEWAL (full official content, 2 pages) ── */
 function addForm25(doc,d){
-  /* ---- PAGE 1 : APPLICATION ---- */
-  center(doc,16,'FORM - 25',15,true);
-  center(doc,22,'[ See Rule 52 ]',9.5);
-  center(doc,28,'APPLICATION FOR RENEWAL OF CERTIFICATE OF REGISTRATION',10.5,true);
-  center(doc,33,'OF A MOTOR VEHICLE, OTHER THAN A TRANSPORT VEHICLE',10.5,true);
-  doc.setLineWidth(0.3);doc.line(15,36,195,36);
-  let y=44;
-  normal(doc,15,y,'To,'); y+=5;
-  normal(doc,15,y,'The Registering Authority'); y+=6;
-  y=lrow(doc,y,'',d.rto); y+=3;
-  y=wrap(doc,15,y,'I / We intend to renew the certificate of registration of the motor vehicle, the particulars of which are given below :-',178,11);
-  y+=4;
+  /* ══ FORM 25 — Official format per Rule 52(1), 2 pages ══ */
+  const reg_as=(d.reg_as||'').toLowerCase();
+  const isNew=reg_as.includes('new')?'Yes':'';
+  const isArmy=reg_as.includes('army')?'Yes':'';
+  const isImport=reg_as.includes('import')?'Yes':'';
 
-  // 1. owner + relation
-  normal(doc,15,y,'1.  Full name of the registered owner ');
-  let x=15+doc.getTextWidth('1.  Full name of the registered owner ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_name); y+=7;
-  normal(doc,22,y,'son / wife / daughter of ');
-  x=22+doc.getTextWidth('son / wife / daughter of ');
-  dline(doc,x,y+0.5,193); bold(doc,x+2,y,d.s_father); y+=8;
+  /* ---- PAGE 1 ---- */
+  center(doc,16,'FORM 25',14,true);
+  center(doc,22,'[ Refer Rule 52(1) ]',9.5);
+  center(doc,29,'FORM OF APPLICATION FOR RENEWAL OF CERTIFICATE OF',10.5,true);
+  center(doc,34,'REGISTRATION OF A MOTOR VEHICLE',10.5,true);
+  doc.setLineWidth(0.35);doc.line(15,37,195,37);
 
-  // Mobile number
-  normal(doc,15,y,'Mobile No.: ');
-  x=15+doc.getTextWidth('Mobile No.: ');
-  dline(doc,x,y+0.5,80); if(d.mobile){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(d.mobile,x+2,y);doc.setFont('helvetica','normal');}
-  y+=8;
+  let y=45;
+  normal(doc,15,y,'To'); y+=6;
+  normal(doc,15,y,'The Registering Authority,'); y+=7;
+  dline(doc,15,y+0.5,193); if(d.rto){bold(doc,17,y,d.rto);} y+=10;
 
-  y=lrow(doc,y,'2.  Full address:  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''));
-  y=lrow(doc,y,'3.  Registration mark of the vehicle:  ',d.reg_no);
-  y=lrow(doc,y,'4.  Class of vehicle:  ',d.veh_type);
-  y=lrow(doc,y,'5.  Maker\'s name:  ',d.make);
-  y=lrow(doc,y,'6.  Model and year of manufacture:  ',d.model);
-  y=lrow(doc,y,'7.  Chassis number:  ',d.ch_no);
-  y=lrow(doc,y,'8.  Engine number / motor number:  ',d.eng_no);
-  y+=2;
+  /* Intro line: I, ___ having mobile ___ */
+  normal(doc,15,y,'I,');
+  let x=15+doc.getTextWidth('I,')+2;
+  dline(doc,x,y+0.5,110); if(d.s_name){bold(doc,x+2,y,d.s_name);}
+  normal(doc,114,y,'having mobile number');
+  x=114+doc.getTextWidth('having mobile number')+2;
+  dline(doc,x,y+0.5,193); if(d.mobile){bold(doc,x+2,y,d.mobile);}
+  y+=7;
+  y=wrap(doc,15,y,'hereby apply for the renewal of the certificate of registration which is attached, the particulars of which are as follows :\u2014',180,10.5);
+  y+=3;
 
-  normal(doc,15,y,'9.  Whether the vehicle is covered by a valid certificate of insurance:   Yes / No'); y+=8;
-  normal(doc,22,y,'(a)  Name of the insurance company: ');
-  x=22+doc.getTextWidth('(a)  Name of the insurance company: ');
-  dline(doc,x,y+0.5,193); y+=8;
-  normal(doc,22,y,'(b)  Policy number: ');
-  x=22+doc.getTextWidth('(b)  Policy number: ');
-  dline(doc,x,y+0.5,120);
-  normal(doc,124,y,'(c)  Valid up to: ');
-  x=124+doc.getTextWidth('(c)  Valid up to: ');
-  dline(doc,x,y+0.5,193); y+=9;
+  /* (a)-(d) */
+  normal(doc,15,y,'(a)  Register No.');
+  x=15+doc.getTextWidth('(a)  Register No.')+2;
+  dline(doc,x,y+0.5,120); if(d.reg_no){bold(doc,x+2,y,d.reg_no);} y+=8;
 
-  normal(doc,15,y,'10. Pollution Under Control (PUC) certificate No. and validity:'); y+=8;
-  dline(doc,22,y+0.5,193); y+=9;
+  normal(doc,15,y,'(b)  Date of issue');
+  x=15+doc.getTextWidth('(b)  Date of issue')+2;
+  dline(doc,x,y+0.5,120); if(d.date_issue){bold(doc,x+2,y,fmtDate(d.date_issue));} y+=8;
 
-  normal(doc,15,y,'11. Whether motor vehicle tax has been paid up to date:   Yes / No'); y+=8;
-  normal(doc,22,y,'Tax paid up to: ');
-  x=22+doc.getTextWidth('Tax paid up to: ');
-  dline(doc,x,y+0.5,120); y+=12;
+  normal(doc,15,y,'(c)  Date of expiry');
+  x=15+doc.getTextWidth('(c)  Date of expiry')+2;
+  dline(doc,x,y+0.5,120); if(d.date_expiry){bold(doc,x+2,y,fmtDate(d.date_expiry));} y+=8;
 
-  y=wrap(doc,15,y,'I / We solemnly declare that the above statement is true and request that the certificate of registration may kindly be renewed.',178,11);
-  y+=10;
+  normal(doc,15,y,'(d)  Registering authority by which the');y+=6;
+  normal(doc,22,y,'certificate was issued / last renewed');
+  x=22+doc.getTextWidth('certificate was issued / last renewed')+2;
+  dline(doc,x,y+0.5,193); if(d.rto){bold(doc,x+2,y,d.rto);} y+=10;
 
-  normal(doc,15,y,'Date: _____________________');
-  normal(doc,120,y,'(S)  ('); dline(doc,133,y+0.5,188); normal(doc,190,y,')'); y+=5;
-  normal(doc,120,y,'Signature / thumb impression of the Owner'); y+=12;
+  /* present address declaration */
+  const addrFull=(d.s_addr||'')+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:'');
+  y=wrap(doc,15,y,'My present address is '+(addrFull||'..............................')+'. If this address is not entered in the certificate of registration, I do / do not wish that it should be so entered. The renewal of the certificate has not been refused by any registering authority.',180,10.5);
+  y+=3;
+  y=wrap(doc,15,y,'I hereby declare that the certificate of registration has not been cancelled or suspended by any registering authority.',180,10.5);
+  y+=5;
 
-  bold(doc,15,y,'Note:',9.5);
-  normal(doc,28,y,'The certificate of registration and proof of fee paid should be enclosed with this application.',9.5);
+  /* Numbered fields 1-13 */
+  const f25row=(num,label,val)=>{
+    y=newPageIfNeeded(doc,y,8);
+    normal(doc,15,y,num+'.  '+label);
+    const lx=15+doc.getTextWidth(num+'.  '+label)+2;
+    dline(doc,lx,y+0.5,193);
+    if(val){bold(doc,lx+2,y,val);}
+    y+=8;
+  };
 
-  /* ---- PAGE 2 : OFFICE ENDORSEMENT + RECEIPT ---- */
-  doc.addPage();
-  doc.setFont('helvetica','normal');
-  center(doc,18,'FORM - 25  (Page 2)',12,true);
-  center(doc,24,'FOR OFFICE USE ONLY',9.5);
-  doc.setLineWidth(0.3);doc.line(15,27,195,27);
+  f25row('1','Class of vehicle',d.veh_type);
 
-  let z=38;
-  z=secline(doc,z,'OFFICE  ENDORSEMENT'); z+=4;
-  normal(doc,15,z,'The certificate of registration of vehicle No. ');
-  let zx=15+doc.getTextWidth('The certificate of registration of vehicle No. ');
-  dline(doc,zx,z+0.5,140); bold(doc,zx+2,z,d.reg_no);
-  normal(doc,142,z,' is hereby renewed'); z+=8;
-  normal(doc,15,z,'up to ');
-  zx=15+doc.getTextWidth('up to ');
-  dline(doc,zx,z+0.5,100);
-  normal(doc,104,z,'subject to the conditions prescribed.'); z+=10;
-  z=lrowPair(doc,z,'Office of the:  ','','District:  ','');
-  z=lrowPair(doc,z,'No.:  ','','Date:  ',''); z+=14;
-  normal(doc,120,z,'Signature of Registering Authority'); z+=5;
-  normal(doc,120,z,'(Office Seal)'); z+=16;
+  /* 2. registered as (a)(b)(c) */
+  y=newPageIfNeeded(doc,y,26);
+  normal(doc,15,y,'2.  The motor vehicle was registered as'); y+=7;
+  normal(doc,22,y,'(a)  a new vehicle');
+  x=22+doc.getTextWidth('(a)  a new vehicle')+2;
+  dline(doc,x,y+0.5,120); if(isNew){bold(doc,x+2,y,isNew);} y+=7;
+  normal(doc,22,y,'(b)  ex army vehicle');
+  x=22+doc.getTextWidth('(b)  ex army vehicle')+2;
+  dline(doc,x,y+0.5,120); if(isArmy){bold(doc,x+2,y,isArmy);} y+=7;
+  normal(doc,22,y,'(c)  imported vehicle');
+  x=22+doc.getTextWidth('(c)  imported vehicle')+2;
+  dline(doc,x,y+0.5,120); if(isImport){bold(doc,x+2,y,isImport);} y+=8;
 
-  // cut line
-  doc.setLineDashPattern([2,2],0); doc.setLineWidth(0.3);
-  doc.line(15,z,195,z);
-  doc.setLineDashPattern([],0);
-  normal(doc,98,z+4,'\u2702',9); z+=14;
+  f25row('3','Type of body',d.body_type);
+  f25row('4',"Maker's name",d.make);
+  f25row('5','Month and year of manufacture',d.model);
+  f25row('6','Number of cylinders',d.cylinders);
+  f25row('7','Cubic capacity / horse power',d.cubic_cap);
+  f25row('8',"Maker's classification",d.maker_class);
+  f25row('9','Chassis No. (Affix pencil print)',d.ch_no);
+  f25row('10','Engine No. or motor number (in case of BOV)',d.eng_no);
+  f25row('11','Seating capacity (including driver)',d.seating);
+  f25row('11A','Standing capacity',d.standing);
+  f25row('11B','Sleeper capacity',d.sleeper);
+  f25row('12','Unladen weight',d.unladen);
+  f25row('13','Fuel used',d.fuel);
+  y+=3;
 
-  z=secline(doc,z,'RECEIPT'); z+=4;
-  normal(doc,15,z,'Received the application in Form 25 for renewal of the certificate of registration of'); z+=7;
-  normal(doc,15,z,'vehicle No. ');
-  zx=15+doc.getTextWidth('vehicle No. ');
-  dline(doc,zx,z+0.5,100); bold(doc,zx+2,z,d.reg_no);
-  normal(doc,104,z,' from Shri / Smt. '); 
-  zx=104+doc.getTextWidth(' from Shri / Smt. ');
-  dline(doc,zx,z+0.5,193); bold(doc,zx+2,z,d.s_name); z+=10;
-  z=lrowPair(doc,z,'Fee received:  Rs. ','','Receipt No.:  ',''); z+=14;
-  normal(doc,15,z,'Date: _____________________');
-  normal(doc,120,z,'Signature of the Receiving Official');
+  y=newPageIfNeeded(doc,y,16);
+  normal(doc,15,y,'I enclose the certificate of insurance for perusal and return.'); y+=7;
+  normal(doc,15,y,'I have paid the fee of Rs. ____________________'); y+=12;
+
+  normal(doc,15,y,'Date : ___________________');
+  normal(doc,108,y,'Signature or thumb impression of the applicant'); y+=8;
+
+  /* ---- PAGE 2 ---- */
+  doc.addPage(); y=20;
+  normal(doc,15,y,'Note :  The motor vehicle above described is not subject to an agreement of'); y+=6;
+  normal(doc,30,y,'hire-purchase, lease or hypothecation.'); y+=9;
+  normal(doc,15,y,'The vehicle is :'); y+=8;
+
+  normal(doc,15,y,'*(i)');
+  x=15+doc.getTextWidth('*(i)')+2;
+  dline(doc,x,y+0.5,80);
+  normal(doc,84,y,'Subject to hire-purchase agreement / lease agreement with'); y+=9;
+  normal(doc,15,y,'*(ii)');
+  x=15+doc.getTextWidth('*(ii)')+2;
+  dline(doc,x,y+0.5,80);
+  normal(doc,84,y,'Subject to hypothecation in favour of'); y+=9;
+  normal(doc,15,y,'* Strike out whichever is inapplicable',9.5); y+=13;
+
+  normal(doc,110,y,'Signature or thumb impression of the'); y+=5;
+  normal(doc,120,y,'registered owner'); y+=14;
+
+  bold(doc,15,y,'Specimen signature or thumb impression of the registered owner :'); y+=11;
+  normal(doc,15,y,'1.'); dline(doc,24,y+0.5,110); y+=12;
+  normal(doc,15,y,'2.'); dline(doc,24,y+0.5,110); y+=12;
+  normal(doc,15,y,'3.'); dline(doc,24,y+0.5,110); y+=16;
+
+  doc.setLineWidth(0.4);doc.line(15,y,195,y); y+=9;
+  center(doc,y,'CERTIFICATE',13,true); y+=11;
+  y=wrap(doc,15,y,'Inspected the vehicle \u2014 verified the chassis number and engine number.',180,10.5);
+  y+=3;
+  y=wrap(doc,15,y,'Certified that the particulars contained in the application and the corresponding particulars declared in the certificate of registration of the vehicle are true and that the vehicle complies with the requirements of the Motor Vehicles Act, 1988, and rules made thereunder.',180,10.5);
+  y+=14;
+  normal(doc,112,y,'Signature of the inspecting authority'); y+=10;
+  normal(doc,15,y,'Name');
+  dline(doc,15+doc.getTextWidth('Name')+3,y+0.5,150); y+=9;
+  normal(doc,15,y,'Designation');
+  dline(doc,15+doc.getTextWidth('Designation')+3,y+0.5,150);
 }
 
 /* ── FORM 26 — DUPLICATE RC (official 2-page) ── */
@@ -1880,6 +1912,18 @@ const FIELDS={
  dest_state:{sec:'extra',label:'Destination state — Form 28',ph:'Jharkhand'},
  prev_state:{sec:'extra',label:'Previously registered in state — Form 27',ph:'Bihar'},
  email:     {sec:'extra',label:'Email — Form 27A',ph:'name@example.com'},
+ date_issue:{sec:'extra',label:'RC date of issue — Form 25',type:'date'},
+ date_expiry:{sec:'extra',label:'RC date of expiry — Form 25',type:'date'},
+ reg_as:    {sec:'extra',label:'Registered as — Form 25',ph:'New / Ex-army / Imported'},
+ body_type: {sec:'extra',label:'Type of body — Form 25',ph:'Saloon / Sedan / Two-wheeler'},
+ cylinders: {sec:'extra',label:'Number of cylinders — Form 25',ph:'4'},
+ cubic_cap: {sec:'extra',label:'Cubic capacity / HP — Form 25',ph:'1197 cc'},
+ maker_class:{sec:'extra',label:"Maker's classification — Form 25",ph:'LXi / VXi'},
+ seating:   {sec:'extra',label:'Seating capacity (incl. driver) — Form 25',ph:'5'},
+ standing:  {sec:'extra',label:'Standing capacity — Form 25',ph:'0'},
+ sleeper:   {sec:'extra',label:'Sleeper capacity — Form 25',ph:'0'},
+ unladen:   {sec:'extra',label:'Unladen weight (kg) — Form 25',ph:'1050'},
+ fuel:      {sec:'extra',label:'Fuel used — Form 25',ph:'Petrol / Diesel / CNG / Electric'},
 
  adv_at: {sec:'advocate',label:'Advocate at'},
  state:  {sec:'advocate',label:'State'},
@@ -1906,7 +1950,7 @@ const PICKS=[
  {id:'pk28', pages:2, gen:addForm28, label:'Form 28 \u2014 NOC',
   fields:[...VEH,...OWN,'mobile','b_name','dest_rto','dest_state']},
  {id:'pk25', pages:2, gen:addForm25, label:'Form 25 \u2014 RC renewal',
-  fields:['reg_no','veh_type','make','model','eng_no','ch_no','rto',...OWN,'mobile']},
+  fields:['reg_no','date_issue','date_expiry','rto','veh_type','reg_as','body_type','make','model','cylinders','cubic_cap','maker_class','ch_no','eng_no','seating','standing','sleeper','unladen','fuel',...OWN,'mobile']},
  {id:'pk26', pages:2, gen:addForm26, label:'Form 26 \u2014 Duplicate RC',
   fields:['reg_no','rto',...OWN,'mobile']},
  {id:'pk20', pages:4, gen:addForm20, label:'Form 20 \u2014 New registration',
