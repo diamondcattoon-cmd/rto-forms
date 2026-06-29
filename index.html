@@ -10,6 +10,10 @@
 <meta name="author" content="RTO Forms India">
 <link rel="canonical" href="https://rto-forms.onrender.com/">
 <meta name="theme-color" content="#142850">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RTO Forms">
 
 <!-- Open Graph (WhatsApp / Facebook share) -->
 <meta property="og:type" content="website">
@@ -243,8 +247,17 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .ftr-links{display:flex;gap:28px;flex-wrap:wrap}
 .ftr-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:13px;transition:color .15s}
 .ftr-links a:hover{color:#fff}
-.ftr-bottom{padding-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.35)}
+.ftr-disclaimer{padding:10px 0 16px;font-size:12px;color:rgba(255,255,255,.5);border-bottom:1px dotted rgba(255,255,255,.1);margin-bottom:6px;line-height:1.6}
+.ftr-bottom{padding-top:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.35)}
 .ftr-bottom .mono{font-size:11px}
+
+/* ─── PRINT ─── */
+@media print{
+  .hdr,.hero,.hero-stats,.hero-cta,.hdr-nav,.tool-wrap,.sec-eyebrow,
+  .ftr,.faq-list,.steps,.cat-tabs,.search-row,.forms-grid,.mobile-fab,
+  #how,#faq,#forms,.dotrule{display:none!important}
+  body{background:#fff;color:#000}
+}
 
 /* focus visibility */
 a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var(--stamp);outline-offset:2px}
@@ -323,7 +336,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
       <div class="gen-row">
         <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate selected forms — Download PDF</button>
         <button class="btn-blank" id="blankBtn" onclick="generatePDF(true)">Download blank forms</button>
-        <span class="gen-note">Output: <span class="mono">4 pages · A4 · print-ready</span></span>
+        <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote">select forms above</span></span>
       </div>
       <div class="status" id="statusMsg" role="status"></div>
 
@@ -431,16 +444,21 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <a href="#faq">FAQ</a>
       </div>
     </div>
+    <div class="ftr-disclaimer">
+      ⚠️ This is an independent, unofficial tool — NOT an official government website. Forms are based on CMV Rules 1989. Always verify with your RTO/DTO before submission.
+    </div>
     <div class="ftr-bottom">
       <span>Fill Form 29, 30, 25, 26, 27, 28, 31, 33, 34, 35 &amp; more online — Built in Jamshedpur, Jharkhand</span>
-      <span class="mono">v1.0 — Forms as per CMV Rules 1989</span>
+      <span class="mono">v1.1 — Forms as per CMV Rules 1989</span>
     </div>
   </div>
 </footer>
 
 <script>
 /* ════════ FORMS CATALOG DATA ════════ */
-const USE_LOCAL=false; /* set true after uploading the forms/ folder to your repo */
+/* Auto-detect local forms folder */
+let USE_LOCAL=false;
+(async()=>{try{const r=await fetch('forms/FORM-29.pdf',{method:'HEAD'});USE_LOCAL=r.ok;if(USE_LOCAL)renderForms();}catch(e){USE_LOCAL=false;}})();
 const FORMS=[
  {num:'1',name:'Application-cum-Declaration of Physical Fitness',desc:'Self-declaration of medical fitness for learner\'s licence — Rule 5(1)',cat:'licence',fill:'pk1',pdfs:['FORM-1.pdf']},
  {num:'1A',name:'Medical Certificate',desc:'Fitness certificate filled by a registered medical practitioner — Rule 5(2)',cat:'licence',fmt:true,pdfs:['FORM-1A.pdf']},
@@ -562,19 +580,32 @@ function dline(doc,x1,y,x2){
   doc.line(x1,y,x2,y);
   doc.setLineDashPattern([],0);
 }
-function bold(doc,x,y,t,sz){doc.setFont('times','bold');doc.setFontSize(sz||11);doc.text(String(t),x,y);doc.setFont('times','normal');}
-function normal(doc,x,y,t,sz){doc.setFont('times','normal');doc.setFontSize(sz||11);doc.text(String(t),x,y);}
-function center(doc,y,t,sz,b){doc.setFont('times',b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(t),105,y,{align:'center'});doc.setFont('times','normal');}
-function wrap(doc,x,y,t,w,sz){doc.setFont('times','normal');doc.setFontSize(sz||10);const L=doc.splitTextToSize(String(t),w);doc.text(L,x,y);return y+L.length*(sz?sz*0.46:4.6);}
+function bold(doc,x,y,t,sz){doc.setFont('helvetica','bold');doc.setFontSize(sz||11);doc.text(String(t),x,y);doc.setFont('helvetica','normal');}
+function normal(doc,x,y,t,sz){doc.setFont('helvetica','normal');doc.setFontSize(sz||11);doc.text(String(t),x,y);}
+function center(doc,y,t,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(t),105,y,{align:'center'});doc.setFont('helvetica','normal');}
+function wrap(doc,x,y,t,w,sz){
+  doc.setFont('helvetica','normal');doc.setFontSize(sz||10);
+  const lh=(sz||10)*0.45;
+  const L=doc.splitTextToSize(String(t),w||178);
+  L.forEach(line=>{y=newPageIfNeeded(doc,y,lh+2);doc.text(line,x,y);y+=lh;});
+  return y;
+}
 function lrow(doc,y,label,val,sz){
-  doc.setFont('times','normal');doc.setFontSize(sz||11);
+  const fsz=sz||11;
+  y=newPageIfNeeded(doc,y,fsz*0.5+3);
+  doc.setFont('helvetica','normal');doc.setFontSize(fsz);
   doc.text(label,15,y);
   const lx=15+doc.getTextWidth(label)+1;
+  const maxW=Math.max(193-lx-4,40);
+  const vStr=String(val||'');
+  const vL=vStr?doc.splitTextToSize(vStr,maxW):[];
   dline(doc,lx,y+0.5,193);
-  if(val){doc.setFont('times','bold');doc.text(String(val),lx+2,y);doc.setFont('times','normal');}
+  if(vL.length){doc.setFont('helvetica','bold');doc.text(vL[0],lx+2,y);doc.setFont('helvetica','normal');}
+  for(let i=1;i<vL.length;i++){y+=7;y=newPageIfNeeded(doc,y,7);dline(doc,15,y+0.5,193);doc.setFont('helvetica','bold');doc.text(vL[i],17,y);doc.setFont('helvetica','normal');}
   return y+7;
 }
 function secline(doc,y,title){
+  y=newPageIfNeeded(doc,y,14);
   doc.setLineWidth(0.5);doc.line(15,y,195,y);
   center(doc,y+6,title,11.5,true);
   return y+11;
@@ -632,15 +663,16 @@ function addForm29(doc,d){
 }
 
 function lrowPair(doc,y,l1,v1,l2,v2){
-  doc.setFont('times','normal');doc.setFontSize(11);
+  y=newPageIfNeeded(doc,y,9);
+  doc.setFont('helvetica','normal');doc.setFontSize(11);
   doc.text(l1,15,y);
   let x1=15+doc.getTextWidth(l1)+1;
   dline(doc,x1,y+0.5,100);
-  if(v1){doc.setFont('times','bold');doc.text(String(v1),x1+2,y);doc.setFont('times','normal');}
+  if(v1){const vL=doc.splitTextToSize(String(v1),100-x1-2);doc.setFont('helvetica','bold');doc.text(vL[0],x1+2,y);doc.setFont('helvetica','normal');}
   doc.text(l2,105,y);
   let x2=105+doc.getTextWidth(l2)+1;
   dline(doc,x2,y+0.5,193);
-  if(v2){doc.setFont('times','bold');doc.text(String(v2),x2+2,y);doc.setFont('times','normal');}
+  if(v2){const vL=doc.splitTextToSize(String(v2),193-x2-2);doc.setFont('helvetica','bold');doc.text(vL[0],x2+2,y);doc.setFont('helvetica','normal');}
   return y+7;
 }
 
@@ -941,7 +973,7 @@ function addForm25(doc,d){
 
   /* ---- PAGE 2 : OFFICE ENDORSEMENT + RECEIPT ---- */
   doc.addPage();
-  doc.setFont('times','normal');
+  doc.setFont('helvetica','normal');
   center(doc,18,'FORM - 25  (Page 2)',12,true);
   center(doc,24,'FOR OFFICE USE ONLY',9.5);
   doc.setLineWidth(0.3);doc.line(15,27,195,27);
@@ -1633,10 +1665,10 @@ function addForm22(doc,d){
   doc.setLineWidth(0.3);
   // header row
   doc.rect(tx,y,c1,rh); doc.rect(tx+c1,y,c2,rh); doc.rect(tx+c1+c2,y,c3,rh); doc.rect(tx+c1+c2+c3,y,c4,rh);
-  doc.setFont('times','bold');doc.setFontSize(8);
+  doc.setFont('helvetica','bold');doc.setFontSize(8);
   doc.text('Sr.',tx+2,y+4.7); doc.text('Pollutant ( as applicable )',tx+c1+2,y+4.7);
   doc.text('Units ( as applicable )',tx+c1+c2+2,y+4.7); doc.text('Value',tx+c1+c2+c3+2,y+4.7);
-  doc.setFont('times','normal');
+  doc.setFont('helvetica','normal');
   y+=rh;
   rows.forEach(r=>{
     doc.rect(tx,y,c1,rh); doc.rect(tx+c1,y,c2,rh); doc.rect(tx+c1+c2,y,c3,rh); doc.rect(tx+c1+c2+c3,y,c4,rh);
@@ -1670,9 +1702,9 @@ function addGeneric(doc,d,def){
   let y=16;
   center(doc,y,'FORM - '+def.n,15,true); y+=6;
   center(doc,y,'[ '+def.rule+' ]',9.5); y+=6;
-  doc.setFont('times','bold');doc.setFontSize(10.5);
+  doc.setFont('helvetica','bold');doc.setFontSize(10.5);
   doc.splitTextToSize(def.title,178).forEach(t=>{doc.text(t,105,y,{align:'center'});y+=5;});
-  doc.setFont('times','normal');
+  doc.setFont('helvetica','normal');
   doc.setLineWidth(0.3);doc.line(15,y,195,y); y+=8;
   normal(doc,15,y,'To,'); y+=5;
   normal(doc,15,y,'The Registering Authority'); y+=6;
@@ -1857,63 +1889,63 @@ const OWN=['s_name','s_father','s_addr','s_town','s_dist'];
 const BUY=['b_name','b_father','b_addr','b_town','b_dist'];
 
 const PICKS=[
- {id:'pk29', gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true,
+ {id:'pk29', pages:1, gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true,
   fields:[...VEH,'sale_date',...OWN,...BUY,'state']},
- {id:'pk30', gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true,
+ {id:'pk30', pages:2, gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true,
   fields:[...VEH,'sale_date',...OWN,...BUY,'mobile']},
- {id:'pkAS', gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true,
+ {id:'pkAS', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true,
   fields:['reg_no','veh_type',...OWN,...BUY,'adv_at']},
- {id:'pkAP', gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true,
+ {id:'pkAP', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true,
   fields:['reg_no','veh_type',...OWN,...BUY,'adv_at']},
- {id:'pk28', gen:addForm28, label:'Form 28 \u2014 NOC',
+ {id:'pk28', pages:2, gen:addForm28, label:'Form 28 \u2014 NOC',
   fields:[...VEH,...OWN,'mobile','b_name','dest_rto','dest_state']},
- {id:'pk25', gen:addForm25, label:'Form 25 \u2014 RC renewal',
+ {id:'pk25', pages:2, gen:addForm25, label:'Form 25 \u2014 RC renewal',
   fields:[...VEH,...OWN]},
- {id:'pk26', gen:addForm26, label:'Form 26 \u2014 Duplicate RC',
+ {id:'pk26', pages:2, gen:addForm26, label:'Form 26 \u2014 Duplicate RC',
   fields:['reg_no','rto',...OWN,'mobile']},
- {id:'pk20', gen:addForm20, label:'Form 20 \u2014 New registration',
+ {id:'pk20', pages:4, gen:addForm20, label:'Form 20 \u2014 New registration',
   fields:[...VEH,'colour',...OWN,'mobile']},
- {id:'pk21', gen:addForm21, label:'Form 21 \u2014 Sale certificate', needB:true,
+ {id:'pk21', pages:1, gen:addForm21, label:'Form 21 \u2014 Sale certificate', needB:true,
   fields:[...VEH,...BUY,'s_name']},
- {id:'pk22', gen:addForm22, label:'Form 22 \u2014 Roadworthiness',
+ {id:'pk22', pages:1, gen:addForm22, label:'Form 22 \u2014 Roadworthiness',
   fields:['make','model','ch_no','eng_no']},
- {id:'pk23B',gen:addForm23B,label:'Form 23B \u2014 Temporary RC',
+ {id:'pk23B', pages:1,gen:addForm23B,label:'Form 23B \u2014 Temporary RC',
   fields:[...VEH,'colour',...OWN,'mobile']},
- {id:'pk27', gen:addForm27, label:'Form 27 \u2014 New regn. mark',
+ {id:'pk27', pages:2, gen:addForm27, label:'Form 27 \u2014 New regn. mark',
   fields:[...VEH,'s_name','s_father','mobile','prev_state']},
- {id:'pk27A',gen:addForm27A,label:'Form 27A \u2014 BH-Series',
+ {id:'pk27A', pages:1,gen:addForm27A,label:'Form 27A \u2014 BH-Series',
   fields:[...VEH,'s_name','s_father','mobile','email']},
- {id:'pk31', gen:addForm31, label:'Form 31 \u2014 Transfer on death',
+ {id:'pk31', pages:2, gen:addForm31, label:'Form 31 \u2014 Transfer on death',
   fields:[...VEH,...OWN,'mobile','deceased','relation','succession']},
- {id:'pk32', gen:G('f32'), label:'Form 32 \u2014 Auction transfer',
+ {id:'pk32', pages:1, gen:G('f32'), label:'Form 32 \u2014 Auction transfer',
   fields:[...VEH,...OWN]},
- {id:'pk33', gen:addForm33, label:'Form 33 \u2014 Change of address',
+ {id:'pk33', pages:2, gen:addForm33, label:'Form 33 \u2014 Change of address',
   fields:['reg_no','rto',...OWN,'mobile','new_addr','fin_name']},
- {id:'pk34', gen:addForm34, label:'Form 34 \u2014 HP endorsement',
+ {id:'pk34', pages:1, gen:addForm34, label:'Form 34 \u2014 HP endorsement',
   fields:['reg_no','rto','s_name','mobile','fin_name','loan_no']},
- {id:'pk35', gen:addForm35, label:'Form 35 \u2014 HP termination',
+ {id:'pk35', pages:1, gen:addForm35, label:'Form 35 \u2014 HP termination',
   fields:['reg_no','rto','mobile']},
- {id:'pk36', gen:G('f36'), label:'Form 36 \u2014 Fresh RC (financier)',
+ {id:'pk36', pages:1, gen:G('f36'), label:'Form 36 \u2014 Fresh RC (financier)',
   fields:[...VEH,...OWN,'fin_name']},
- {id:'pk1',  gen:G('f1'),  label:'Form 1 \u2014 Fitness declaration',
+ {id:'pk1', pages:1,  gen:G('f1'),  label:'Form 1 \u2014 Fitness declaration',
   fields:['rto',...OWN]},
- {id:'pk2',  gen:G('f2'),  label:'Form 2 \u2014 LL / DL application',
+ {id:'pk2', pages:1,  gen:G('f2'),  label:'Form 2 \u2014 LL / DL application',
   fields:['rto',...OWN]},
- {id:'pk4A', gen:G('f4A'), label:'Form 4A \u2014 IDP',
+ {id:'pk4A', pages:1, gen:G('f4A'), label:'Form 4A \u2014 IDP',
   fields:['rto',...OWN]},
- {id:'pk8',  gen:G('f8'),  label:'Form 8 \u2014 Add vehicle class',
+ {id:'pk8', pages:1,  gen:G('f8'),  label:'Form 8 \u2014 Add vehicle class',
   fields:['rto',...OWN]},
- {id:'pk9',  gen:G('f9'),  label:'Form 9 \u2014 DL renewal',
+ {id:'pk9', pages:1,  gen:G('f9'),  label:'Form 9 \u2014 DL renewal',
   fields:['rto',...OWN]},
- {id:'pkLLD',gen:G('fLLD'),label:'Form LLD \u2014 Duplicate licence',
+ {id:'pkLLD', pages:1,gen:G('fLLD'),label:'Form LLD \u2014 Duplicate licence',
   fields:['rto',...OWN]},
- {id:'pk16', gen:G('f16'), label:'Form 16 \u2014 Trade certificate',
+ {id:'pk16', pages:1, gen:G('f16'), label:'Form 16 \u2014 Trade certificate',
   fields:['rto',...OWN]},
- {id:'pk45', gen:G('f45'), label:'Form 45 \u2014 Tourist permit',
+ {id:'pk45', pages:1, gen:G('f45'), label:'Form 45 \u2014 Tourist permit',
   fields:[...VEH,...OWN]},
- {id:'pk46', gen:G('f46'), label:'Form 46 \u2014 National permit',
+ {id:'pk46', pages:1, gen:G('f46'), label:'Form 46 \u2014 National permit',
   fields:[...VEH,...OWN]},
- {id:'pk48', gen:G('f48'), label:'Form 48 \u2014 Tourist authorisation',
+ {id:'pk48', pages:1, gen:G('f48'), label:'Form 48 \u2014 Tourist authorisation',
   fields:[...VEH,...OWN]},
 ];
 
@@ -1936,6 +1968,28 @@ function updateSections(){
   chosen.forEach(p=>(p.fields||[]).forEach(f=>need.add(f)));
   const anyB=chosen.some(p=>p.needB);
 
+  /* Update dynamic page count note */
+  const pcEl=document.getElementById('pageCountNote');
+  if(pcEl){
+    if(!chosen.length){
+      pcEl.textContent='select forms above';
+    } else {
+      const totalPages=chosen.reduce((s,p)=>s+(p.pages||1),0);
+      const formNames=chosen.map(p=>p.label.split('—')[0].trim()).join(', ');
+      pcEl.textContent=totalPages+' page'+(totalPages>1?'s':'')+' · A4 · print-ready';
+      const genNote=document.getElementById('genNote');
+      if(genNote) genNote.title=formNames;
+    }
+  }
+
+  /* Update generate button text */
+  const genBtn=document.getElementById('genBtn');
+  if(genBtn && chosen.length){
+    genBtn.textContent='Generate '+chosen.length+' form'+(chosen.length>1?'s':'')+' — Download PDF';
+  } else if(genBtn){
+    genBtn.textContent='Generate selected forms — Download PDF';
+  }
+
   let html=''; let n=1;
   const fieldOrder=Object.keys(FIELDS);
   SECTIONS.forEach(s=>{
@@ -1946,6 +2000,10 @@ function updateSections(){
   });
   document.getElementById('dynFields').innerHTML = html ||
     '<p style="color:var(--txt-2);font-size:13.5px;padding:6px 0 14px">Select at least one form above to see its fields.</p>';
+
+  /* Mobile FAB visibility */
+  const fab=document.getElementById('mobileFab');
+  if(fab) fab.classList.toggle('show', chosen.length>0);
 }
 
 buildPicks();
@@ -1973,15 +2031,23 @@ function generatePDF(blank){
   } else {
     const needsReg=need.has('reg_no');
     const needsBuyer=chosen.some(p=>p.needB);
-    if(!g('s_name')){
-      st.textContent='Owner / Seller name is required.'; st.className='status err'; return;
-    }
-    if(needsReg && !g('reg_no')){
-      st.textContent='Registration No. is required for the selected forms.'; st.className='status err'; return;
-    }
-    if(needsBuyer && !g('b_name')){
-      st.textContent='Purchaser name is required for the selected transfer / sale forms.'; st.className='status err'; return;
-    }
+    const highlightErr=(fieldId,msg)=>{
+      st.textContent=msg; st.className='status err';
+      const inp=document.getElementById(fieldId);
+      if(inp){
+        inp.style.borderColor='var(--stamp)';
+        inp.style.background='var(--stamp-soft)';
+        inp.scrollIntoView({behavior:'smooth',block:'center'});
+        inp.focus();
+        setTimeout(()=>{inp.style.borderColor='';inp.style.background='';},3000);
+      }
+    };
+    if(!g('s_name')){highlightErr('s_name','Owner / Seller name is required.'); return;}
+    if(needsReg && !g('reg_no')){highlightErr('reg_no','Registration No. is required for the selected forms.'); return;}
+    if(needsBuyer && !g('b_name')){highlightErr('b_name','Purchaser name is required for the selected transfer / sale forms.'); return;}
+    /* Mobile validation */
+    const mob=g('mobile');
+    if(mob && mob.length!==10){highlightErr('mobile','Mobile number must be exactly 10 digits.'); return;}
     allIds.forEach(k=>d[k]=g(k));
     d.veh_type=d.veh_type||'Motor Vehicle';
     d.rto=d.rto||'District Transport Office, Jamshedpur';
@@ -2002,9 +2068,10 @@ function generatePDF(blank){
         doc.setFont('helvetica','normal');
         p.gen(doc,d);
       });
+      const formNums=chosen.map(p=>p.label.split('—')[0].replace('Form ','').trim()).join('_');
       const fname = blank
-        ? 'RTO_Blank_Forms.pdf'
-        : 'RTO_Forms_'+(d.reg_no||d.s_name||'set').replace(/\s+/g,'_')+'.pdf';
+        ? 'RTO_Blank_Forms_'+formNums+'.pdf'
+        : 'Form_'+formNums+'_'+(d.reg_no||d.s_name||'set').replace(/\s+/g,'_')+'.pdf';
       doc.save(fname);
       st.textContent = blank
         ? 'Blank forms downloaded \u2014 '+chosen.length+' empty form(s) ready to print and fill by hand.'
