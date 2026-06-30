@@ -261,6 +261,31 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 
 /* focus visibility */
 a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var(--stamp);outline-offset:2px}
+/* ─── TAX CALCULATOR ─── */
+.calc-wrap{max-width:880px;margin:0 auto}
+.calc-card{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:28px;box-shadow:0 1px 3px rgba(20,40,80,.04)}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.calc-fld{display:flex;flex-direction:column;gap:6px}
+.calc-fld label{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.6px;text-transform:uppercase}
+.calc-fld input,.calc-fld select{padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s;width:100%}
+.calc-fld input:focus,.calc-fld select:focus{outline:none;border-color:var(--ink);background:#fff}
+.calc-hint{font-size:10.5px;color:var(--txt-3)}
+.calc-result{margin-top:24px;border-top:2px dotted var(--line);padding-top:20px}
+.calc-placeholder{color:var(--txt-3);font-size:13.5px;text-align:center;padding:16px 0}
+.calc-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--paper-2);font-size:14px}
+.calc-row .lbl{color:var(--txt-2)}
+.calc-row .val{font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums}
+.calc-row.total{border-bottom:none;border-top:2px solid var(--ink);margin-top:6px;padding-top:14px;font-size:17px}
+.calc-row.total .lbl{font-weight:700;color:var(--ink)}
+.calc-row.total .val{font-weight:800;color:var(--stamp);font-size:22px}
+.calc-row.muted .lbl,.calc-row.muted .val{color:var(--txt-3);font-weight:500}
+.calc-disclaimer{margin-top:18px;font-size:11.5px;color:var(--txt-2);line-height:1.6;background:var(--stamp-soft);padding:12px 14px;border-radius:8px}
+@media(max-width:560px){
+  .calc-grid{grid-template-columns:1fr}
+  .calc-card{padding:20px}
+  .calc-row.total .val{font-size:19px}
+}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -275,6 +300,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
     </a>
     <nav class="hdr-nav">
       <a href="#forms">All Forms</a>
+      <a href="#calc">Tax Calculator</a>
       <a href="#how">How it works</a>
       <a href="#faq">FAQ</a>
       <a href="#tool" class="live-link">Fill Forms →</a>
@@ -340,6 +366,69 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
       </div>
       <div class="status" id="statusMsg" role="status"></div>
 
+    </div>
+  </div>
+</section>
+
+<hr class="dotrule" style="max-width:1080px;margin:0 auto">
+
+<!-- ════════ TAX CALCULATOR ════════ -->
+<section class="sec" id="calc">
+  <div class="sec-eyebrow">Estimate</div>
+  <h2 class="sec-title">Jharkhand registration cost calculator</h2>
+  <p class="sec-sub">Naye vehicle ka approximate registration cost — road tax, fees, HP charges sab ek jagah. Ex-showroom price daalo aur turant estimate paao.</p>
+
+  <div class="calc-wrap">
+    <div class="calc-card">
+      <div class="calc-grid">
+        <div class="calc-fld">
+          <label>Ex-showroom price (₹)</label>
+          <input type="tel" inputmode="numeric" id="calcPrice" placeholder="e.g. 800000" oninput="calcEstimate()">
+          <span class="calc-hint">GST included price chalega — tax GST-exclusive value pe lagta hai</span>
+        </div>
+        <div class="calc-fld">
+          <label>Vehicle type</label>
+          <select id="calcType" onchange="calcEstimate()">
+            <option value="car">Car / 4-wheeler (private)</option>
+            <option value="bike">Two-wheeler</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>Fuel type</label>
+          <select id="calcFuel" onchange="calcEstimate()">
+            <option value="petrol">Petrol / Diesel</option>
+            <option value="cng">CNG / LPG</option>
+            <option value="ev">Electric (EV)</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>Owner type</label>
+          <select id="calcOwner" onchange="calcEstimate()">
+            <option value="individual">Individual</option>
+            <option value="company">Company / Firm</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>Condition</label>
+          <select id="calcCond" onchange="calcEstimate()">
+            <option value="new">New vehicle</option>
+            <option value="used">Pre-owned / Used</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>On loan / finance?</label>
+          <select id="calcHP" onchange="calcEstimate()">
+            <option value="no">No</option>
+            <option value="yes">Yes (HP endorsement)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="calc-result" id="calcResult">
+        <p class="calc-placeholder">Ex-showroom price daalo — estimate yahan dikhega.</p>
+      </div>
+
+      <p class="calc-disclaimer">⚠️ <strong>Approximate estimate only.</strong> Actual RTO charges state notifications ke hisaab se vary kar sakte hain. Final amount apne DTO / RTO se confirm karein. Rates last updated: review pending.</p>
     </div>
   </div>
 </section>
@@ -2058,6 +2147,99 @@ function updateSections(){
 
 buildPicks();
 updateSections();
+
+/* ════════ JHARKHAND REGISTRATION COST CALCULATOR ════════ */
+/* ─────────────────────────────────────────────────────────
+   EDIT THESE RATES AFTER VERIFYING WITH YOUR DTO / RTO.
+   All values are based on publicly available 2026 estimates
+   and MUST be confirmed before relying on them.
+   ───────────────────────────────────────────────────────── */
+const JH_RATES = {
+  /* Road tax — % of ex-showroom price (GST-exclusive), by price slab */
+  car: [
+    {upTo:600000,   pct:6},    /* under 6 lakh  → 6%  */
+    {upTo:1500000,  pct:8},    /* 6–15 lakh     → 8%  */
+    {upTo:Infinity, pct:10}    /* above 15 lakh → 10% */
+  ],
+  bike: [
+    {upTo:Infinity, pct:6}     /* two-wheeler flat 6% (verify) */
+  ],
+  evRebatePct: 25,        /* EV gets 25% rebate on road tax */
+  cngRebatePct: 0,        /* set if CNG concession applies */
+  usedExtraPct: 3,        /* pre-owned car: +3% */
+  companyExtraPct: 0,     /* set if company owners pay extra */
+  gstPct: 28,             /* to back-calculate ex-showroom-without-GST */
+  /* Fixed fees (₹) */
+  regFee:     {car:600,  bike:300},   /* CMV registration fee */
+  smartCard:  200,                     /* RC smart card */
+  hpFee:      1500,                    /* hypothecation endorsement */
+  hsrpPlate:  {car:600,  bike:300},   /* HSRP number plate (approx) */
+  postalFee:  50                       /* postage / misc */
+};
+
+function fmtINR(n){
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+function calcEstimate(){
+  const priceRaw = parseFloat((document.getElementById('calcPrice').value||'').replace(/[^0-9.]/g,''));
+  const result = document.getElementById('calcResult');
+  if(!priceRaw || priceRaw < 1000){
+    result.innerHTML = '<p class="calc-placeholder">Ex-showroom price daalo — estimate yahan dikhega.</p>';
+    return;
+  }
+  const type  = document.getElementById('calcType').value;
+  const fuel  = document.getElementById('calcFuel').value;
+  const owner = document.getElementById('calcOwner').value;
+  const cond  = document.getElementById('calcCond').value;
+  const hp    = document.getElementById('calcHP').value;
+
+  /* Road tax is on GST-exclusive price. If user enters on-road/GST-incl price,
+     we approximate the taxable (ex-showroom pre-GST) base. */
+  const taxableBase = priceRaw / (1 + JH_RATES.gstPct/100);
+
+  /* Find slab % */
+  const slabs = JH_RATES[type] || JH_RATES.car;
+  let pct = slabs[slabs.length-1].pct;
+  for(const s of slabs){ if(taxableBase <= s.upTo){ pct = s.pct; break; } }
+
+  /* Pre-owned extra */
+  if(cond==='used' && type==='car') pct += JH_RATES.usedExtraPct;
+  /* Company extra */
+  if(owner==='company') pct += JH_RATES.companyExtraPct;
+
+  let roadTax = taxableBase * pct/100;
+  let rebate = 0;
+  if(fuel==='ev'){ rebate = roadTax * JH_RATES.evRebatePct/100; }
+  else if(fuel==='cng'){ rebate = roadTax * JH_RATES.cngRebatePct/100; }
+  const roadTaxFinal = roadTax - rebate;
+
+  const regFee   = JH_RATES.regFee[type];
+  const smart    = JH_RATES.smartCard;
+  const hsrp     = JH_RATES.hsrpPlate[type];
+  const postal   = JH_RATES.postalFee;
+  const hpFee    = (hp==='yes') ? JH_RATES.hpFee : 0;
+
+  const total = roadTaxFinal + regFee + smart + hsrp + postal + hpFee;
+
+  let rows = '';
+  rows += `<div class="calc-row"><span class="lbl">Taxable base (approx, ex-GST)</span><span class="val">${fmtINR(taxableBase)}</span></div>`;
+  rows += `<div class="calc-row"><span class="lbl">Road tax @ ${pct}%</span><span class="val">${fmtINR(roadTax)}</span></div>`;
+  if(rebate>0){
+    rows += `<div class="calc-row"><span class="lbl">${fuel==='ev'?'EV':'CNG'} rebate (${fuel==='ev'?JH_RATES.evRebatePct:JH_RATES.cngRebatePct}%)</span><span class="val">− ${fmtINR(rebate)}</span></div>`;
+  }
+  rows += `<div class="calc-row"><span class="lbl">Registration fee</span><span class="val">${fmtINR(regFee)}</span></div>`;
+  rows += `<div class="calc-row"><span class="lbl">Smart card (RC)</span><span class="val">${fmtINR(smart)}</span></div>`;
+  rows += `<div class="calc-row"><span class="lbl">HSRP number plate</span><span class="val">${fmtINR(hsrp)}</span></div>`;
+  if(hpFee>0){
+    rows += `<div class="calc-row"><span class="lbl">HP endorsement (loan)</span><span class="val">${fmtINR(hpFee)}</span></div>`;
+  }
+  rows += `<div class="calc-row muted"><span class="lbl">Postage / misc</span><span class="val">${fmtINR(postal)}</span></div>`;
+  rows += `<div class="calc-row total"><span class="lbl">Estimated total</span><span class="val">${fmtINR(total)}</span></div>`;
+
+  result.innerHTML = rows;
+}
+
 
 function generatePDF(blank){
   const st=document.getElementById('statusMsg');
