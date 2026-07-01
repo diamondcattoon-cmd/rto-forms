@@ -254,7 +254,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 /* ─── PRINT ─── */
 @media print{
   .hdr,.hero,.hero-stats,.hero-cta,.hdr-nav,.tool-wrap,.sec-eyebrow,
-  .ftr,.faq-list,.steps,.cat-tabs,.search-row,.forms-grid,.mobile-fab,
+  .ftr,.faq-list,.steps,.cat-tabs,.search-row,.forms-grid,.mobile-fab,.wa-float,.contact-card,
   #how,#faq,#forms,.dotrule{display:none!important}
   body{background:#fff;color:#000}
 }
@@ -285,6 +285,33 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
   .calc-card{padding:20px}
   .calc-row.total .val{font-size:19px}
 }
+
+/* ─── WHATSAPP CONTACT ─── */
+.wa-float{position:fixed;bottom:20px;right:20px;z-index:250;display:flex;align-items:center;gap:8px;
+  background:#25D366;color:#fff;text-decoration:none;font-weight:600;font-size:14px;
+  padding:12px 18px;border-radius:50px;box-shadow:0 4px 16px rgba(37,211,102,.4);
+  font-family:inherit;transition:transform .15s,box-shadow .15s}
+.wa-float:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(37,211,102,.5)}
+.wa-float svg{width:22px;height:22px;flex-shrink:0}
+.wa-float .wa-txt{white-space:nowrap}
+@media(max-width:560px){
+  .wa-float{bottom:14px;right:14px;padding:13px}
+  .wa-float .wa-txt{display:none}
+}
+/* When mobile FAB is showing, push WhatsApp button up so they don't overlap */
+@media(max-width:680px){
+  body.fab-active .wa-float{bottom:74px}
+}
+.contact-card{background:var(--ink-2);border-radius:12px;padding:22px 24px;margin-top:18px;
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.contact-card .cc-txt{color:#fff}
+.contact-card .cc-txt strong{display:block;font-size:15px;margin-bottom:3px}
+.contact-card .cc-txt span{font-size:13px;color:rgba(255,255,255,.6)}
+.contact-card .cc-btn{background:#25D366;color:#fff;text-decoration:none;font-weight:600;font-size:14px;
+  padding:11px 20px;border-radius:8px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s}
+.contact-card .cc-btn:hover{opacity:.9}
+.contact-card .cc-btn svg{width:18px;height:18px}
+@media(max-width:560px){.contact-card{flex-direction:column;align-items:stretch;text-align:center}.contact-card .cc-btn{justify-content:center}}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -532,6 +559,16 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <a href="#how">How it works</a>
         <a href="#faq">FAQ</a>
       </div>
+    </div>
+    <div class="contact-card">
+      <div class="cc-txt">
+        <strong>Need a new form added? Or have a question?</strong>
+        <span>Showroom owners, RTO agents, or anyone — message us directly on WhatsApp.</span>
+      </div>
+      <a class="cc-btn" href="https://wa.me/918709731996?text=Hello%2C%20I%20want%20to%20get%20in%20touch%20regarding%20rtoformsindia.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.6.1-.2.3-.7 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5s-.6-1.5-.9-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.2-1.4c1.4.8 3 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 14.8 3.5 13.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20 12 20z"/></svg>
+        WhatsApp: 8709731996
+      </a>
     </div>
     <div class="ftr-disclaimer">
       ⚠️ This is an independent, unofficial tool — NOT an official government website. Forms are based on CMV Rules 1989. Always verify with your RTO/DTO before submission.
@@ -2317,5 +2354,9 @@ function generatePDF(blank){
   },80);
 }
 </script>
+<a class="wa-float" href="https://wa.me/918709731996?text=Hello%2C%20I%20want%20to%20get%20in%20touch%20regarding%20rtoformsindia.com" target="_blank" rel="noopener" aria-label="Contact us on WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.6.1-.2.3-.7 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5s-.6-1.5-.9-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.2-1.4c1.4.8 3 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 14.8 3.5 13.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20 12 20z"/></svg>
+  <span class="wa-txt">Contact / Form request</span>
+</a>
 </body>
 </html>
