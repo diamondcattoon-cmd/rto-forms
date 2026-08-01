@@ -173,7 +173,9 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
 .fld{display:flex;flex-direction:column;gap:5px}
 .fld.full{grid-column:1/-1}
-.fld label{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.6px;text-transform:uppercase}
+.fld label{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.fld-counter{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--txt-3);font-family:'IBM Plex Mono',monospace}
+.fld-hint{font-size:10.5px;color:var(--txt-3);margin-top:3px;letter-spacing:0;text-transform:none;font-weight:400}
 .fld input{padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s,background .15s}
 .fld input:focus{outline:none;border-color:var(--ink);background:#fff}
 .fld input::placeholder{color:var(--txt-3)}
@@ -2013,12 +2015,12 @@ const SECTIONS=[
 ];
 
 const FIELDS={
- reg_no:   {sec:'vehicle',label:'Registration No. *',ph:'JH05AB1234'},
+ reg_no:   {sec:'vehicle',label:'Registration No. *',ph:'JH05AB1234',maxlen:13,upper:true,pat:/[^A-Z0-9]/g,hint:'Letters & numbers only'},
  veh_type: {sec:'vehicle',label:'Vehicle type',ph:'Motor Car / Motor Cycle'},
  make:     {sec:'vehicle',label:'Make',ph:'Maruti / Honda / Tata'},
  model:    {sec:'vehicle',label:'Model & year',ph:'Swift 2018'},
- eng_no:   {sec:'vehicle',label:'Engine No.',ph:'K12M1234567'},
- ch_no:    {sec:'vehicle',label:'Chassis No.',ph:'MA3FJEB1S00123456'},
+ eng_no:   {sec:'vehicle',label:'Engine No.',ph:'K12M1234567',maxlen:17,upper:true,pat:/[^A-Z0-9]/g},
+ ch_no:    {sec:'vehicle',label:'Chassis No.',ph:'MA3FJEB1S00123456',maxlen:17,upper:true,pat:/[^A-Z0-9]/g,hint:'VIN — 17 chars max'},
  sale_date:{sec:'vehicle',label:'Date of sale',type:'date'},
  colour:   {sec:'vehicle',label:'Vehicle colour',ph:'Pearl White'},
  rto:      {sec:'vehicle',label:'RTO / DTO office',ph:'District Transport Office, Jamshedpur'},
@@ -2028,7 +2030,7 @@ const FIELDS={
  s_addr:   {sec:'owner',label:'Address (house / street)',ph:'H.No. 45, Station Road',full:true},
  s_town:   {sec:'owner',label:'Town',ph:'Jamshedpur'},
  s_dist:   {sec:'owner',label:'District',ph:'East Singhbhum'},
- mobile:   {sec:'owner',label:'Mobile number',ph:'98XXXXXXXX'},
+ mobile:   {sec:'owner',label:'Mobile number',ph:'98XXXXXXXX',maxlen:10,type:'tel',inputmode:'numeric',pat:/[^0-9]/g,hint:'10 digits only'},
 
  b_name:   {sec:'buyer',label:'Full name *',ph:'Suresh Kumar Yadav'},
  b_father: {sec:'buyer',label:"S/o — father's name",ph:'Shri Ram Prasad Yadav'},
@@ -2041,19 +2043,19 @@ const FIELDS={
  succession:{sec:'extra',label:'Proof of nomination / succession — Form 31',ph:'Succession certificate / Nomination in RC'},
  new_addr:  {sec:'extra',label:'New address — Form 33',ph:'Full new address with district',full:true},
  fin_name:  {sec:'extra',label:'Financier name & address — Form 33/34',ph:'HDFC Bank Ltd., Main Branch, Jamshedpur',full:true},
- loan_no:   {sec:'extra',label:'Agreement / loan account No. — Form 34',ph:'LN-000123'},
+ loan_no:   {sec:'extra',label:'Agreement / loan account No. — Form 34',ph:'LN-000123',maxlen:20,upper:true},
  dest_rto:  {sec:'extra',label:'Destination RTO — Form 28',ph:'RTO Ranchi'},
  dest_state:{sec:'extra',label:'Destination state — Form 28',ph:'Jharkhand'},
  prev_state:{sec:'extra',label:'Previously registered in state — Form 27',ph:'Bihar'},
- email:     {sec:'extra',label:'Email — Form 27A',ph:'name@example.com'},
+ email:     {sec:'extra',label:'Email — Form 27A',ph:'name@example.com',type:'email',maxlen:60},
  date_issue:{sec:'extra',label:'RC date of issue — Form 25',type:'date'},
  date_expiry:{sec:'extra',label:'RC date of expiry — Form 25',type:'date'},
  reg_as:    {sec:'extra',label:'Registered as — Form 25',ph:'New / Ex-army / Imported'},
  body_type: {sec:'extra',label:'Type of body — Form 25',ph:'Saloon / Sedan / Two-wheeler'},
- cylinders: {sec:'extra',label:'Number of cylinders — Form 25',ph:'4'},
+ cylinders: {sec:'extra',label:'Number of cylinders — Form 25',ph:'4',maxlen:2,inputmode:'numeric',pat:/[^0-9]/g},
  cubic_cap: {sec:'extra',label:'Cubic capacity / HP — Form 25',ph:'1197 cc'},
  maker_class:{sec:'extra',label:"Maker's classification — Form 25",ph:'LXi / VXi'},
- seating:   {sec:'extra',label:'Seating capacity (incl. driver) — Form 25',ph:'5'},
+ seating:   {sec:'extra',label:'Seating capacity (incl. driver) — Form 25',ph:'5',maxlen:3,inputmode:'numeric',pat:/[^0-9]/g},
  standing:  {sec:'extra',label:'Standing capacity — Form 25',ph:'0'},
  sleeper:   {sec:'extra',label:'Sleeper capacity — Form 25',ph:'0'},
  unladen:   {sec:'extra',label:'Unladen weight (kg) — Form 25',ph:'1050'},
@@ -2142,7 +2144,33 @@ function buildPicks(){
 function fieldHTML(id){
   const f=FIELDS[id];
   const v=(VALS[id]||'').replace(/"/g,'&quot;');
-  return `<div class="fld ${f.full?'full':''}"><label>${f.label}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" oninput="VALS['${id}']=this.value"></div>`;
+  const maxl=f.maxlen?`maxlength="${f.maxlen}"`:'';
+  const imode=f.inputmode?`inputmode="${f.inputmode}"`:'';
+  const hint=f.hint?`<span class="fld-hint">${f.hint}</span>`:'';
+  const counter=(f.maxlen&&f.type!=='date')?`<span class="fld-counter" id="cnt_${id}"></span>`:'';
+  return `<div class="fld ${f.full?'full':''}"><label>${f.label}${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} oninput="handleInput('${id}',this)">${hint}</div>`;
+}
+
+function handleInput(id, el){
+  const f=FIELDS[id];
+  let v=el.value;
+  if(f.pat) v=v.replace(f.pat,'');
+  if(f.upper) v=v.toUpperCase();
+  if(f.maxlen && v.length>f.maxlen) v=v.slice(0,f.maxlen);
+  if(el.value!==v) el.value=v;
+  VALS[id]=v;
+  const cnt=document.getElementById('cnt_'+id);
+  if(cnt && f.maxlen && f.type!=='date'){
+    cnt.textContent = v.length>0 ? ` ${v.length}/${f.maxlen}` : '';
+    cnt.style.color = (f.maxlen-v.length)<=2 ? 'var(--stamp)' : 'var(--txt-3)';
+  }
+  if(id==='mobile'){
+    el.style.borderColor = v.length>0&&v.length<10 ? 'var(--stamp)' : v.length===10 ? 'var(--approve)' : '';
+  } else if(id==='reg_no' && v.length>0){
+    el.style.borderColor = v.length>=5 ? 'var(--approve)' : '';
+  } else {
+    el.style.borderColor='';
+  }
 }
 
 /* Build the input sections from the union of selected forms' fields */
