@@ -710,6 +710,14 @@ function fmtDate(d){
   return n+s+' day of '+m[dt.getMonth()]+', '+dt.getFullYear();
 }
 
+/* ── Page overflow helper (auto-paginate) ── */
+const PAGE_BOTTOM=278;
+const PAGE_TOP=18;
+function newPageIfNeeded(doc,y,need){
+  if(y+(need||12)>PAGE_BOTTOM){doc.addPage();return PAGE_TOP;}
+  return y;
+}
+
 function dline(doc,x1,y,x2){
   doc.setLineDashPattern([0.5,1],0);
   doc.setLineWidth(0.3);
