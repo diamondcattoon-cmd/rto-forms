@@ -666,6 +666,8 @@ const FORMS=[
  {num:'48',name:'Tourist Permit Authorisation',desc:'Authorisation application for tourist permit — Rule 83',cat:'permit',fill:'pk48',pdfs:['FORM-48.pdf']},
  {num:'51',name:'Certificate of Insurance',desc:'Motor insurance COI format — Rule 141',cat:'misc',fmt:true,pdfs:['FORM-51.pdf']},
  {num:'54',name:'Accident Information Report',desc:'Police accident report format — Rule 150',cat:'misc',fmt:true,pdfs:['FORM-54.pdf']},
+ {num:'DN',name:'Motor Vehicle Delivery Note',desc:'Delivery confirmation with documents checklist — used at vehicle handover',cat:'transfer',fill:'pkDN'},
+ {num:'MR',name:'Motor Vehicle Money Receipt',desc:'Payment receipt for vehicle sale — seller to purchaser',cat:'transfer',fill:'pkMR'},
 ];
 
 let curCat='all';
@@ -1258,6 +1260,124 @@ function addForm25(doc,d){
   dline(doc,15+doc.getTextWidth('Name')+3,y+0.5,150); y+=9;
   normal(doc,15,y,'Designation');
   dline(doc,15+doc.getTextWidth('Designation')+3,y+0.5,150);
+}
+
+/* ── MOTOR VEHICLE DELIVERY NOTE ── */
+function addDeliveryNote(doc,d){
+  center(doc,20,'MOTOR VEHICLE DELIVERY NOTE',15,true);
+  doc.setLineWidth(0.4);doc.line(52,23,158,23);
+  let y=38,x;
+
+  /* Confirm delivery line */
+  normal(doc,15,y,'I / We hereby confirm having taken delivery of');
+  x=15+doc.getTextWidth('I / We hereby confirm having taken delivery of')+2;
+  dline(doc,x,y+0.5,180);
+  normal(doc,182,y,'bearing'); y+=8;
+
+  y=lrowPair(doc,y,'Registration No. ',d.reg_no,'Chassis No. ',d.ch_no);
+  y=lrowPair(doc,y,'Engine No. ',d.eng_no,'Model ',d.model);
+  y+=1;
+
+  /* today the __ day of __ month __ year at __ */
+  normal(doc,15,y,'today the');
+  x=15+doc.getTextWidth('today the')+2; dline(doc,x,y+0.5,x+22);
+  normal(doc,x+25,y,'day of');
+  let x2=x+25+doc.getTextWidth('day of')+2; dline(doc,x2,y+0.5,x2+30);
+  normal(doc,x2+33,y,'month');
+  let x3=x2+33+doc.getTextWidth('month')+2; dline(doc,x3,y+0.5,193); y+=7;
+  normal(doc,15,y,'year');
+  x=15+doc.getTextWidth('year')+2; dline(doc,x,y+0.5,x+25);
+  normal(doc,x+28,y,'at');
+  x2=x+28+doc.getTextWidth('at')+2; dline(doc,x2,y+0.5,x2+30);
+  normal(doc,x2+34,y,'AM / PM'); y+=7;
+  y=wrap(doc,15,y,'along with all tools and papers as seen, inspected and approved by me / us.',180,10.5); y+=4;
+
+  /* From / Through / at */
+  normal(doc,20,y,'From :');
+  dline(doc,42,y+0.5,193);
+  drawFit(doc,(d.s_name?d.s_name+', ':'')+(d.s_addr||''),44,y,147,10.5); y+=7;
+  dline(doc,42,y+0.5,193); y+=8;
+  normal(doc,20,y,'Through');
+  dline(doc,42,y+0.5,193); drawFit(doc,d.del_through,44,y,147,10.5); y+=8;
+  normal(doc,20,y,'at');
+  dline(doc,42,y+0.5,193); drawFit(doc,d.del_place,44,y,147,10.5); y+=10;
+
+  y=wrap(doc,15,y,'From today onwards I / we would be fully responsible for all sort of damages, claims, accidents, theft, civil or criminal liabilities that may arise in plying the said vehicle.',180,10.5); y+=4;
+  normal(doc,15,y,'I / We also confirm having received the following Documents :'); y+=9;
+
+  const item=(n,label,val,end)=>{
+    normal(doc,15,y,n+'.');
+    normal(doc,22,y,label);
+    const lx=22+doc.getTextWidth(label)+2;
+    dline(doc,lx,y+0.5,end||193);
+    if(val) drawFit(doc,val,lx+2,y,(end||193)-lx-2,10.5);
+    y+=8.5;
+  };
+  item('1','R.C. Book ',d.reg_no?'Yes':'');
+  normal(doc,15,y,'2.');normal(doc,22,y,'Tax Token No. ');
+  let tx=22+doc.getTextWidth('Tax Token No. ')+2;dline(doc,tx,y+0.5,120);
+  normal(doc,124,y,'Valid upto ');let vx=124+doc.getTextWidth('Valid upto ')+2;dline(doc,vx,y+0.5,193);
+  if(d.tax_valid)drawFit(doc,d.tax_valid,vx+2,y,193-vx-2,10.5); y+=8.5;
+  normal(doc,15,y,'3.');normal(doc,22,y,'Sale letter — i.e., Form No. 29 and 30'); y+=8.5;
+  item('4','Insurance cover Note / Certificate / Policy No. ',d.policy_no);
+  item('5','Key No. ','');
+  normal(doc,15,y,'6.');normal(doc,22,y,'Money Receipt'); y+=8.5;
+  normal(doc,15,y,'7.'); y+=11;
+
+  /* Witness + signature */
+  const wy=y;
+  normal(doc,15,y,'Witness :'); y+=9;
+  normal(doc,15,y,'1.');dline(doc,22,y+0.5,95);if(d.wit1_name)drawFit(doc,d.wit1_name,24,y,69,10);y+=10;
+  normal(doc,15,y,'2.');dline(doc,22,y+0.5,95);if(d.wit2_name)drawFit(doc,d.wit2_name,24,y,69,10);
+  /* right side signature */
+  let sy=wy;
+  normal(doc,110,sy,'Signature :');dline(doc,135,sy+0.5,193);sy+=10;
+  normal(doc,110,sy,'Name :');dline(doc,128,sy+0.5,193);if(d.s_name)drawFit(doc,d.s_name,130,sy,63,10);sy+=10;
+  normal(doc,110,sy,'Address :');dline(doc,133,sy+0.5,193);if(d.s_addr)drawFit(doc,d.s_addr,135,sy,58,10);
+}
+
+/* ── MOTOR VEHICLE MONEY RECEIPT ── */
+function addMoneyReceipt(doc,d){
+  center(doc,20,'MOTOR VEHICLE MONEY RECEIPT',15,true);
+  doc.setLineWidth(0.4);doc.line(48,23,162,23);
+  let y=40,x;
+
+  normal(doc,15,y,'Name of the Seller');
+  x=15+doc.getTextWidth('Name of the Seller')+2;dline(doc,x,y+0.5,130);if(d.s_name)drawFit(doc,d.s_name,x+2,y,113-x,10.5);
+  normal(doc,134,y,'S/O·W/O·D/O');x=134+doc.getTextWidth('S/O·W/O·D/O')+2;dline(doc,x,y+0.5,193);if(d.s_father)drawFit(doc,d.s_father,x+2,y,193-x-2,10.5);y+=9;
+
+  normal(doc,15,y,'Resident of');x=15+doc.getTextWidth('Resident of')+2;dline(doc,x,y+0.5,193);
+  drawFit(doc,(d.s_addr||'')+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''),x+2,y,193-x-2,10.5);y+=12;
+
+  normal(doc,15,y,'That I have received a sum of Rs.');
+  x=15+doc.getTextWidth('That I have received a sum of Rs.')+2;dline(doc,x,y+0.5,120);if(d.amount_rs)bold(doc,x+2,y,d.amount_rs);
+  normal(doc,124,y,'(Rupees');x=124+doc.getTextWidth('(Rupees')+2;dline(doc,x,y+0.5,193);y+=8;
+  dline(doc,15,y+0.5,60);if(d.amount_words)drawFit(doc,d.amount_words,15,y,45,10);
+  normal(doc,62,y,'only) By Cash / NEFT / Cheque No.');x=62+doc.getTextWidth('only) By Cash / NEFT / Cheque No.')+2;dline(doc,x,y+0.5,160);if(d.pay_mode)drawFit(doc,d.pay_mode,x+2,y,158-x,10);
+  normal(doc,162,y,'Dated');x=162+doc.getTextWidth('Dated')+2;dline(doc,x,y+0.5,193);if(d.pay_date)drawFit(doc,fmtDate(d.pay_date),x+2,y,193-x-2,9);y+=11;
+
+  normal(doc,15,y,'From');x=15+doc.getTextWidth('From')+2;dline(doc,x,y+0.5,130);if(d.b_name)drawFit(doc,d.b_name,x+2,y,113-x,10.5);
+  normal(doc,134,y,'S/O·W/O·D/O');x=134+doc.getTextWidth('S/O·W/O·D/O')+2;dline(doc,x,y+0.5,193);if(d.b_father)drawFit(doc,d.b_father,x+2,y,193-x-2,10.5);y+=9;
+  dline(doc,15,y+0.5,193);drawFit(doc,(d.b_addr||'')+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''),15,y,178,10);y+=11;
+
+  normal(doc,15,y,'towards the sale price of my vehicle');
+  x=15+doc.getTextWidth('towards the sale price of my vehicle')+2;dline(doc,x,y+0.5,160);
+  normal(doc,162,y,'bearing');y+=8;
+  normal(doc,15,y,'Registration Number');x=15+doc.getTextWidth('Registration Number')+2;dline(doc,x,y+0.5,90);if(d.reg_no)drawFit(doc,d.reg_no,x+2,y,88-x,10);
+  normal(doc,92,y,'Engine number');x=92+doc.getTextWidth('Engine number')+2;dline(doc,x,y+0.5,150);if(d.eng_no)drawFit(doc,d.eng_no,x+2,y,148-x,9);y+=8;
+  normal(doc,15,y,'Chassis number');x=15+doc.getTextWidth('Chassis number')+2;dline(doc,x,y+0.5,110);if(d.ch_no)drawFit(doc,d.ch_no,x+2,y,108-x,10);y+=8;
+  normal(doc,15,y,'Class of vehicle');x=15+doc.getTextWidth('Class of vehicle')+2;dline(doc,x,y+0.5,110);if(d.veh_class||d.veh_type)drawFit(doc,d.veh_class||d.veh_type,x+2,y,108-x,10);
+  normal(doc,112,y,'on today at');x=112+doc.getTextWidth('on today at')+2;dline(doc,x,y+0.5,193);y+=11;
+
+  y=wrap(doc,15,y,'That I have signed this Money Receipt on my full sense and sound health and without any pressure from any corner.',180,10.5);y+=8;
+
+  normal(doc,15,y,'Witnesses :-');y+=9;
+  normal(doc,15,y,'1.  Name');dline(doc,42,y+0.5,110);if(d.wit1_name)drawFit(doc,d.wit1_name,44,y,66,10);y+=8;
+  normal(doc,20,y,'Address');dline(doc,42,y+0.5,110);if(d.wit1_addr)drawFit(doc,d.wit1_addr,44,y,66,9);y+=10;
+  normal(doc,15,y,'2.  Name');dline(doc,42,y+0.5,110);if(d.wit2_name)drawFit(doc,d.wit2_name,44,y,66,10);y+=8;
+  normal(doc,20,y,'Address');dline(doc,42,y+0.5,110);if(d.wit2_addr)drawFit(doc,d.wit2_addr,44,y,66,9);y+=16;
+
+  normal(doc,120,y,'Signature of the Receiver');
 }
 
 /* ── FORM 26 — DUPLICATE RC (official 2-page) ── */
@@ -2085,6 +2205,7 @@ const SECTIONS=[
  {id:'owner',   title:'Owner / Applicant details'},
  {id:'buyer',   title:'Purchaser (transferee)'},
  {id:'extra',   title:'Form-specific details'},
+ {id:'receipt', title:'Receipt / Delivery details'},
  {id:'advocate',title:'Advocate / notary'},
 ];
 
@@ -2134,6 +2255,21 @@ const FIELDS={
  sleeper:   {sec:'extra',label:'Sleeper capacity — Form 25',ph:'0'},
  unladen:   {sec:'extra',label:'Unladen weight (kg) — Form 25',ph:'1050'},
  fuel:      {sec:'extra',label:'Fuel used — Form 25',ph:'Petrol / Diesel / CNG / Electric'},
+
+ /* Receipt / Delivery Note fields */
+ amount_rs: {sec:'receipt',label:'Sale amount (₹) — Receipt',ph:'250000',maxlen:12,inputmode:'numeric',pat:/[^0-9]/g},
+ amount_words:{sec:'receipt',label:'Amount in words — Receipt',ph:'Two Lakh Fifty Thousand Only',full:true,maxlen:80},
+ pay_mode:  {sec:'receipt',label:'Payment mode / Cheque-NEFT No. — Receipt',ph:'Cash / NEFT 123456'},
+ pay_date:  {sec:'receipt',label:'Payment date — Receipt',type:'date'},
+ veh_class: {sec:'receipt',label:'Class of vehicle — Receipt',ph:'Motor Car / Motorcycle'},
+ del_place: {sec:'receipt',label:'Delivery place — Delivery Note',ph:'Jamshedpur'},
+ del_through:{sec:'receipt',label:'Through (agent/dealer) — Delivery Note',ph:'ABC Motors'},
+ tax_valid: {sec:'receipt',label:'Tax token valid up to — Delivery Note',ph:'March 2025'},
+ policy_no: {sec:'receipt',label:'Insurance policy No. — Delivery Note',ph:'3101/2024/123456'},
+ wit1_name: {sec:'receipt',label:'Witness 1 name',ph:'Witness full name'},
+ wit1_addr: {sec:'receipt',label:'Witness 1 address',ph:'Address',full:true},
+ wit2_name: {sec:'receipt',label:'Witness 2 name',ph:'Witness full name'},
+ wit2_addr: {sec:'receipt',label:'Witness 2 address',ph:'Address',full:true},
 
  adv_at: {sec:'advocate',label:'Advocate at'},
  state:  {sec:'advocate',label:'State'},
@@ -2207,6 +2343,11 @@ const PICKS=[
   fields:[...VEH,...OWN]},
  {id:'pk48', type:'rto', pages:1, gen:G('f48'), label:'Form 48 \u2014 Tourist authorisation',
   fields:[...VEH,...OWN]},
+
+ {id:'pkDN', type:'receipt', pages:1, gen:addDeliveryNote, label:'Delivery Note', needB:true,
+  fields:['reg_no','ch_no','eng_no','model','s_name','s_addr','s_town','s_dist','del_through','del_place','tax_valid','policy_no','wit1_name','wit2_name']},
+ {id:'pkMR', type:'receipt', pages:1, gen:addMoneyReceipt, label:'Money Receipt', needB:true,
+  fields:['s_name','s_father','s_addr','s_town','s_dist','amount_rs','amount_words','pay_mode','pay_date','b_name','b_father','b_addr','b_town','b_dist','reg_no','eng_no','ch_no','veh_class','wit1_name','wit1_addr','wit2_name','wit2_addr']},
 ];
 
 /* ── Document TYPES (Level 1) — extensible: add new types here (e.g. application) ── */
@@ -2221,7 +2362,7 @@ const DOC_TYPES=[
 const BUNDLES=[
   {id:'b_transfer', label:'Vehicle Transfer', icon:'🚗',
    picks:['pk29','pk30','pkAS','pkAP'],
-   suggest:['pk28','pk26']},
+   suggest:['pk28','pk26','pkDN','pkMR']},
   {id:'b_rcrenew', label:'RC Renewal', icon:'🔄',
    picks:['pk25'], suggest:['pk33']},
   {id:'b_duprc', label:'Duplicate RC', icon:'📋',
