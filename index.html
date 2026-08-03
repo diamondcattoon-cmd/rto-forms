@@ -2318,10 +2318,13 @@ function fieldHTML(id){
 function handleInput(id, el){
   const f=FIELDS[id];
   let v=el.value;
-  if(f.upper) v=v.toUpperCase();
+  /* Auto-uppercase all text fields except email and date */
+  if(f.type!=='email' && f.type!=='date') v=v.toUpperCase();
   if(f.pat) v=v.replace(f.pat,'');
   if(f.maxlen && v.length>f.maxlen) v=v.slice(0,f.maxlen);
-  if(el.value!==v) el.value=v;
+  /* preserve caret position for a smooth typing experience */
+  const caret=el.selectionStart;
+  if(el.value!==v){ el.value=v; try{ el.setSelectionRange(caret,caret); }catch(e){} }
   VALS[id]=v;
   const cnt=document.getElementById('cnt_'+id);
   if(cnt && f.maxlen && f.type!=='date'){
