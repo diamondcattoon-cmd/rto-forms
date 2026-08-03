@@ -2162,8 +2162,8 @@ function fieldHTML(id){
 function handleInput(id, el){
   const f=FIELDS[id];
   let v=el.value;
-  if(f.pat) v=v.replace(f.pat,'');
   if(f.upper) v=v.toUpperCase();
+  if(f.pat) v=v.replace(f.pat,'');
   if(f.maxlen && v.length>f.maxlen) v=v.slice(0,f.maxlen);
   if(el.value!==v) el.value=v;
   VALS[id]=v;
@@ -2375,6 +2375,13 @@ function generatePDF(blank){
     try{
       const { jsPDF } = window.jspdf;
       const doc=new jsPDF({unit:'mm',format:'a4'});
+      /* Defensive: ensure any value passed to doc.text is a string (prevents crashes on numbers/null) */
+      const _origText=doc.text.bind(doc);
+      doc.text=function(txt,...rest){
+        if(txt==null) txt='';
+        else if(typeof txt!=='string' && !Array.isArray(txt)) txt=String(txt);
+        return _origText(txt,...rest);
+      };
       doc.setFont('helvetica','normal');
       chosen.forEach((p,i)=>{
         if(i>0) doc.addPage();
