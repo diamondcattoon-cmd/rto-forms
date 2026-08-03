@@ -734,22 +734,55 @@ function wrap(doc,x,y,t,w,sz){
   L.forEach(line=>{y=newPageIfNeeded(doc,y,lh+2);doc.text(line,x,y);y+=lh;});
   return y;
 }
+/* ── Smart value fit: try 11→8pt on one line; if still too wide, use 2 lines (font stays ≥8) ── */
+const MIN_FIT_SIZE = 8;
+function drawFit(doc, val, x, y, maxWidth, baseSize){
+  const text = String(val==null?'':val);
+  if(!text) return {lines:1};
+  baseSize = baseSize||11;
+  doc.setFont('helvetica','bold');
+  /* 1) try shrinking font down to MIN_FIT_SIZE on a single line */
+  let size = baseSize;
+  while(size > MIN_FIT_SIZE){
+    doc.setFontSize(size);
+    if(doc.getTextWidth(text) <= maxWidth) break;
+    size -= 0.5;
+  }
+  doc.setFontSize(size);
+  if(doc.getTextWidth(text) <= maxWidth){
+    doc.text(text, x, y);
+    doc.setFont('helvetica','normal');
+    return {lines:1};
+  }
+  /* 2) still too wide at 8pt → wrap into max 2 lines at MIN_FIT_SIZE */
+  doc.setFontSize(MIN_FIT_SIZE);
+  const parts = doc.splitTextToSize(text, maxWidth);
+  const line1 = parts[0] || '';
+  let line2 = parts.slice(1).join(' ');
+  /* ensure line2 also fits; if not, trim with ellipsis */
+  if(doc.getTextWidth(line2) > maxWidth){
+    while(line2.length > 1 && doc.getTextWidth(line2 + '…') > maxWidth){
+      line2 = line2.slice(0, -1);
+    }
+    line2 = line2.trimEnd() + '…';
+  }
+  doc.text(line1, x, y);
+  doc.text(line2, x, y + 3.6);
+  doc.setFont('helvetica','normal');
+  return {lines:2};
+}
+
 function lrow(doc,y,label,val,sz){
   const fsz=sz||11;
-  y=newPageIfNeeded(doc,y,fsz*0.5+3);
   doc.setFont('helvetica','normal');doc.setFontSize(fsz);
   doc.text(label,15,y);
   const lx=15+doc.getTextWidth(label)+1;
   const maxW=Math.max(193-lx-4,40);
-  const vStr=String(val||'');
-  const vL=vStr?doc.splitTextToSize(vStr,maxW):[];
   dline(doc,lx,y+0.5,193);
-  if(vL.length){doc.setFont('helvetica','bold');doc.text(vL[0],lx+2,y);doc.setFont('helvetica','normal');}
-  for(let i=1;i<vL.length;i++){y+=7;y=newPageIfNeeded(doc,y,7);dline(doc,15,y+0.5,193);doc.setFont('helvetica','bold');doc.text(vL[i],17,y);doc.setFont('helvetica','normal');}
+  drawFit(doc,val,lx+2,y,maxW,fsz);
   return y+7;
 }
 function secline(doc,y,title){
-  y=newPageIfNeeded(doc,y,14);
   doc.setLineWidth(0.5);doc.line(15,y,195,y);
   center(doc,y+6,title,11.5,true);
   return y+11;
@@ -807,16 +840,16 @@ function addForm29(doc,d){
 }
 
 function lrowPair(doc,y,l1,v1,l2,v2){
-  y=newPageIfNeeded(doc,y,9);
   doc.setFont('helvetica','normal');doc.setFontSize(11);
   doc.text(l1,15,y);
   let x1=15+doc.getTextWidth(l1)+1;
   dline(doc,x1,y+0.5,100);
-  if(v1){const vL=doc.splitTextToSize(String(v1),100-x1-2);doc.setFont('helvetica','bold');doc.text(vL[0],x1+2,y);doc.setFont('helvetica','normal');}
+  drawFit(doc,v1,x1+2,y,Math.max(100-x1-2,22),11);
+  doc.setFont('helvetica','normal');doc.setFontSize(11);
   doc.text(l2,105,y);
   let x2=105+doc.getTextWidth(l2)+1;
   dline(doc,x2,y+0.5,193);
-  if(v2){const vL=doc.splitTextToSize(String(v2),193-x2-2);doc.setFont('helvetica','bold');doc.text(vL[0],x2+2,y);doc.setFont('helvetica','normal');}
+  drawFit(doc,v2,x2+2,y,Math.max(193-x2-2,22),11);
   return y+7;
 }
 
@@ -1263,9 +1296,9 @@ function hT(doc,x,y,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFo
 function hTC(doc,y,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(s),105,y,{align:'center'});}
 function hTW(doc,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);return doc.getTextWidth(String(s));}
 function hWrap(doc,x,y,s,w,sz){doc.setFont('helvetica','normal');doc.setFontSize(sz||9);const L=doc.splitTextToSize(String(s),w);doc.text(L,x,y);return y+L.length*(sz?sz*0.42:3.8);}
-function hRow(doc,y,label,val,R){hT(doc,15,y,label,11);const lx=15+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,193);if(val){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(val),lx+2,y);}return y+(R||9.5);}
-function hPair(doc,y,l1,v1,l2,v2,R){hT(doc,15,y,l1,11);let x1=15+hTW(doc,l1,11)+1;dline(doc,x1,y+0.6,100);if(v1){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(v1),x1+2,y);}hT(doc,105,y,l2,11);let x2=105+hTW(doc,l2,11)+1;dline(doc,x2,y+0.6,193);if(v2){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(v2),x2+2,y);}return y+(R||9.5);}
-function hInline(doc,x,y,label,val,lineEnd){hT(doc,x,y,label,11);const lx=x+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,lineEnd);if(val){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(val),lx+2,y);}return lineEnd+2;}
+function hRow(doc,y,label,val,R){hT(doc,15,y,label,11);const lx=15+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,193);drawFit(doc,val,lx+2,y,Math.max(193-lx-4,30),11);return y+(R||9.5);}
+function hPair(doc,y,l1,v1,l2,v2,R){hT(doc,15,y,l1,11);let x1=15+hTW(doc,l1,11)+1;dline(doc,x1,y+0.6,100);drawFit(doc,v1,x1+2,y,Math.max(100-x1-2,20),11);hT(doc,105,y,l2,11);let x2=105+hTW(doc,l2,11)+1;dline(doc,x2,y+0.6,193);drawFit(doc,v2,x2+2,y,Math.max(193-x2-2,20),11);return y+(R||9.5);}
+function hInline(doc,x,y,label,val,lineEnd){hT(doc,x,y,label,11);const lx=x+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,lineEnd);drawFit(doc,val,lx+2,y,Math.max(lineEnd-lx-2,20),11);return lineEnd+2;}
 function hHead(doc,num,rule,titleLines){
   hTC(doc,17,num,17,true);
   hTC(doc,24,rule,10);
