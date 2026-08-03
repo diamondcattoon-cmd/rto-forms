@@ -317,8 +317,31 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 .cc-btns{display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:560px){.contact-card{flex-direction:column;align-items:stretch;text-align:center}.contact-card .cc-btn{justify-content:center}.cc-btns{flex-direction:column}}
 
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-</style>
+/* ─── TASK BUNDLES ─── */
+.bundle-wrap{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 6px}
+.bundle-btn{font-family:inherit;font-size:13.5px;font-weight:600;padding:11px 18px;border-radius:10px;
+  border:1.5px solid var(--line);background:var(--white);color:var(--ink);cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+.bundle-btn:hover{border-color:var(--ink);background:var(--paper);transform:translateY(-1px)}
+.bundle-btn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.bundle-ico{font-size:16px}
+/* ─── TYPE TABS ─── */
+.type-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px}
+.type-tab{font-family:inherit;font-size:13px;font-weight:600;padding:8px 15px;border-radius:8px;
+  border:1.5px solid var(--line);background:var(--white);color:var(--txt-2);cursor:pointer;transition:all .15s;
+  display:inline-flex;align-items:center;gap:7px}
+.type-tab:hover{border-color:var(--ink);color:var(--ink)}
+.type-tab.on{background:var(--stamp);border-color:var(--stamp);color:#fff}
+.tt-count{font-size:11px;background:var(--paper-2);color:var(--txt-2);padding:1px 7px;border-radius:10px;font-weight:600}
+.type-tab.on .tt-count{background:rgba(255,255,255,.25);color:#fff}
+.tt-sel{font-size:11px;background:var(--approve);color:#fff;padding:1px 7px;border-radius:10px;font-weight:700}
+/* ─── SUGGESTED PICKS ─── */
+.pick-suggest{border-color:var(--stamp)!important;background:var(--stamp-soft)}
+.sug-tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--stamp);
+  background:#fff;padding:2px 6px;border-radius:4px;margin-left:7px;vertical-align:middle}
+@media(max-width:560px){.bundle-btn{font-size:12.5px;padding:10px 14px;flex:1 1 auto;justify-content:center}}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style>
 </head>
 <body>
 
@@ -383,9 +406,16 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
     <div class="tool-body">
 
       <div class="fset">
-        <div class="fset-label"><span class="fset-num">0</span><h4>Forms to include in the PDF</h4></div>
+        <div class="fset-label"><span class="fset-num">0</span><h4>Quick start — pick a task</h4></div>
+        <div class="bundle-wrap" id="bundleWrap"></div>
+        <p class="pick-note">Ek task chuno — related forms apne aap select ho jaate hain. Ya neeche se manually koi bhi combination choose karo.</p>
+      </div>
+
+      <div class="fset">
+        <div class="fset-label"><span class="fset-num">1</span><h4>Forms to include in the PDF</h4></div>
+        <div class="type-tabs" id="typeTabs"></div>
         <div class="picks" id="picksWrap"></div>
-        <p class="pick-note">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms and every needed field is added once, shared across all of them.</p>
+        <p class="pick-note">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms (across categories) and every needed field is added once, shared across all of them.</p>
       </div>
 
       <div id="dynFields"></div>
@@ -678,7 +708,12 @@ function renderForms(){
 function fillNow(i){
   const f=FORMS[i];
   const ids=[].concat(f.fill);
-  PICKS.forEach(p=>{const el=document.getElementById(p.id); if(el) el.checked=ids.includes(p.id);});
+  PICKS.forEach(p=>{ CHECKED[p.id]=ids.includes(p.id); });
+  window._activeSuggest=[];
+  /* switch to the type of the first selected pick */
+  const firstPick=PICKS.find(p=>ids.includes(p.id));
+  if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
+  buildPicks();
   updateSections();
   document.getElementById('tool').scrollIntoView({behavior:'smooth'});
 }
@@ -2116,70 +2151,158 @@ const OWN=['s_name','s_father','s_addr','s_town','s_dist'];
 const BUY=['b_name','b_father','b_addr','b_town','b_dist'];
 
 const PICKS=[
- {id:'pk29', pages:1, gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true,
+ {id:'pk29', type:'rto', pages:1, gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true,
   fields:[...VEH,'sale_date',...OWN,...BUY,'state']},
- {id:'pk30', pages:2, gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true,
+ {id:'pk30', type:'rto', pages:2, gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true,
   fields:[...VEH,'sale_date',...OWN,...BUY,'mobile']},
- {id:'pkAS', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true,
+ {id:'pkAS', type:'affidavit', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true,
   fields:['reg_no','veh_type',...OWN,...BUY,'adv_at']},
- {id:'pkAP', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true,
+ {id:'pkAP', type:'affidavit', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true,
   fields:['reg_no','veh_type',...OWN,...BUY,'adv_at']},
- {id:'pk28', pages:2, gen:addForm28, label:'Form 28 \u2014 NOC',
+ {id:'pk28', type:'rto', pages:2, gen:addForm28, label:'Form 28 \u2014 NOC',
   fields:[...VEH,...OWN,'mobile','b_name','dest_rto','dest_state']},
- {id:'pk25', pages:2, gen:addForm25, label:'Form 25 \u2014 RC renewal',
+ {id:'pk25', type:'rto', pages:2, gen:addForm25, label:'Form 25 \u2014 RC renewal',
   fields:['reg_no','date_issue','date_expiry','rto','veh_type','reg_as','body_type','make','model','cylinders','cubic_cap','maker_class','ch_no','eng_no','seating','standing','sleeper','unladen','fuel',...OWN,'mobile']},
- {id:'pk26', pages:2, gen:addForm26, label:'Form 26 \u2014 Duplicate RC',
+ {id:'pk26', type:'rto', pages:2, gen:addForm26, label:'Form 26 \u2014 Duplicate RC',
   fields:['reg_no','rto',...OWN,'mobile']},
- {id:'pk20', pages:4, gen:addForm20, label:'Form 20 \u2014 New registration',
+ {id:'pk20', type:'rto', pages:4, gen:addForm20, label:'Form 20 \u2014 New registration',
   fields:[...VEH,'colour',...OWN,'mobile']},
- {id:'pk21', pages:1, gen:addForm21, label:'Form 21 \u2014 Sale certificate', needB:true,
+ {id:'pk21', type:'rto', pages:1, gen:addForm21, label:'Form 21 \u2014 Sale certificate', needB:true,
   fields:[...VEH,...BUY,'s_name']},
- {id:'pk22', pages:1, gen:addForm22, label:'Form 22 \u2014 Roadworthiness',
+ {id:'pk22', type:'rto', pages:1, gen:addForm22, label:'Form 22 \u2014 Roadworthiness',
   fields:['make','model','ch_no','eng_no']},
- {id:'pk23B', pages:1,gen:addForm23B,label:'Form 23B \u2014 Temporary RC',
+ {id:'pk23B', type:'rto', pages:1,gen:addForm23B,label:'Form 23B \u2014 Temporary RC',
   fields:[...VEH,'colour',...OWN,'mobile']},
- {id:'pk27', pages:2, gen:addForm27, label:'Form 27 \u2014 New regn. mark',
+ {id:'pk27', type:'rto', pages:2, gen:addForm27, label:'Form 27 \u2014 New regn. mark',
   fields:[...VEH,'s_name','s_father','mobile','prev_state']},
- {id:'pk27A', pages:1,gen:addForm27A,label:'Form 27A \u2014 BH-Series',
+ {id:'pk27A', type:'rto', pages:1,gen:addForm27A,label:'Form 27A \u2014 BH-Series',
   fields:[...VEH,'s_name','s_father','mobile','email']},
- {id:'pk31', pages:2, gen:addForm31, label:'Form 31 \u2014 Transfer on death',
+ {id:'pk31', type:'rto', pages:2, gen:addForm31, label:'Form 31 \u2014 Transfer on death',
   fields:[...VEH,...OWN,'mobile','deceased','relation','succession']},
- {id:'pk32', pages:1, gen:G('f32'), label:'Form 32 \u2014 Auction transfer',
+ {id:'pk32', type:'rto', pages:1, gen:G('f32'), label:'Form 32 \u2014 Auction transfer',
   fields:[...VEH,...OWN]},
- {id:'pk33', pages:2, gen:addForm33, label:'Form 33 \u2014 Change of address',
+ {id:'pk33', type:'rto', pages:2, gen:addForm33, label:'Form 33 \u2014 Change of address',
   fields:['reg_no','rto',...OWN,'mobile','new_addr','fin_name']},
- {id:'pk34', pages:1, gen:addForm34, label:'Form 34 \u2014 HP endorsement',
+ {id:'pk34', type:'rto', pages:1, gen:addForm34, label:'Form 34 \u2014 HP endorsement',
   fields:['reg_no','rto','s_name','mobile','fin_name','loan_no']},
- {id:'pk35', pages:1, gen:addForm35, label:'Form 35 \u2014 HP termination',
+ {id:'pk35', type:'rto', pages:1, gen:addForm35, label:'Form 35 \u2014 HP termination',
   fields:['reg_no','rto','mobile']},
- {id:'pk36', pages:1, gen:G('f36'), label:'Form 36 \u2014 Fresh RC (financier)',
+ {id:'pk36', type:'rto', pages:1, gen:G('f36'), label:'Form 36 \u2014 Fresh RC (financier)',
   fields:[...VEH,...OWN,'fin_name']},
- {id:'pk1', pages:1,  gen:G('f1'),  label:'Form 1 \u2014 Fitness declaration',
+ {id:'pk1', type:'rto', pages:1,  gen:G('f1'),  label:'Form 1 \u2014 Fitness declaration',
   fields:['rto',...OWN]},
- {id:'pk2', pages:1,  gen:G('f2'),  label:'Form 2 \u2014 LL / DL application',
+ {id:'pk2', type:'rto', pages:1,  gen:G('f2'),  label:'Form 2 \u2014 LL / DL application',
   fields:['rto',...OWN]},
- {id:'pk4A', pages:1, gen:G('f4A'), label:'Form 4A \u2014 IDP',
+ {id:'pk4A', type:'rto', pages:1, gen:G('f4A'), label:'Form 4A \u2014 IDP',
   fields:['rto',...OWN]},
- {id:'pk8', pages:1,  gen:G('f8'),  label:'Form 8 \u2014 Add vehicle class',
+ {id:'pk8', type:'rto', pages:1,  gen:G('f8'),  label:'Form 8 \u2014 Add vehicle class',
   fields:['rto',...OWN]},
- {id:'pk9', pages:1,  gen:G('f9'),  label:'Form 9 \u2014 DL renewal',
+ {id:'pk9', type:'rto', pages:1,  gen:G('f9'),  label:'Form 9 \u2014 DL renewal',
   fields:['rto',...OWN]},
- {id:'pkLLD', pages:1,gen:G('fLLD'),label:'Form LLD \u2014 Duplicate licence',
+ {id:'pkLLD', type:'rto', pages:1,gen:G('fLLD'),label:'Form LLD \u2014 Duplicate licence',
   fields:['rto',...OWN]},
- {id:'pk16', pages:1, gen:G('f16'), label:'Form 16 \u2014 Trade certificate',
+ {id:'pk16', type:'rto', pages:1, gen:G('f16'), label:'Form 16 \u2014 Trade certificate',
   fields:['rto',...OWN]},
- {id:'pk45', pages:1, gen:G('f45'), label:'Form 45 \u2014 Tourist permit',
+ {id:'pk45', type:'rto', pages:1, gen:G('f45'), label:'Form 45 \u2014 Tourist permit',
   fields:[...VEH,...OWN]},
- {id:'pk46', pages:1, gen:G('f46'), label:'Form 46 \u2014 National permit',
+ {id:'pk46', type:'rto', pages:1, gen:G('f46'), label:'Form 46 \u2014 National permit',
   fields:[...VEH,...OWN]},
- {id:'pk48', pages:1, gen:G('f48'), label:'Form 48 \u2014 Tourist authorisation',
+ {id:'pk48', type:'rto', pages:1, gen:G('f48'), label:'Form 48 \u2014 Tourist authorisation',
   fields:[...VEH,...OWN]},
 ];
 
-function buildPicks(){
-  document.getElementById('picksWrap').innerHTML = PICKS.map(p=>
-    `<label class="pick"><input type="checkbox" id="${p.id}"${p.def?' checked':''} onchange="updateSections()"> ${p.label}</label>`
+/* ── Document TYPES (Level 1) — extensible: add new types here (e.g. application) ── */
+const DOC_TYPES=[
+  {id:'rto',       label:'RTO Forms'},
+  {id:'affidavit', label:'Affidavits'},
+  {id:'receipt',   label:'Receipts & Notes'},
+  /* future: {id:'application', label:'Applications'} */
+];
+
+/* ── TASK BUNDLES — one click selects a set of related documents ── */
+const BUNDLES=[
+  {id:'b_transfer', label:'Vehicle Transfer', icon:'🚗',
+   picks:['pk29','pk30','pkAS','pkAP'],
+   suggest:['pk28','pk26']},
+  {id:'b_rcrenew', label:'RC Renewal', icon:'🔄',
+   picks:['pk25'], suggest:['pk33']},
+  {id:'b_duprc', label:'Duplicate RC', icon:'📋',
+   picks:['pk26'], suggest:['pkAS']},
+  {id:'b_death', label:'Transfer on Death', icon:'📜',
+   picks:['pk31'], suggest:['pkAS','pk26']},
+  {id:'b_hp', label:'HP / Loan', icon:'🏦',
+   picks:['pk34'], suggest:['pk35','pk33']},
+  {id:'b_address', label:'Address Change', icon:'📍',
+   picks:['pk33'], suggest:['pk26']},
+  {id:'b_newreg', label:'New Registration', icon:'🆕',
+   picks:['pk20','pk21','pk22'], suggest:['pk28']},
+];
+
+let ACTIVE_TYPE='rto';
+const CHECKED={};  /* pick id -> true/false, persists across type switches */
+PICKS.forEach(p=>{ CHECKED[p.id]=!!p.def; });
+
+/* Build task-bundle buttons */
+function buildBundles(){
+  const wrap=document.getElementById('bundleWrap');
+  if(!wrap) return;
+  wrap.innerHTML = BUNDLES.map(b=>
+    `<button class="bundle-btn" onclick="applyBundle('${b.id}')"><span class="bundle-ico">${b.icon}</span>${b.label}</button>`
   ).join('');
+}
+
+/* Apply a bundle: check its picks, uncheck others, show suggestions */
+function applyBundle(bid){
+  const b=BUNDLES.find(x=>x.id===bid);
+  if(!b) return;
+  PICKS.forEach(p=>{ CHECKED[p.id]=b.picks.includes(p.id); });
+  window._activeSuggest = b.suggest||[];
+  document.querySelectorAll('.bundle-btn').forEach(btn=>btn.classList.remove('on'));
+  const idx=BUNDLES.findIndex(x=>x.id===bid);
+  const btns=document.querySelectorAll('.bundle-btn');
+  if(btns[idx]) btns[idx].classList.add('on');
+  /* switch to the type of the first pick so user sees the checked items */
+  const firstPick=PICKS.find(p=>p.id===b.picks[0]);
+  if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
+  buildPicks();
+  updateSections();
+  document.getElementById('tool').scrollIntoView({behavior:'smooth'});
+}
+
+/* Build the picks list grouped by active type, with type sub-tabs */
+function buildPicks(){
+  const tabsWrap=document.getElementById('typeTabs');
+  if(tabsWrap){
+    tabsWrap.innerHTML = DOC_TYPES.map(t=>{
+      const count = PICKS.filter(p=>(p.type||'rto')===t.id).length;
+      if(count===0 && t.id!=='rto') return '';
+      const checkedInType = PICKS.filter(p=>(p.type||'rto')===t.id && CHECKED[p.id]).length;
+      const badge = checkedInType>0 ? `<span class="tt-sel">${checkedInType}</span>` : `<span class="tt-count">${count}</span>`;
+      return `<button class="type-tab${t.id===ACTIVE_TYPE?' on':''}" onclick="switchType('${t.id}')">${t.label} ${badge}</button>`;
+    }).join('');
+  }
+  renderPicksList();
+}
+
+function switchType(tid){
+  ACTIVE_TYPE=tid;
+  buildPicks();
+}
+
+function renderPicksList(){
+  const wrap=document.getElementById('picksWrap');
+  const inType = PICKS.filter(p=>(p.type||'rto')===ACTIVE_TYPE);
+  const suggest = window._activeSuggest||[];
+  wrap.innerHTML = inType.map(p=>{
+    const isSug = suggest.includes(p.id);
+    return `<label class="pick${isSug?' pick-suggest':''}"><input type="checkbox" id="${p.id}"${CHECKED[p.id]?' checked':''} onchange="toggleCheck('${p.id}',this)"> ${p.label}${isSug?'<span class="sug-tag">suggested</span>':''}</label>`;
+  }).join('') || '<p style="color:var(--txt-3);font-size:13px;padding:8px 0">No documents in this category yet.</p>';
+}
+
+function toggleCheck(id, el){
+  CHECKED[id]=el.checked;
+  buildPicks();  /* refresh tab badges */
+  updateSections();
 }
 
 function fieldHTML(id){
@@ -2216,7 +2339,7 @@ function handleInput(id, el){
 
 /* Build the input sections from the union of selected forms' fields */
 function updateSections(){
-  const chosen=PICKS.filter(p=>el(p.id)?.checked);
+  const chosen=PICKS.filter(p=>CHECKED[p.id]);
   const need=new Set();
   chosen.forEach(p=>(p.fields||[]).forEach(f=>need.add(f)));
   const anyB=chosen.some(p=>p.needB);
@@ -2259,6 +2382,7 @@ function updateSections(){
   if(fab) fab.classList.toggle('show', chosen.length>0);
 }
 
+buildBundles();
 buildPicks();
 updateSections();
 
@@ -2360,7 +2484,7 @@ function generatePDF(blank){
   const btn=document.getElementById('genBtn');
   const bbtn=document.getElementById('blankBtn');
 
-  const chosen=PICKS.filter(p=>el(p.id)?.checked);
+  const chosen=PICKS.filter(p=>CHECKED[p.id]);
   if(!chosen.length){
     st.textContent='Select at least one form to include.';
     st.className='status err';
