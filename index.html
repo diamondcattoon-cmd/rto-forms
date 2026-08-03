@@ -177,6 +177,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .fld-counter{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--txt-3);font-family:'IBM Plex Mono',monospace}
 .fld-hint{font-size:10.5px;color:var(--txt-3);margin-top:3px;letter-spacing:0;text-transform:none;font-weight:400}
 .fld input{padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s,background .15s}
+.fld input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer}
 .fld input:focus{outline:none;border-color:var(--ink);background:#fff}
 .fld input::placeholder{color:var(--txt-3)}
 
@@ -1137,71 +1138,69 @@ function addForm25(doc,d){
   center(doc,34,'REGISTRATION OF A MOTOR VEHICLE',10.5,true);
   doc.setLineWidth(0.35);doc.line(15,37,195,37);
 
-  let y=45;
-  normal(doc,15,y,'To'); y+=6;
-  normal(doc,15,y,'The Registering Authority,'); y+=7;
-  dline(doc,15,y+0.5,193); if(d.rto){bold(doc,17,y,d.rto);} y+=10;
+  let y=44;
+  normal(doc,15,y,'To'); y+=5.5;
+  normal(doc,15,y,'The Registering Authority,'); y+=6.5;
+  dline(doc,15,y+0.5,193); if(d.rto){bold(doc,17,y,d.rto);} y+=9;
 
   /* Intro line: I, ___ having mobile ___ */
   normal(doc,15,y,'I,');
   let x=15+doc.getTextWidth('I,')+2;
-  dline(doc,x,y+0.5,110); if(d.s_name){bold(doc,x+2,y,d.s_name);}
+  dline(doc,x,y+0.5,110); if(d.s_name){drawFit(doc,d.s_name,x+2,y,93,11);}
   normal(doc,114,y,'having mobile number');
   x=114+doc.getTextWidth('having mobile number')+2;
   dline(doc,x,y+0.5,193); if(d.mobile){bold(doc,x+2,y,d.mobile);}
-  y+=7;
-  y=wrap(doc,15,y,'hereby apply for the renewal of the certificate of registration which is attached, the particulars of which are as follows :\u2014',180,10.5);
-  y+=3;
+  y+=6.5;
+  y=wrap(doc,15,y,'hereby apply for the renewal of the certificate of registration which is attached, the particulars of which are as follows :\u2014',180,10);
+  y+=2.5;
 
   /* (a)-(d) */
   normal(doc,15,y,'(a)  Register No.');
   x=15+doc.getTextWidth('(a)  Register No.')+2;
-  dline(doc,x,y+0.5,120); if(d.reg_no){bold(doc,x+2,y,d.reg_no);} y+=8;
+  dline(doc,x,y+0.5,120); if(d.reg_no){bold(doc,x+2,y,d.reg_no);} y+=7;
 
   normal(doc,15,y,'(b)  Date of issue');
   x=15+doc.getTextWidth('(b)  Date of issue')+2;
-  dline(doc,x,y+0.5,120); if(d.date_issue){bold(doc,x+2,y,fmtDate(d.date_issue));} y+=8;
+  dline(doc,x,y+0.5,120); if(d.date_issue){bold(doc,x+2,y,fmtDate(d.date_issue));} y+=7;
 
   normal(doc,15,y,'(c)  Date of expiry');
   x=15+doc.getTextWidth('(c)  Date of expiry')+2;
-  dline(doc,x,y+0.5,120); if(d.date_expiry){bold(doc,x+2,y,fmtDate(d.date_expiry));} y+=8;
+  dline(doc,x,y+0.5,120); if(d.date_expiry){bold(doc,x+2,y,fmtDate(d.date_expiry));} y+=7;
 
-  normal(doc,15,y,'(d)  Registering authority by which the');y+=6;
-  normal(doc,22,y,'certificate was issued / last renewed');
-  x=22+doc.getTextWidth('certificate was issued / last renewed')+2;
-  dline(doc,x,y+0.5,193); if(d.rto){bold(doc,x+2,y,d.rto);} y+=10;
+  normal(doc,15,y,'(d)  Registering authority by which the certificate');y+=5.5;
+  normal(doc,22,y,'was issued / last renewed');
+  x=22+doc.getTextWidth('was issued / last renewed')+2;
+  dline(doc,x,y+0.5,193); if(d.rto){drawFit(doc,d.rto,x+2,y,Math.max(193-x-4,40),11);} y+=8;
 
   /* present address declaration */
   const addrFull=(d.s_addr||'')+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:'');
-  y=wrap(doc,15,y,'My present address is '+(addrFull||'..............................')+'. If this address is not entered in the certificate of registration, I do / do not wish that it should be so entered. The renewal of the certificate has not been refused by any registering authority.',180,10.5);
-  y+=3;
-  y=wrap(doc,15,y,'I hereby declare that the certificate of registration has not been cancelled or suspended by any registering authority.',180,10.5);
-  y+=5;
+  y=wrap(doc,15,y,'My present address is '+(addrFull||'..............................')+'. If this address is not entered in the certificate of registration, I do / do not wish that it should be so entered. The renewal of the certificate has not been refused by any registering authority.',180,10);
+  y+=2;
+  y=wrap(doc,15,y,'I hereby declare that the certificate of registration has not been cancelled or suspended by any registering authority.',180,10);
+  y+=3.5;
 
-  /* Numbered fields 1-13 */
+  /* Numbered fields 1-13 (compact, no page break) */
   const f25row=(num,label,val)=>{
-    y=newPageIfNeeded(doc,y,8);
     normal(doc,15,y,num+'.  '+label);
     const lx=15+doc.getTextWidth(num+'.  '+label)+2;
     dline(doc,lx,y+0.5,193);
-    if(val){bold(doc,lx+2,y,val);}
-    y+=8;
+    if(val){drawFit(doc,val,lx+2,y,Math.max(193-lx-4,30),11);}
+    y+=6.8;
   };
 
   f25row('1','Class of vehicle',d.veh_type);
 
   /* 2. registered as (a)(b)(c) */
-  y=newPageIfNeeded(doc,y,26);
-  normal(doc,15,y,'2.  The motor vehicle was registered as'); y+=7;
+  normal(doc,15,y,'2.  The motor vehicle was registered as'); y+=6;
   normal(doc,22,y,'(a)  a new vehicle');
   x=22+doc.getTextWidth('(a)  a new vehicle')+2;
-  dline(doc,x,y+0.5,120); if(isNew){bold(doc,x+2,y,isNew);} y+=7;
+  dline(doc,x,y+0.5,120); if(isNew){bold(doc,x+2,y,isNew);} y+=6;
   normal(doc,22,y,'(b)  ex army vehicle');
   x=22+doc.getTextWidth('(b)  ex army vehicle')+2;
-  dline(doc,x,y+0.5,120); if(isArmy){bold(doc,x+2,y,isArmy);} y+=7;
+  dline(doc,x,y+0.5,120); if(isArmy){bold(doc,x+2,y,isArmy);} y+=6;
   normal(doc,22,y,'(c)  imported vehicle');
   x=22+doc.getTextWidth('(c)  imported vehicle')+2;
-  dline(doc,x,y+0.5,120); if(isImport){bold(doc,x+2,y,isImport);} y+=8;
+  dline(doc,x,y+0.5,120); if(isImport){bold(doc,x+2,y,isImport);} y+=6.8;
 
   f25row('3','Type of body',d.body_type);
   f25row('4',"Maker's name",d.make);
@@ -1216,14 +1215,13 @@ function addForm25(doc,d){
   f25row('11B','Sleeper capacity',d.sleeper);
   f25row('12','Unladen weight',d.unladen);
   f25row('13','Fuel used',d.fuel);
-  y+=3;
+  y+=2;
 
-  y=newPageIfNeeded(doc,y,16);
-  normal(doc,15,y,'I enclose the certificate of insurance for perusal and return.'); y+=7;
-  normal(doc,15,y,'I have paid the fee of Rs. ____________________'); y+=12;
+  normal(doc,15,y,'I enclose the certificate of insurance for perusal and return.'); y+=6;
+  normal(doc,15,y,'I have paid the fee of Rs. ____________________'); y+=10;
 
   normal(doc,15,y,'Date : ___________________');
-  normal(doc,108,y,'Signature or thumb impression of the applicant'); y+=8;
+  normal(doc,108,y,'Signature or thumb impression of the applicant');
 
   /* ---- PAGE 2 ---- */
   doc.addPage(); y=20;
@@ -2312,7 +2310,20 @@ function fieldHTML(id){
   const imode=f.inputmode?`inputmode="${f.inputmode}"`:'';
   const hint=f.hint?`<span class="fld-hint">${f.hint}</span>`:'';
   const counter=(f.maxlen&&f.type!=='date')?`<span class="fld-counter" id="cnt_${id}"></span>`:'';
-  return `<div class="fld ${f.full?'full':''}"><label>${f.label}${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} oninput="handleInput('${id}',this)">${hint}</div>`;
+  const dateTab=f.type==='date'?`onkeydown="dateTabFix(event,this)"`:'';
+  return `<div class="fld ${f.full?'full':''}"><label>${f.label}${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}</div>`;
+}
+
+/* Tab on a date field should move to the next input, not the calendar picker */
+function dateTabFix(e, el){
+  if(e.key==='Tab' && !e.shiftKey){
+    const inputs=Array.from(document.querySelectorAll('#dynFields input, #dynFields select'));
+    const idx=inputs.indexOf(el);
+    if(idx>-1 && idx<inputs.length-1){
+      e.preventDefault();
+      inputs[idx+1].focus();
+    }
+  }
 }
 
 function handleInput(id, el){
