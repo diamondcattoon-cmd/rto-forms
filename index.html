@@ -931,7 +931,8 @@ function addForm30(doc,d){
   dline(doc,x,y+0.6,165);
   if(d.sale_date){doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.text(fmtDate(d.sale_date),x+2,y);}
   hT(doc,168,y,'( day, year )',8); y+=8;
-  y=hPair(doc,y,'purchased the motor vehicle bearing registration No. :  ',d.reg_no,'from :  ',d.s_name,8);
+  y=hRow(doc,y,'purchased the motor vehicle bearing registration No. :  ',d.reg_no,8);
+  y=hRow(doc,y,'from ( seller ) :  ',d.s_name,8);
   y=hRow(doc,y,'( name and full address ) :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''),8);
   y=hWrap(doc,15,y,'and request that necessary entries regarding the transfer of ownership of the vehicle in my / our name may be recorded in the certificate of registration / certificate of fitness of the vehicle, which is enclosed.',180,10); y+=1;
   y=hWrap(doc,15,y,'The certificate of insurance is also enclosed. To the best of my knowledge and belief I / we have not suppressed any facts and information furnished is true. The vehicle is not superdari and free from all encumbrances. I / we undertake to hold myself responsible for any inaccuracy.',180,10); y+=2;
