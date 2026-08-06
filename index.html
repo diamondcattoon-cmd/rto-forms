@@ -915,7 +915,7 @@ function addForm30(doc,d){
   y=hWrap(doc,15,y,'and handed over the certificate of registration and the certificate of insurance to him / her / them.',180,10); y+=1;
   y=hWrap(doc,15,y,'I / We hereby declare that to the best of my / our knowledge the certificate of registration of the vehicle has not been suspended* or cancelled.',180,10); y+=1;
   y=hWrap(doc,15,y,'*  I / We enclose the \u201CNo Objection Certificate\u201D issued by the registering authority.',180,10);
-  y=hWrap(doc,15,y,'**  If the \u201CNo Objection Certificate\u201D from the registering authority is not enclosed, the transferor should file along with this application a declaration as required under sub-section (1) of section 50.',180,10); y+=2;
+  y=hWrap(doc,15,y,'**  If the \u201CNo Objection Certificate\u201D from the registering authority is not enclosed, the transferor should file along with this application a declaration as required under sub-section (1) of section 50.',180,10); y+=8;
   hT(doc,15,y,'Date : ________________',10.5);
   hT(doc,108,y,'Signature / digital signature / e-signature of owner of',9); y+=4.5;
   hT(doc,108,y,'motor vehicle or authorised dealer of registered vehicle',9); y+=6;
@@ -923,7 +923,7 @@ function addForm30(doc,d){
 
   hTC(doc,y,'PART II \u2014 FOR THE USE OF TRANSFEREE',11,true); y+=8;
   y=hPair(doc,y,'Name of the transferee :  ',d.b_name,'son / wife / daughter of :  ',d.b_father,8);
-  y=hPair(doc,y,'Age :  ','','Mobile number :  ',d.mobile,8);
+  y=hPair(doc,y,'Age :  ','','Mobile number :  ',d.b_mobile,8);
   y=hRow(doc,y,'Full address ( proof of address to be enclosed ) :  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''),8);
   y=hRow(doc,y,'I / We hereby declare ............................ as the nominee for this vehicle, who is my / our :  ','',8);
   hT(doc,15,y,'I / We hereby declare that I / We have on this ',10.5);
@@ -2233,6 +2233,7 @@ const FIELDS={
  b_addr:   {sec:'buyer',label:'Address (house / street)',ph:'Village Rampur, NH-33',full:true},
  b_town:   {sec:'buyer',label:'Town',ph:'Baharagora'},
  b_dist:   {sec:'buyer',label:'District',ph:'East Singhbhum'},
+ b_mobile: {sec:'buyer',label:'Purchaser mobile number',ph:'98XXXXXXXX',maxlen:10,type:'tel',inputmode:'numeric',pat:/[^0-9]/g,hint:'10 digits only'},
 
  deceased:  {sec:'extra',label:'Deceased owner name — Form 31',ph:'Late Shri ...'},
  relation:  {sec:'extra',label:'Relationship with deceased — Form 31',ph:'Son / Wife / Daughter'},
@@ -2289,7 +2290,7 @@ const PICKS=[
  {id:'pk29', type:'rto', pages:1, gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true,
   fields:[...VEH,'sale_date',...OWN,...BUY,'state']},
  {id:'pk30', type:'rto', pages:2, gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true,
-  fields:[...VEH,'sale_date',...OWN,...BUY,'mobile']},
+  fields:[...VEH,'sale_date',...OWN,...BUY,'mobile','b_mobile']},
  {id:'pkAS', type:'affidavit', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true,
   fields:['reg_no','veh_type',...OWN,...BUY,'adv_at']},
  {id:'pkAP', type:'affidavit', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'PURCHASER'), label:'Affidavit \u2014 Purchaser', def:true, needB:true, adv:true,
