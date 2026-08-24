@@ -36,6 +36,7 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <!-- Structured data: WebApplication + FAQ -->
 <script type="application/ld+json">
@@ -254,10 +255,62 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .ftr-bottom{padding-top:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.35)}
 .ftr-bottom .mono{font-size:11px}
 
+/* ─── PRO / AI AUTO-FILL ─── */
+.pro-panel{background:linear-gradient(180deg,var(--stamp-soft) 0%,var(--white) 140px);border:1.5px solid var(--stamp);border-radius:12px;padding:20px 20px 22px;margin-bottom:26px}
+.pro-num{background:var(--stamp)!important;color:#fff!important}
+.pro-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;background:var(--stamp);color:#fff;padding:2px 8px;border-radius:4px;vertical-align:middle;margin-left:8px;transform:translateY(-1px)}
+.pro-toprow{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0 18px}
+.pro-role-lbl{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px}
+.pro-role-opts{display:flex;gap:14px}
+.pro-radio{display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer}
+.pro-radio input{accent-color:var(--stamp)}
+.pro-credits{display:flex;align-items:center;gap:10px}
+.pro-credits-badge{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;background:var(--ink);color:#fff;padding:7px 14px;border-radius:20px;white-space:nowrap}
+.pro-buy-btn{padding:9px 16px;font-size:13px}
+.upload-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.upload-slot{background:var(--white);border:1.5px dashed var(--line);border-radius:10px;padding:12px 14px}
+.upload-slot-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.upload-slot-name{font-size:13px;font-weight:600}
+.upload-slot-state{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--txt-3);letter-spacing:.4px;text-transform:uppercase}
+.upload-slot-state.done{color:var(--approve)}
+.upload-slot-state.err{color:var(--stamp)}
+.upload-slot input[type=file]{width:100%;font-size:12px;color:var(--txt-2)}
+.pro-attach-chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt-2);cursor:pointer;margin-bottom:6px}
+.pro-attach-chk input{accent-color:var(--stamp)}
+.pro-result-card{background:var(--approve-soft);border:1px solid var(--approve);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12.5px}
+.pro-result-card b{color:var(--approve)}
+.pro-result-row{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.pro-result-row span:first-child{color:var(--txt-2);text-transform:capitalize}
+
+/* ─── MODAL (buy credits) ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,40,80,.55);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
+.modal-box{background:#fff;border-radius:14px;max-width:420px;width:100%;padding:24px;max-height:88vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{font-size:17px;font-weight:700}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--txt-2);line-height:1}
+.modal-sub{font-size:13px;color:var(--txt-2);margin:8px 0 16px}
+.pack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.pack-card{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:inherit;transition:all .15s}
+.pack-card:hover{border-color:var(--stamp);background:var(--stamp-soft)}
+.pack-n{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--ink)}
+.pack-l{font-size:10.5px;color:var(--txt-2);text-transform:uppercase;letter-spacing:.5px}
+.pack-p{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--stamp);margin-top:4px}
+.modal-code-lbl{font-size:12px;font-weight:600;color:var(--txt-2);display:block;margin-bottom:8px}
+.modal-code-in{display:flex;gap:8px}
+.modal-code-in input{flex:1;padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
+.modal-code-in .btn-generate{padding:11px 18px;font-size:13px}
+
+/* ─── ADMIN (hidden — open with ?admin=vikash2026) ─── */
+.admin-panel{position:fixed;bottom:20px;left:20px;z-index:400}
+.admin-box{background:#fff;border:2px solid var(--stamp);border-radius:10px;padding:14px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.admin-box h4{font-size:12.5px;margin-bottom:10px}
+.admin-box input{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;margin-bottom:8px}
+
 /* ─── PRINT ─── */
 @media print{
   .hdr,.hero,.hero-stats,.hero-cta,.hdr-nav,.tool-wrap,.sec-eyebrow,
   .ftr,.faq-list,.steps,.cat-tabs,.search-row,.forms-grid,.mobile-fab,.wa-float,.contact-card,
+  .modal-overlay,
   #how,#faq,#forms,.dotrule{display:none!important}
   body{background:#fff;color:#000}
 }
@@ -410,6 +463,62 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <div class="fset-label"><span class="fset-num">0</span><h4>Quick start — pick a task</h4></div>
         <div class="bundle-wrap" id="bundleWrap"></div>
         <p class="pick-note">Ek task chuno — related forms apne aap select ho jaate hain. Ya neeche se manually koi bhi combination choose karo.</p>
+      </div>
+
+      <div class="fset pro-panel" id="proPanel">
+        <div class="fset-label">
+          <span class="fset-num pro-num">AI</span>
+          <h4>Auto-fill from documents <span class="pro-tag">PRO</span></h4>
+        </div>
+        <p class="pick-note">Aadhaar / PAN / RC ki clear photo upload karo — naam, address, reg. no, chassis/engine no. jaisi details apne aap fields mein fill ho jayengi. Har extraction ₹5 leta hai.</p>
+
+        <div class="pro-toprow">
+          <div class="pro-role">
+            <label class="pro-role-lbl">Data fill karo as</label>
+            <div class="pro-role-opts">
+              <label class="pro-radio"><input type="radio" name="proRole" value="seller" checked onchange="setProRole(this.value)"> Owner / Seller</label>
+              <label class="pro-radio"><input type="radio" name="proRole" value="buyer" onchange="setProRole(this.value)"> Purchaser / Buyer</label>
+            </div>
+          </div>
+          <div class="pro-credits">
+            <span class="pro-credits-badge" id="proCreditsBadge">₹0.00</span>
+            <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()">+ Add Money</button>
+          </div>
+        </div>
+
+        <div class="pro-wallet-row" id="proWalletRow">
+          <label class="pro-role-lbl">Mobile number (aapka wallet ID)</label>
+          <div class="modal-code-in">
+            <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono">
+            <button type="button" class="btn-generate" onclick="setWalletMobile()">Confirm</button>
+          </div>
+          <p class="fld-hint">Isi number se balance track hota hai — dusre device pe wahi number daal ke balance dikh jayega.</p>
+        </div>
+
+        <div class="upload-grid">
+          <div class="upload-slot">
+            <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card</span><span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></div>
+            <input type="file" accept="image/*" capture="environment" id="file-aadhaar" onchange="handleDocUpload('aadhaar', this.files[0])">
+          </div>
+          <div class="upload-slot">
+            <div class="upload-slot-top"><span class="upload-slot-name">PAN Card</span><span class="upload-slot-state" id="state-pan">Not uploaded</span></div>
+            <input type="file" accept="image/*" capture="environment" id="file-pan" onchange="handleDocUpload('pan', this.files[0])">
+          </div>
+          <div class="upload-slot">
+            <div class="upload-slot-top"><span class="upload-slot-name">RC (Registration Certificate)</span><span class="upload-slot-state" id="state-rc">Not uploaded</span></div>
+            <input type="file" accept="image/*" capture="environment" id="file-rc" onchange="handleDocUpload('rc', this.files[0])">
+          </div>
+          <div class="upload-slot">
+            <div class="upload-slot-top"><span class="upload-slot-name">Face Photo (for attachment)</span><span class="upload-slot-state" id="state-photo">Not uploaded</span></div>
+            <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
+          </div>
+        </div>
+
+        <label class="pro-attach-chk"><input type="checkbox" id="attachDocsChk"> Attach uploaded documents & photo as extra pages in the final PDF</label>
+
+
+        <div class="status" id="proStatus" role="status"></div>
+        <div id="proResults"></div>
       </div>
 
       <div class="fset">
@@ -2702,6 +2811,25 @@ function generatePDF(blank){
         doc.setFont('helvetica','normal');
         p.gen(doc,d);
       });
+
+      /* PRO: attach uploaded Aadhaar/PAN/RC copies + face photo as extra pages */
+      const attachChk=document.getElementById('attachDocsChk');
+      if(!blank && attachChk && attachChk.checked && typeof PRO!=='undefined'){
+        ['aadhaar','pan','rc','photo'].forEach(key=>{
+          const up=PRO.uploads && PRO.uploads[key];
+          if(!up) return;
+          doc.addPage();
+          doc.setFont('helvetica','bold'); doc.setFontSize(12);
+          doc.text('Attachment: '+key.toUpperCase(), 15, 15);
+          doc.setFont('helvetica','normal');
+          const maxW=180, maxH=245;
+          const scale=Math.min(maxW/up.w, maxH/up.h, 1);
+          const w=up.w*scale, h=up.h*scale;
+          const x=(210-w)/2, y=25;
+          try{ doc.addImage(up.dataUrl,'JPEG',x,y,w,h); }catch(e){}
+        });
+      }
+
       const formNums=chosen.map(p=>p.label.split('—')[0].replace('Form ','').trim()).join('_');
       const fname = blank
         ? 'RTO_Blank_Forms_'+formNums+'.pdf'
@@ -2718,7 +2846,255 @@ function generatePDF(blank){
     btn.disabled=false; if(bbtn) bbtn.disabled=false;
   },80);
 }
+
+/* ════════ PRO — AI AUTO-FILL (Gemini Vision + Razorpay wallet, via Cloudflare Worker) ════════ */
+const WORKER_URL='https://rto-ai-extract.diamondcattoon.workers.dev';
+const RAZORPAY_KEY_ID_PLACEHOLDER=''; /* not used directly — Worker returns the correct key with each order */
+
+let PRO=Object.assign({role:'seller',walletId:''}, JSON.parse(localStorage.getItem('rtoProState')||'{}'));
+PRO.uploads={}; /* images kept in memory only for this session — used for PDF attachment */
+PRO.balancePaise=0;
+
+function saveProState(){ localStorage.setItem('rtoProState', JSON.stringify({role:PRO.role, walletId:PRO.walletId})); }
+function setProRole(role){ PRO.role=role; saveProState(); }
+
+function renderProCredits(){
+  const el=document.getElementById('proCreditsBadge');
+  if(el) el.textContent='₹'+(PRO.balancePaise/100).toFixed(2);
+}
+
+/* Wallet ID = user's mobile number, entered once, stored locally */
+function setWalletMobile(){
+  const input=document.getElementById('walletMobileInput');
+  const v=input.value.replace(/\D/g,'');
+  if(v.length!==10){ alert('10 digit mobile number daalo.'); return; }
+  PRO.walletId=v; saveProState();
+  document.getElementById('proWalletRow').style.display='none';
+  fetchWalletBalance();
+}
+function ensureWallet(){
+  if(PRO.walletId) return true;
+  document.getElementById('proWalletRow').scrollIntoView({behavior:'smooth',block:'center'});
+  document.getElementById('walletMobileInput').focus();
+  return false;
+}
+async function fetchWalletBalance(){
+  if(!PRO.walletId) return;
+  try{
+    const res=await fetch(WORKER_URL+'/balance?walletId='+encodeURIComponent(PRO.walletId));
+    const j=await res.json();
+    if(j.balancePaise!==undefined){ PRO.balancePaise=j.balancePaise; renderProCredits(); }
+  }catch(e){ /* silent — balance will refresh on next action */ }
+}
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result.split(',')[1]);
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
+}
+function loadImageDims(dataUrl){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>resolve({w:img.naturalWidth||800,h:img.naturalHeight||600});
+    img.onerror=()=>resolve({w:800,h:600});
+    img.src=dataUrl;
+  });
+}
+
+/* Maps Gemini's extracted fields onto the site's existing FIELDS ids (s_/b_ prefix by role) */
+const AI_FIELD_MAP={
+  aadhaar:(data,role)=>{
+    const p=role==='buyer'?'b_':'s_'; const out={};
+    if(data.name) out[p+'name']=data.name;
+    if(data.father_or_husband_name) out[p+'father']=data.father_or_husband_name;
+    if(data.address) out[p+'addr']=data.address;
+    return out;
+  },
+  pan:(data,role)=>{
+    const p=role==='buyer'?'b_':'s_'; const out={};
+    if(data.name) out[p+'name']=data.name;
+    if(data.father_name) out[p+'father']=data.father_name;
+    return out;
+  },
+  rc:(data)=>{
+    const out={};
+    if(data.registration_number) out.reg_no=data.registration_number;
+    if(data.chassis_number) out.ch_no=data.chassis_number;
+    if(data.engine_number) out.eng_no=data.engine_number;
+    if(data.vehicle_class) out.veh_type=data.vehicle_class;
+    if(data.maker_model) out.model=data.maker_model;
+    return out;
+  }
+};
+
+async function handleDocUpload(docType, file){
+  if(!file) return;
+  if(!ensureWallet()) return;
+
+  const stateEl=document.getElementById('state-'+docType);
+  const statusEl=document.getElementById('proStatus');
+
+  if(PRO.balancePaise<500){
+    statusEl.textContent='Balance kam hai (kam se kam ₹5 chahiye) — pehle wallet mein paise add karo.';
+    statusEl.className='status err';
+    openBuyModal();
+    return;
+  }
+
+  stateEl.textContent='Reading...'; stateEl.className='upload-slot-state';
+  statusEl.textContent='Document padh raha hoon...'; statusEl.className='status';
+
+  try{
+    const b64=await fileToBase64(file);
+    const dataUrl='data:'+(file.type||'image/jpeg')+';base64,'+b64;
+
+    statusEl.textContent='AI se data extract ho raha hai...';
+    const res=await fetch(WORKER_URL+'/extract',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({walletId:PRO.walletId, docType, imageBase64:b64, mimeType:file.type||'image/jpeg'})
+    });
+    const json=await res.json();
+    if(!res.ok || json.error){
+      if(res.status===402){ PRO.balancePaise=json.balancePaise||0; renderProCredits(); openBuyModal(); }
+      throw new Error(json.error||'Extraction failed');
+    }
+
+    const data=json.data;
+    const mapped=AI_FIELD_MAP[docType](data, PRO.role);
+    Object.keys(mapped).forEach(k=>{ if(mapped[k]) VALS[k]=String(mapped[k]).toUpperCase(); });
+    updateSections();
+
+    const dims=await loadImageDims(dataUrl);
+    PRO.uploads[docType]={dataUrl,w:dims.w,h:dims.h,raw:data};
+
+    PRO.balancePaise=json.balancePaise; renderProCredits();
+
+    stateEl.textContent='Extracted \u2713'; stateEl.className='upload-slot-state done';
+    statusEl.textContent=docType.toUpperCase()+' se data auto-fill ho gaya. Balance: ₹'+json.balanceRs;
+    statusEl.className='status ok';
+    renderProResult(docType, data);
+  }catch(err){
+    stateEl.textContent='Failed'; stateEl.className='upload-slot-state err';
+    statusEl.textContent='Error: '+err.message;
+    statusEl.className='status err';
+  }
+}
+
+async function handlePhotoUpload(file){
+  if(!file) return;
+  const stateEl=document.getElementById('state-photo');
+  stateEl.textContent='Reading...';
+  const b64=await fileToBase64(file);
+  const dataUrl='data:'+(file.type||'image/jpeg')+';base64,'+b64;
+  const dims=await loadImageDims(dataUrl);
+  PRO.uploads.photo={dataUrl,w:dims.w,h:dims.h};
+  stateEl.textContent='Uploaded \u2713'; stateEl.className='upload-slot-state done';
+}
+
+function renderProResult(docType, data){
+  const wrap=document.getElementById('proResults');
+  const rows=Object.keys(data).filter(k=>data[k]).map(k=>
+    `<div class="pro-result-row"><span>${k.replace(/_/g,' ')}</span><b>${String(data[k]).replace(/</g,'&lt;')}</b></div>`
+  ).join('');
+  const card=document.createElement('div');
+  card.className='pro-result-card';
+  card.innerHTML=`<b>${docType.toUpperCase()} extracted</b>${rows}`;
+  wrap.prepend(card);
+}
+
+/* ── Add Money — Razorpay auto-payment, credits instantly on success ── */
+function openBuyModal(){
+  if(!ensureWallet()){ return; }
+  document.getElementById('proBuyModal').style.display='flex';
+}
+function closeBuyModal(){ document.getElementById('proBuyModal').style.display='none'; }
+
+async function startPayment(amountRs){
+  if(!amountRs || amountRs<=0){ alert('Sahi amount daalo.'); return; }
+  if(!ensureWallet()) return;
+  const statusEl=document.getElementById('proCodeStatus');
+  statusEl.textContent='Payment shuru ho raha hai...'; statusEl.className='status';
+
+  try{
+    const orderRes=await fetch(WORKER_URL+'/order',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({walletId:PRO.walletId, amountRs})
+    });
+    const order=await orderRes.json();
+    if(!orderRes.ok || order.error) throw new Error(order.error||'Order create failed');
+
+    const rzp=new Razorpay({
+      key:order.keyId,
+      amount:order.amountPaise,
+      currency:'INR',
+      order_id:order.orderId,
+      name:'RTO Forms India',
+      description:'Wallet recharge — AI auto-fill',
+      prefill:{ contact: PRO.walletId },
+      theme:{ color:'#D6481F' },
+      handler:async function(resp){
+        statusEl.textContent='Payment confirm ho raha hai...'; statusEl.className='status';
+        try{
+          const verifyRes=await fetch(WORKER_URL+'/verify',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              walletId:PRO.walletId,
+              razorpay_order_id:resp.razorpay_order_id,
+              razorpay_payment_id:resp.razorpay_payment_id,
+              razorpay_signature:resp.razorpay_signature
+            })
+          });
+          const v=await verifyRes.json();
+          if(!verifyRes.ok || v.error) throw new Error(v.error||'Verification failed');
+          PRO.balancePaise=v.balancePaise; renderProCredits();
+          statusEl.textContent='₹'+amountRs+' add ho gaye! Balance: ₹'+v.balanceRs;
+          statusEl.className='status ok';
+          setTimeout(closeBuyModal, 1500);
+        }catch(err){
+          statusEl.textContent='Payment hua par confirm nahi ho paya: '+err.message+'. Refresh karke balance check karo.';
+          statusEl.className='status err';
+        }
+      },
+      modal:{ ondismiss:function(){ statusEl.textContent=''; } }
+    });
+    rzp.open();
+  }catch(err){
+    statusEl.textContent='Error: '+err.message;
+    statusEl.className='status err';
+  }
+}
+
+if(PRO.walletId){ const wr=document.getElementById('proWalletRow'); if(wr) wr.style.display='none'; }
+renderProCredits();
+fetchWalletBalance();
 </script>
+<div class="modal-overlay" id="proBuyModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Add Money to Wallet</h3>
+      <button type="button" class="modal-close" onclick="closeBuyModal()">&times;</button>
+    </div>
+    <p class="modal-sub">UPI / card se turant add ho jayega — koi wait nahi. ₹5 per document extraction katega.</p>
+    <div class="pack-grid">
+      <button type="button" class="pack-card" onclick="startPayment(50)"><span class="pack-n">₹50</span><span class="pack-l">10 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(100)"><span class="pack-n">₹100</span><span class="pack-l">20 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(200)"><span class="pack-n">₹200</span><span class="pack-l">40 extractions</span></button>
+    </div>
+    <label class="modal-code-lbl">Ya custom amount</label>
+    <div class="modal-code-in">
+      <input type="number" id="customAmountInput" placeholder="e.g. 150" min="1" class="mono">
+      <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))">Pay</button>
+    </div>
+    <div class="status" id="proCodeStatus"></div>
+  </div>
+</div>
+
 <a class="wa-float" href="https://wa.me/918709731996?text=Hello%2C%20I%20want%20to%20get%20in%20touch%20regarding%20rtoformsindia.com" target="_blank" rel="noopener" aria-label="Contact us on WhatsApp">
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.6.1-.2.3-.7 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5s-.6-1.5-.9-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.2-1.4c1.4.8 3 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 14.8 3.5 13.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20 12 20z"/></svg>
   <span class="wa-txt">Contact / Form request</span>
