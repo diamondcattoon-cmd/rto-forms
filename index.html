@@ -3093,7 +3093,7 @@ async function runExtraction(docType, images, btnId, stateId, uploadsKey){
     const res=await fetch(WORKER_URL+'/extract',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({walletId:PRO.walletId, docType, images})
+      body:JSON.stringify({walletId:PRO.walletId, docType, images: images.map(img=>({data:img.dataUrl, mimeType:img.mimeType}))})
     });
     const json=await res.json();
     if(!res.ok || json.error){
