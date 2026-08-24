@@ -37,6 +37,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <!-- Structured data: WebApplication + FAQ -->
 <script type="application/ld+json">
@@ -275,6 +276,17 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .upload-slot-state.done{color:var(--approve)}
 .upload-slot-state.err{color:var(--stamp)}
 .upload-slot input[type=file]{width:100%;font-size:12px;color:var(--txt-2)}
+.doc-preview-wrap{margin-top:10px}
+.doc-preview-wrap img{width:100%;max-height:160px;object-fit:contain;border-radius:7px;border:1.5px solid var(--line);background:#f4f4f4;display:block}
+.pdf-page-picker{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pdf-page-thumb{width:44px;height:58px;object-fit:cover;border-radius:5px;border:2px solid var(--line);cursor:pointer;opacity:.7}
+.pdf-page-thumb.sel{border-color:var(--stamp);opacity:1}
+.pdf-page-label{font-size:9px;color:var(--txt-3);text-align:center;margin-top:2px}
+.doc-extract-btn{width:100%;margin-top:10px;padding:9px;font-size:12.5px}
+.upload-slot-wide{grid-column:1/-1}
+.aadhaar-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.aadhaar-two-col .fld-hint{display:block;margin-bottom:5px;font-weight:600;color:var(--txt-2)}
+@media(max-width:560px){.aadhaar-two-col{grid-template-columns:1fr}}
 .pro-attach-chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt-2);cursor:pointer;margin-bottom:6px}
 .pro-attach-chk input{accent-color:var(--stamp)}
 .pro-result-card{background:var(--approve-soft);border:1px solid var(--approve);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12.5px}
@@ -496,21 +508,45 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         </div>
 
         <div class="upload-grid">
-          <div class="upload-slot">
+          <div class="upload-slot upload-slot-wide">
             <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card</span><span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></div>
-            <input type="file" accept="image/*" capture="environment" id="file-aadhaar" onchange="handleDocUpload('aadhaar', this.files[0])">
+            <div class="aadhaar-two-col">
+              <div>
+                <span class="fld-hint">Front side</span>
+                <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-front" onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                <div class="doc-preview-wrap" id="preview-aadhaar_front"></div>
+                <div class="pdf-page-picker" id="pages-aadhaar_front" style="display:none"></div>
+              </div>
+              <div>
+                <span class="fld-hint">Back side (optional — for address)</span>
+                <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-back" onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                <div class="doc-preview-wrap" id="preview-aadhaar_back"></div>
+                <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
+              </div>
+            </div>
+            <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="extractAadhaar()">Extract Aadhaar (₹5)</button>
           </div>
+
           <div class="upload-slot">
             <div class="upload-slot-top"><span class="upload-slot-name">PAN Card</span><span class="upload-slot-state" id="state-pan">Not uploaded</span></div>
-            <input type="file" accept="image/*" capture="environment" id="file-pan" onchange="handleDocUpload('pan', this.files[0])">
+            <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-pan" onchange="handleFileSelect('pan', this.files[0])">
+            <div class="doc-preview-wrap" id="preview-pan"></div>
+            <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
+            <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="extractSingle('pan')">Extract PAN (₹5)</button>
           </div>
+
           <div class="upload-slot">
             <div class="upload-slot-top"><span class="upload-slot-name">RC (Registration Certificate)</span><span class="upload-slot-state" id="state-rc">Not uploaded</span></div>
-            <input type="file" accept="image/*" capture="environment" id="file-rc" onchange="handleDocUpload('rc', this.files[0])">
+            <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" onchange="handleFileSelect('rc', this.files[0])">
+            <div class="doc-preview-wrap" id="preview-rc"></div>
+            <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
+            <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="extractSingle('rc')">Extract RC (₹5)</button>
           </div>
+
           <div class="upload-slot">
             <div class="upload-slot-top"><span class="upload-slot-name">Face Photo (for attachment)</span><span class="upload-slot-state" id="state-photo">Not uploaded</span></div>
             <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
+            <div class="doc-preview-wrap" id="preview-photo"></div>
           </div>
         </div>
 
@@ -2887,10 +2923,13 @@ async function fetchWalletBalance(){
   }catch(e){ /* silent — balance will refresh on next action */ }
 }
 
+/* DOC_STATE holds the confirmed image (dataUrl + mimeType) the user has previewed & approved, per slot key */
+const DOC_STATE={};
+
 function fileToBase64(file){
   return new Promise((resolve,reject)=>{
     const r=new FileReader();
-    r.onload=()=>resolve(r.result.split(',')[1]);
+    r.onload=()=>resolve(r.result);
     r.onerror=reject;
     r.readAsDataURL(file);
   });
@@ -2930,12 +2969,115 @@ const AI_FIELD_MAP={
   }
 };
 
-async function handleDocUpload(docType, file){
+/* ── File selection: shows a preview immediately. PDFs render to page thumbnails so the
+   right page can be picked (handles multi-page / multi-document PDFs and scans). ── */
+async function handleFileSelect(key, file){
   if(!file) return;
-  if(!ensureWallet()) return;
+  const isPdf = file.type==='application/pdf' || /\.pdf$/i.test(file.name||'');
+  const previewEl=document.getElementById('preview-'+key);
+  const pickerEl=document.getElementById('pages-'+key);
+  previewEl.innerHTML='<p class="fld-hint">Loading preview...</p>';
+  pickerEl.style.display='none'; pickerEl.innerHTML='';
 
-  const stateEl=document.getElementById('state-'+docType);
+  if(isPdf){
+    try{
+      const dataUrl=await fileToBase64(file);
+      const raw=atob(dataUrl.split(',')[1]);
+      const bytes=new Uint8Array(raw.length);
+      for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+      const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+      const pageCount=Math.min(pdf.numPages, 8);
+      const thumbs=[];
+      for(let p=1;p<=pageCount;p++){
+        const page=await pdf.getPage(p);
+        const viewport=page.getViewport({scale:1.1});
+        const canvas=document.createElement('canvas');
+        canvas.width=viewport.width; canvas.height=viewport.height;
+        await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
+        thumbs.push(canvas.toDataURL('image/jpeg',0.85));
+      }
+      if(thumbs.length===1){
+        setDocImage(key, thumbs[0]);
+      }else{
+        previewEl.innerHTML='<p class="fld-hint">Is PDF mein '+thumbs.length+' pages hain — sahi page choose karo:</p>';
+        pickerEl.style.display='flex';
+        thumbs.forEach((t,i)=>{
+          const img=document.createElement('img');
+          img.src=t; img.className='pdf-page-thumb'; img.title='Page '+(i+1);
+          img.onclick=()=>{ selectPdfPage(key, t, pickerEl); };
+          pickerEl.appendChild(img);
+        });
+      }
+    }catch(err){
+      previewEl.innerHTML='<p class="fld-hint" style="color:var(--stamp)">PDF read nahi ho paayi: '+err.message+'</p>';
+    }
+  }else{
+    const dataUrl=await fileToBase64(file);
+    setDocImage(key, dataUrl);
+  }
+}
+
+function selectPdfPage(key, dataUrl, pickerEl){
+  [...pickerEl.children].forEach(el=>el.classList.remove('sel'));
+  const clicked=[...pickerEl.children].find(el=>el.src===dataUrl);
+  if(clicked) clicked.classList.add('sel');
+  setDocImage(key, dataUrl, true);
+}
+
+function setDocImage(key, dataUrl, keepPicker){
+  DOC_STATE[key]={dataUrl, mimeType:'image/jpeg'};
+  const previewEl=document.getElementById('preview-'+key);
+  if(!keepPicker){
+    previewEl.innerHTML='';
+    const img=document.createElement('img');
+    img.src=dataUrl;
+    previewEl.appendChild(img);
+  }else{
+    let img=previewEl.querySelector('img.doc-main-preview');
+    if(!img){
+      previewEl.innerHTML='';
+      img=document.createElement('img');
+      img.className='doc-main-preview';
+      previewEl.appendChild(img);
+    }
+    img.src=dataUrl;
+  }
+  onDocReady(key);
+}
+
+function onDocReady(key){
+  if(key==='aadhaar_front' || key==='aadhaar_back'){
+    document.getElementById('state-aadhaar').textContent='Preview ready';
+    document.getElementById('state-aadhaar').className='upload-slot-state';
+    if(DOC_STATE.aadhaar_front) document.getElementById('extract-aadhaar').style.display='block';
+  }else{
+    document.getElementById('state-'+key).textContent='Preview ready';
+    document.getElementById('state-'+key).className='upload-slot-state';
+    document.getElementById('extract-'+key).style.display='block';
+  }
+}
+
+/* ── Extract: only runs when the user clicks the button, after reviewing the preview ── */
+async function extractSingle(docType){
+  if(!ensureWallet()) return;
+  const doc=DOC_STATE[docType];
+  if(!doc){ return; }
+  await runExtraction(docType, [doc], 'extract-'+docType, 'state-'+docType, docType);
+}
+
+async function extractAadhaar(){
+  if(!ensureWallet()) return;
+  const front=DOC_STATE.aadhaar_front;
+  if(!front){ return; }
+  const images=[front];
+  if(DOC_STATE.aadhaar_back) images.push(DOC_STATE.aadhaar_back);
+  await runExtraction('aadhaar', images, 'extract-aadhaar', 'state-aadhaar', 'aadhaar');
+}
+
+async function runExtraction(docType, images, btnId, stateId, uploadsKey){
   const statusEl=document.getElementById('proStatus');
+  const stateEl=document.getElementById(stateId);
+  const btn=document.getElementById(btnId);
 
   if(PRO.balancePaise<500){
     statusEl.textContent='Balance kam hai (kam se kam ₹5 chahiye) — pehle wallet mein paise add karo.';
@@ -2944,18 +3086,14 @@ async function handleDocUpload(docType, file){
     return;
   }
 
-  stateEl.textContent='Reading...'; stateEl.className='upload-slot-state';
-  statusEl.textContent='Document padh raha hoon...'; statusEl.className='status';
+  btn.disabled=true; btn.textContent='Extracting...';
+  statusEl.textContent='AI se data extract ho raha hai...'; statusEl.className='status';
 
   try{
-    const b64=await fileToBase64(file);
-    const dataUrl='data:'+(file.type||'image/jpeg')+';base64,'+b64;
-
-    statusEl.textContent='AI se data extract ho raha hai...';
     const res=await fetch(WORKER_URL+'/extract',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({walletId:PRO.walletId, docType, imageBase64:b64, mimeType:file.type||'image/jpeg'})
+      body:JSON.stringify({walletId:PRO.walletId, docType, images})
     });
     const json=await res.json();
     if(!res.ok || json.error){
@@ -2968,17 +3106,19 @@ async function handleDocUpload(docType, file){
     Object.keys(mapped).forEach(k=>{ if(mapped[k]) VALS[k]=String(mapped[k]).toUpperCase(); });
     updateSections();
 
-    const dims=await loadImageDims(dataUrl);
-    PRO.uploads[docType]={dataUrl,w:dims.w,h:dims.h,raw:data};
+    const dims=await loadImageDims(images[0].dataUrl);
+    PRO.uploads[uploadsKey]={dataUrl:images[0].dataUrl,w:dims.w,h:dims.h,raw:data};
 
     PRO.balancePaise=json.balancePaise; renderProCredits();
 
     stateEl.textContent='Extracted \u2713'; stateEl.className='upload-slot-state done';
+    btn.textContent='Extracted \u2713'; btn.disabled=true;
     statusEl.textContent=docType.toUpperCase()+' se data auto-fill ho gaya. Balance: ₹'+json.balanceRs;
     statusEl.className='status ok';
     renderProResult(docType, data);
   }catch(err){
     stateEl.textContent='Failed'; stateEl.className='upload-slot-state err';
+    btn.disabled=false; btn.textContent='Retry Extract (₹5)';
     statusEl.textContent='Error: '+err.message;
     statusEl.className='status err';
   }
@@ -2988,10 +3128,13 @@ async function handlePhotoUpload(file){
   if(!file) return;
   const stateEl=document.getElementById('state-photo');
   stateEl.textContent='Reading...';
-  const b64=await fileToBase64(file);
-  const dataUrl='data:'+(file.type||'image/jpeg')+';base64,'+b64;
+  const dataUrl=await fileToBase64(file);
   const dims=await loadImageDims(dataUrl);
   PRO.uploads.photo={dataUrl,w:dims.w,h:dims.h};
+  const previewEl=document.getElementById('preview-photo');
+  previewEl.innerHTML='';
+  const img=document.createElement('img'); img.src=dataUrl;
+  previewEl.appendChild(img);
   stateEl.textContent='Uploaded \u2713'; stateEl.className='upload-slot-state done';
 }
 
