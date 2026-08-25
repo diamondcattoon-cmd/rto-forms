@@ -256,6 +256,9 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .ftr-bottom{padding-top:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.35)}
 .ftr-bottom .mono{font-size:11px}
 
+.fld-blink{animation:fldBlink .5s ease-in-out 4;border-color:var(--stamp)!important;background:var(--stamp-soft)!important}
+@keyframes fldBlink{0%,100%{box-shadow:0 0 0 0 rgba(214,72,31,0)}50%{box-shadow:0 0 0 5px rgba(214,72,31,.4)}}
+
 /* ─── PRO / AI AUTO-FILL ─── */
 .pro-panel{background:linear-gradient(180deg,var(--stamp-soft) 0%,var(--white) 140px);border:1.5px solid var(--stamp);border-radius:12px;padding:20px 20px 22px;margin-bottom:26px}
 .pro-num{background:var(--stamp)!important;color:#fff!important}
@@ -2807,19 +2810,21 @@ function generatePDF(blank){
       st.textContent=msg; st.className='status err';
       const inp=document.getElementById(fieldId);
       if(inp){
-        inp.style.borderColor='var(--stamp)';
-        inp.style.background='var(--stamp-soft)';
+        inp.classList.add('fld-blink');
         inp.scrollIntoView({behavior:'smooth',block:'center'});
         inp.focus();
-        setTimeout(()=>{inp.style.borderColor='';inp.style.background='';},3000);
+        setTimeout(()=>{inp.classList.remove('fld-blink');},2200);
       }
     };
     if(!g('s_name')){highlightErr('s_name','Owner / Seller name is required.'); return;}
     if(needsReg && !g('reg_no')){highlightErr('reg_no','Registration No. is required for the selected forms.'); return;}
     if(needsBuyer && !g('b_name')){highlightErr('b_name','Purchaser name is required for the selected transfer / sale forms.'); return;}
-    /* Mobile validation */
-    const mob=g('mobile');
-    if(mob && mob.length!==10){highlightErr('mobile','Mobile number must be exactly 10 digits.'); return;}
+    /* Mobile is compulsory only for forms that actually include a mobile number field */
+    if(need.has('mobile')){
+      const mob=g('mobile');
+      if(!mob){highlightErr('mobile','Mobile number is compulsory — please enter it before generating the PDF.'); return;}
+      if(mob.length!==10){highlightErr('mobile','Mobile number must be exactly 10 digits.'); return;}
+    }
     allIds.forEach(k=>d[k]=g(k));
     d.veh_type=d.veh_type||'Motor Vehicle';
     d.rto=d.rto||'District Transport Office, Jamshedpur';
@@ -3269,6 +3274,7 @@ async function startPayment(amountRs){
 if(PRO.walletId){ const wr=document.getElementById('proWalletRow'); if(wr) wr.style.display='none'; }
 renderProCredits();
 fetchWalletBalance();
+console.log('RTO PRO build: v4 (RC full-field extraction + mandatory mobile)');
 </script>
 <div class="modal-overlay" id="proBuyModal" style="display:none">
   <div class="modal-box">
