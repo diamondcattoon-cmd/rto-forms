@@ -1,11 +1,12 @@
-# RTO Forms — PRO Feature Worker (v2)
+# RTO Forms — PRO Feature Worker (rto-ai-extract)
 
 Cloudflare Worker that powers the paid features on rtoformsindia.com:
 wallet balance/recharge (Razorpay) and document field extraction (Gemini Vision)
 for Aadhaar, PAN, and RC images.
 
-Currently deployed by pasting `worker-v2.js` into the Cloudflare dashboard editor
-(no `wrangler.toml` / CLI deploy set up yet).
+Deployed with Wrangler from `worker/` — code lives in `src/index.js`, config
+in `wrangler.toml`. Do not deploy by pasting into the Cloudflare dashboard
+editor anymore; that's how the Worker and frontend drifted out of sync before.
 
 ## Routes
 
@@ -14,24 +15,44 @@ Currently deployed by pasting `worker-v2.js` into the Cloudflare dashboard edito
 - `POST /verify` — verify a Razorpay payment and credit the wallet
 - `POST /extract` — deduct ₹5 and run Gemini Vision extraction on 1–2 images
 
-## Deploy (Cloudflare dashboard)
+## One-time setup
 
-1. Go to **Cloudflare dashboard → Workers & Pages** and open the worker
-   (or **Create → Worker** if it doesn't exist yet).
-2. Open the **Edit code** view, replace the contents with `worker-v2.js`, then
-   **Save and deploy**.
-3. Under **Settings → Variables and Secrets**, set:
-   - `GEMINI_API_KEY` (Secret) — from https://aistudio.google.com/apikey
-   - `RAZORPAY_KEY_ID` (Text) — e.g. `rzp_test_xxxx`
-   - `RAZORPAY_KEY_SECRET` (Secret)
-4. Under **Settings → Bindings → KV Namespace**, bind a KV namespace named
-   `WALLET` (create one called `rto-wallets` if it doesn't exist).
-5. Confirm `ALLOWED_ORIGIN` at the top of `worker-v2.js` matches the site
-   domain (currently `https://rtoformsindia.com`) — update and redeploy if it
-   changes.
+1. Install Wrangler (or use `npx wrangler` without installing globally) and
+   log in:
+   ```
+   npx wrangler login
+   ```
+2. Create the KV namespace used for wallet balances:
+   ```
+   npx wrangler kv namespace create rto-wallets
+   ```
+   This prints an `id`. Paste it into `wrangler.toml` in place of
+   `REPLACE_WITH_KV_NAMESPACE_ID`.
+3. Set the required secrets (values are prompted interactively, never
+   passed on the command line, and never committed to the repo):
+   ```
+   npx wrangler secret put GEMINI_API_KEY
+   npx wrangler secret put RAZORPAY_KEY_ID
+   npx wrangler secret put RAZORPAY_KEY_SECRET
+   ```
+   - `GEMINI_API_KEY` — from https://aistudio.google.com/apikey
+   - `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` — from the Razorpay dashboard
+
+## Deploy
+
+```
+npx wrangler deploy
+```
+
+Run this from the `worker/` folder (where `wrangler.toml` lives) every time
+`src/index.js` changes, so the deployed Worker and this repo never drift
+apart again.
 
 ## Notes
 
-- Extraction cost is `COST_PAISE` in `worker-v2.js` (currently ₹5.00 per call).
+- Extraction cost is `COST_PAISE` in `src/index.js` (currently ₹5.00 per call).
 - Wallet balances and payment dedupe records are stored in the `WALLET` KV
   namespace (`bal:<walletId>` and `paid:<razorpay_payment_id>` keys).
+- `ALLOWED_ORIGIN` at the top of `src/index.js` is locked to
+  `https://rtoformsindia.com` — update and redeploy if the site domain
+  changes.

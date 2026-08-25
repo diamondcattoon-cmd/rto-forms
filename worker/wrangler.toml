@@ -1,0 +1,7 @@
+name = "rto-ai-extract"
+main = "src/index.js"
+compatibility_date = "2026-08-25"
+
+[[kv_namespaces]]
+binding = "WALLET"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
