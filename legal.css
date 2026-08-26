@@ -1,0 +1,76 @@
+/* ════════ SHARED STYLES — legal pages (privacy / terms / refund) ════════
+   Reuses the same design tokens as index.html's inline <style> (colors,
+   IBM Plex Sans/Mono, dotted-rule motif) so these pages look like part of
+   the same site. Kept in its own file (rather than duplicated three times
+   or merged into index.html's inline styles) since all three legal pages
+   share an identical header/footer/content shell. */
+:root{
+  --ink:#142850;
+  --ink-2:#1d3a6e;
+  --paper:#FAF8F3;
+  --paper-2:#F1EDE3;
+  --stamp:#D6481F;
+  --stamp-soft:#FBEAE3;
+  --approve:#1A7A4A;
+  --line:#D8D2C4;
+  --txt:#1C2434;
+  --txt-2:#5B6478;
+  --txt-3:#9AA1B2;
+  --white:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--txt);line-height:1.65;font-size:15px}
+.mono{font-family:'IBM Plex Mono',monospace}
+.dotrule{border:none;border-top:2px dotted var(--line);margin:0}
+
+/* ─── HEADER ─── */
+.hdr{background:var(--ink);position:sticky;top:0;z-index:200;box-shadow:0 1px 0 rgba(255,255,255,.08)}
+.hdr-in{max-width:860px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.brand-mark{width:38px;height:38px;background:var(--stamp);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;color:#fff;letter-spacing:-.5px;transform:rotate(-3deg)}
+.brand-txt{color:#fff;font-weight:600;font-size:16px;letter-spacing:.2px}
+.brand-txt small{display:block;font-weight:400;font-size:10.5px;color:rgba(255,255,255,.55);letter-spacing:.8px;text-transform:uppercase;margin-top:-1px}
+.hdr-back{color:rgba(255,255,255,.75);text-decoration:none;font-size:13.5px;font-weight:500;padding:7px 13px;border-radius:6px;transition:all .15s}
+.hdr-back:hover{color:#fff;background:rgba(255,255,255,.1)}
+
+/* ─── HERO ─── */
+.legal-hero{background:var(--ink);color:#fff;padding:40px 20px 34px}
+.legal-hero-in{max-width:860px;margin:0 auto}
+.legal-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;color:#F0A284;margin-bottom:12px}
+.legal-hero h1{font-size:clamp(24px,4vw,34px);font-weight:700;letter-spacing:-.5px}
+.legal-updated{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:rgba(255,255,255,.55);margin-top:10px}
+
+/* ─── CONTENT ─── */
+.legal-wrap{max-width:860px;margin:0 auto;padding:40px 20px 60px}
+.legal-wrap h2{font-size:19px;font-weight:700;color:var(--ink);margin:32px 0 12px;letter-spacing:-.2px}
+.legal-wrap h2:first-child{margin-top:0}
+.legal-wrap h3{font-size:15px;font-weight:600;color:var(--ink);margin:20px 0 8px}
+.legal-wrap p{margin:0 0 14px;color:var(--txt);font-size:14.5px}
+.legal-wrap ul,.legal-wrap ol{margin:0 0 14px 22px;color:var(--txt);font-size:14.5px}
+.legal-wrap li{margin-bottom:6px}
+.legal-wrap a{color:var(--stamp);text-decoration:underline;text-decoration-style:dotted}
+.legal-wrap strong{color:var(--ink)}
+.legal-note{background:var(--stamp-soft);border:1px solid var(--stamp);border-radius:8px;padding:14px 16px;font-size:13.5px;color:var(--txt);margin:18px 0}
+.legal-note strong{color:var(--stamp)}
+.legal-toc{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:8px}
+.legal-toc-lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--txt-2);margin-bottom:10px;text-transform:uppercase}
+.legal-toc a{display:block;font-size:13.5px;color:var(--txt);text-decoration:none;padding:5px 0;border-bottom:1px dotted var(--line)}
+.legal-toc a:last-child{border-bottom:none}
+.legal-toc a:hover{color:var(--stamp)}
+
+/* ─── FOOTER (trimmed copy of index.html's) ─── */
+.ftr{background:var(--ink);color:rgba(255,255,255,.6);margin-top:20px}
+.ftr-in{max-width:860px;margin:0 auto;padding:36px 20px 28px}
+.ftr-top{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:24px;border-bottom:2px dotted rgba(255,255,255,.15)}
+.ftr-brand{font-weight:600;color:#fff;font-size:15px}
+.ftr-brand small{display:block;font-weight:400;font-size:12px;color:rgba(255,255,255,.45);margin-top:4px;max-width:300px;line-height:1.6}
+.ftr-links{display:flex;gap:20px;flex-wrap:wrap}
+.ftr-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:13px;transition:color .15s}
+.ftr-links a:hover{color:#fff}
+.ftr-disclaimer{padding:16px 0;font-size:12px;color:rgba(255,255,255,.5);border-bottom:1px dotted rgba(255,255,255,.1);margin-bottom:6px;line-height:1.6}
+.ftr-bottom{padding-top:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.35)}
+
+@media(max-width:560px){.legal-wrap{padding:28px 16px 48px}.hdr-in{padding:0 16px}}
+/* focus visibility */
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var(--stamp);outline-offset:2px}

@@ -6,6 +6,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+/* Wallet recovery links (/w/<token>) point here — index.html reads the token
+   out of location.pathname on load and claims it via the Worker. */
+app.get('/w/:token', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.listen(PORT, () => console.log('RTO Forms running on port ' + PORT));
