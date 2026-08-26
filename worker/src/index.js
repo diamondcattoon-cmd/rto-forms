@@ -194,6 +194,23 @@ function randomToken() {
   return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/* Razorpay's order `receipt` field must be <=40 characters and unique per
+   order (docs: "Can have a maximum length of 40 characters and has to be
+   unique"). walletId alone is already 64 hex characters (randomToken()),
+   so using it raw — as this used to do — made every single order-creation
+   call get rejected by Razorpay's API. Truncate the wallet id to a short,
+   still-effectively-unique prefix and pair it with a millisecond timestamp
+   (base36, to stay compact) — two different orders for the same wallet
+   can't land on the same millisecond in practice (the browser round-trip
+   to /order alone takes longer than that), and two different wallets
+   colliding on both the truncated id AND the same millisecond is not a
+   realistic concern for a receipt field that's just an internal reference,
+   not a security-relevant identifier (the full walletId is still recorded
+   in `notes`, verified in the frontend, and looked up during /verify). */
+export function buildReceipt(walletId) {
+  return String(walletId).slice(0, 20) + "-" + Date.now().toString(36);
+}
+
 /* ── MSG91 — plain SMS send (Flow API) carrying a DLT-approved template with
    a link variable. We generate/store/expire/single-use the claim token
    ourselves; MSG91's job here is only to deliver the SMS. ── */
@@ -224,6 +241,23 @@ async function fetchPaymentContact(env, paymentId, auth) {
   }
 }
 
+/* Constant-time string comparison — a plain `a === b` short-circuits on the
+   first differing character, which leaks (via response timing) how many
+   leading characters of a guessed signature were correct. Cloudflare
+   Workers has no Node `crypto.timingSafeEqual`, so this XOR-accumulate
+   loop is the portable equivalent: every character gets compared no
+   matter what, so the time taken depends only on the (public) length, not
+   on where the mismatch is. Mismatched length is checked separately and
+   is safe to return early on — it isn't secret-dependent. */
+export function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 /* ── Razorpay signature verification (HMAC SHA-256) ── */
 async function verifySignature(orderId, paymentId, signature, secret) {
   const enc = new TextEncoder();
@@ -236,7 +270,7 @@ async function verifySignature(orderId, paymentId, signature, secret) {
   );
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(orderId + "|" + paymentId));
   const hex = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return hex === signature;
+  return constantTimeEqual(hex, String(signature));
 }
 
 export default {
@@ -350,7 +384,7 @@ async function handleRequest(request, env) {
         body: JSON.stringify({
           amount: amountPaise,
           currency: "INR",
-          receipt: walletId + "-" + Date.now(),
+          receipt: buildReceipt(walletId),
           notes: { walletId },
         }),
       });

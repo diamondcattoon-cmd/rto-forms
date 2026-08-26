@@ -517,6 +517,30 @@ async function startPayment(amountRs){
       },
       modal:{ ondismiss:function(){ statusEl.textContent=''; } }
     });
+
+    /* Razorpay's standard integration expects this bound separately (not
+       inside the constructor options above) — it fires when an attempted
+       payment itself is declined/errors out while the checkout modal is
+       still open (card decline, insufficient funds, etc.), which is a
+       different event from the user just closing the modal (ondismiss,
+       above) or a successful payment (handler, above). Built with DOM
+       methods rather than innerHTML since err.description/err.reason come
+       from Razorpay's response — no reason to trust them as safe HTML. */
+    rzp.on('payment.failed', function(resp){
+      const err=(resp && resp.error) || {};
+      statusEl.textContent='';
+      const msg=document.createElement('span');
+      msg.textContent='Payment fail ho gaya: '+(err.description||'Wajah pata nahi chali')+(err.reason?' ('+err.reason+')':'')+'. ';
+      const retryBtn=document.createElement('button');
+      retryBtn.type='button';
+      retryBtn.className='settings-reset';
+      retryBtn.textContent='Retry';
+      retryBtn.onclick=function(){ startPayment(amountRs); };
+      statusEl.appendChild(msg);
+      statusEl.appendChild(retryBtn);
+      statusEl.className='status err';
+    });
+
     rzp.open();
   }catch(err){
     statusEl.textContent='Error: '+err.message;
