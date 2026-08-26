@@ -56,7 +56,6 @@ function fillNow(i){
   const f=FORMS[i];
   const ids=[].concat(f.fill);
   PICKS.forEach(p=>{ CHECKED[p.id]=ids.includes(p.id); });
-  window._activeSuggest=[];
   /* switch to the type of the first selected pick */
   const firstPick=PICKS.find(p=>ids.includes(p.id));
   if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
@@ -112,7 +111,6 @@ function applyBundle(bid){
   const b=BUNDLES.find(x=>x.id===bid);
   if(!b) return;
   PICKS.forEach(p=>{ CHECKED[p.id]=b.picks.includes(p.id); });
-  window._activeSuggest = b.suggest||[];
   document.querySelectorAll('.bundle-btn').forEach(btn=>btn.classList.remove('on'));
   const idx=BUNDLES.findIndex(x=>x.id===bid);
   const btns=document.querySelectorAll('.bundle-btn');
@@ -148,9 +146,9 @@ function switchType(tid){
 function renderPicksList(){
   const wrap=document.getElementById('picksWrap');
   const inType = PICKS.filter(p=>(p.type||'rto')===ACTIVE_TYPE);
-  const suggest = window._activeSuggest||[];
+  const suggest = computeSuggestPickIds();
   wrap.innerHTML = inType.map(p=>{
-    const isSug = suggest.includes(p.id);
+    const isSug = suggest.includes(p.id) && !CHECKED[p.id];
     return `<label class="pick${isSug?' pick-suggest':''}"><input type="checkbox" id="${p.id}"${CHECKED[p.id]?' checked':''} onchange="toggleCheck('${p.id}',this)"> ${p.label}${isSug?'<span class="sug-tag">suggested</span>':''}</label>`;
   }).join('') || '<p style="color:var(--txt-3);font-size:13px;padding:8px 0">No documents in this category yet.</p>';
 }
@@ -159,6 +157,193 @@ function toggleCheck(id, el){
   CHECKED[id]=el.checked;
   buildPicks();  /* refresh tab badges */
   updateSections();
+}
+
+/* ── "Add more forms" — cross-type suggestions, derived live from whichever
+   BUNDLES the current CHECKED selection overlaps, not a one-time snapshot
+   from clicking a bundle button. This way it stays correct even if the user
+   builds up a selection by hand (no bundle click at all) or edits it after
+   applying a bundle — see PICKS/BUNDLES in forms-data.js for the source data. ── */
+function computeSuggestPickIds(){
+  const checkedIds=new Set(PICKS.filter(p=>CHECKED[p.id]).map(p=>p.id));
+  if(!checkedIds.size) return [];
+  const suggested=new Set();
+  BUNDLES.forEach(b=>{
+    if(b.picks.some(id=>checkedIds.has(id))){
+      (b.suggest||[]).forEach(id=>suggested.add(id));
+    }
+  });
+  return [...suggested];
+}
+
+/* Renders the dedicated "Add more forms" panel (index.html #addMoreFset) —
+   unlike the inline .pick-suggest tag in renderPicksList() (only visible
+   within the currently active type tab), this shows every suggestion
+   regardless of which tab it belongs to, e.g. a receipt suggested alongside
+   a transfer package even while the RTO Forms tab is showing. `need` is the
+   field set already computed by updateSections(), reused here so "+N new
+   fields" reflects what adding this pick would actually add on top of the
+   currently selected forms — not its total field count. */
+function renderSuggestions(need){
+  const wrap=document.getElementById('addMoreFset');
+  const listEl=document.getElementById('suggestList');
+  if(!wrap || !listEl) return;
+  const ids=computeSuggestPickIds();
+  if(!ids.length){ wrap.style.display='none'; listEl.innerHTML=''; return; }
+  wrap.style.display='';
+  listEl.innerHTML=ids.map(id=>{
+    const p=PICKS.find(x=>x.id===id);
+    if(!p) return '';
+    const isChecked=!!CHECKED[id];
+    const newCount=(p.fields||[]).filter(f=>!need.has(f)).length;
+    const delta=isChecked ? 'Added ✓' : (newCount===0 ? 'No new fields' : ('+'+newCount+' new field'+(newCount===1?'':'s')));
+    const note=isChecked ? 'Included in your PDF' : (newCount===0 ? 'No extra fields needed' : 'Same details, no extra charge');
+    return `<div class="suggest-row${isChecked?' added':''}" onclick="toggleSuggest('${id}')">
+      <div class="suggest-row-main">
+        <div class="suggest-row-label">${p.label}</div>
+        <div class="suggest-row-note">${note}</div>
+      </div>
+      <span class="suggest-row-delta">${delta}</span>
+      <span class="suggest-row-btn">${isChecked?'✕ Remove':'+ Add'}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleSuggest(id){
+  CHECKED[id]=!CHECKED[id];
+  buildPicks();
+  updateSections();
+}
+
+/* ── PDF font style ── jsPDF's three built-in "standard 14" families
+   (Helvetica, Times, Courier) render without embedding any font file — no
+   extra network/asset cost, works the same in every PDF viewer. Every
+   drawing function in pdf-generate.js hardcodes 'helvetica' directly (there
+   are 40+ call sites, several inside per-form local closures like addForm20's
+   own `F` constant) — rather than touch all of them, generatePDF() below
+   monkey-patches doc.setFont() once, the same way it already wraps doc.text()
+   defensively, so whatever family a drawing function asks for is substituted
+   with the user's actual choice. */
+let PDF_FONT='helvetica';
+try{
+  const saved=localStorage.getItem('rtoPdfFont');
+  if(saved==='helvetica'||saved==='times'||saved==='courier') PDF_FONT=saved;
+}catch(e){}
+function setPdfFont(v){
+  PDF_FONT=v;
+  try{ localStorage.setItem('rtoPdfFont', v); }catch(e){}
+}
+(function initPdfFontRadio(){
+  const id = PDF_FONT==='times' ? 'pdfFontTimes' : PDF_FONT==='courier' ? 'pdfFontCourier' : 'pdfFontHelvetica';
+  const el=document.getElementById(id);
+  if(el) el.checked=true;
+})();
+
+/* ── Settings modal — "what should already be selected when I open this
+   site" preferences, saved per-browser in localStorage. Two independent
+   knobs:
+     defaultBundle  — '' (site default, i.e. leave PICKS[i].def from
+                      forms-data.js alone), 'none' (start with nothing
+                      checked), or a BUNDLES id to auto-apply that bundle.
+     alwaysInclude  — pick ids that get checked in addition to whichever of
+                      the above applies (e.g. "I always want a Money
+                      Receipt too", regardless of which package I start
+                      with).
+   Deliberately NOT applied retroactively to the current session when
+   changed from the modal — these are "next time I open the site" prefs,
+   not a live action (that's what the picks list / Add-more-forms section
+   are for) — see applyUserPrefs(), called once at bootstrap below. */
+let USER_PREFS={defaultBundle:'', alwaysInclude:[]};
+try{
+  const raw=localStorage.getItem('rtoUserPrefs');
+  if(raw){
+    const parsed=JSON.parse(raw);
+    if(parsed && typeof parsed==='object'){
+      USER_PREFS.defaultBundle = typeof parsed.defaultBundle==='string' ? parsed.defaultBundle : '';
+      USER_PREFS.alwaysInclude = Array.isArray(parsed.alwaysInclude) ? parsed.alwaysInclude.filter(id=>PICKS.some(p=>p.id===id)) : [];
+    }
+  }
+}catch(e){}
+
+function saveUserPrefs(){
+  try{ localStorage.setItem('rtoUserPrefs', JSON.stringify(USER_PREFS)); }catch(e){}
+}
+
+function applyUserPrefs(){
+  if(USER_PREFS.defaultBundle==='none'){
+    PICKS.forEach(p=>{ CHECKED[p.id]=false; });
+  } else if(USER_PREFS.defaultBundle){
+    const b=BUNDLES.find(x=>x.id===USER_PREFS.defaultBundle);
+    if(b){
+      PICKS.forEach(p=>{ CHECKED[p.id]=b.picks.includes(p.id); });
+      const firstPick=PICKS.find(p=>p.id===b.picks[0]);
+      if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
+    }
+  }
+  /* '' = site default — forms-data.js's PICKS[i].def-based CHECKED already stands */
+  USER_PREFS.alwaysInclude.forEach(id=>{ if(id in CHECKED) CHECKED[id]=true; });
+}
+
+function setDefaultBundlePref(v){
+  USER_PREFS.defaultBundle=v;
+  saveUserPrefs();
+}
+
+function toggleAlwaysInclude(id, checked){
+  const set=new Set(USER_PREFS.alwaysInclude);
+  if(checked) set.add(id); else set.delete(id);
+  USER_PREFS.alwaysInclude=[...set];
+  saveUserPrefs();
+}
+
+function resetUserPrefs(){
+  USER_PREFS={defaultBundle:'', alwaysInclude:[]};
+  saveUserPrefs();
+  setPdfFont('helvetica');
+  const helvEl=document.getElementById('pdfFontHelvetica');
+  if(helvEl) helvEl.checked=true;
+  renderSettingsModal();
+}
+
+function renderDefaultBundleOptions(){
+  const wrap=document.getElementById('settingsDefaultBundle');
+  if(!wrap) return;
+  const cur=USER_PREFS.defaultBundle||'';
+  const opts=[
+    {v:'', label:'Site default — Transfer package (Form 29/30 + affidavits)'},
+    {v:'none', label:'Start empty — I’ll choose every time'},
+    ...BUNDLES.map(b=>({v:b.id, label:b.icon+' '+b.label}))
+  ];
+  wrap.innerHTML=opts.map(o=>
+    `<label class="pro-radio"><input type="radio" name="defaultBundlePref" value="${o.v}"${cur===o.v?' checked':''} onchange="setDefaultBundlePref(this.value)"> ${o.label}</label>`
+  ).join('');
+}
+
+function renderAlwaysIncludeList(){
+  const wrap=document.getElementById('settingsAlwaysInclude');
+  if(!wrap) return;
+  const saved=new Set(USER_PREFS.alwaysInclude);
+  wrap.innerHTML=DOC_TYPES.map(t=>{
+    const items=PICKS.filter(p=>(p.type||'rto')===t.id);
+    if(!items.length) return '';
+    return `<div class="settings-group">
+      <div class="settings-group-lbl">${t.label}</div>
+      <div class="picks">${items.map(p=>`<label class="pick"><input type="checkbox"${saved.has(p.id)?' checked':''} onchange="toggleAlwaysInclude('${p.id}',this.checked)"> ${p.label}</label>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSettingsModal(){
+  renderDefaultBundleOptions();
+  renderAlwaysIncludeList();
+}
+
+function openSettingsModal(){
+  renderSettingsModal();
+  document.getElementById('settingsModal').style.display='flex';
+}
+function closeSettingsModal(){
+  document.getElementById('settingsModal').style.display='none';
 }
 
 function fieldHTML(id){
@@ -277,6 +462,7 @@ function updateSections(){
   const anyB=chosen.some(p=>p.needB);
   updateProContext(need);
   updateDocSlotVisibility(need);
+  renderSuggestions(need);
 
   /* Update dynamic page count note */
   const pcEl=document.getElementById('pageCountNote');
@@ -316,6 +502,7 @@ function updateSections(){
   if(fab) fab.classList.toggle('show', chosen.length>0);
 }
 
+applyUserPrefs();
 buildBundles();
 buildPicks();
 updateSections();
@@ -475,6 +662,14 @@ function generatePDF(blank){
         if(txt==null) txt='';
         else if(typeof txt!=='string' && !Array.isArray(txt)) txt=String(txt);
         return _origText(txt,...rest);
+      };
+      /* Substitute the user's chosen PDF font for whatever family the drawing
+         functions ask for (always 'helvetica' literally, in every PICKS[i].gen)
+         — see setPdfFont() above for why this is done here rather than in
+         pdf-generate.js itself. Style (normal/bold/etc.) passes through unchanged. */
+      const _origSetFont=doc.setFont.bind(doc);
+      doc.setFont=function(family,style,...rest){
+        return _origSetFont(PDF_FONT,style,...rest);
       };
       doc.setFont('helvetica','normal');
       chosen.forEach((p,i)=>{

@@ -321,6 +321,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .pro-result-row{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
 .pro-result-row span:first-child{color:var(--txt-2);text-transform:capitalize}
 
+/* ─── COMBINED AI CHECKOUT ─── */
+.checkout-box{background:var(--white);border:1.5px solid var(--stamp);border-radius:10px;padding:14px 16px;margin:2px 0 14px}
+.checkout-rows{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.checkout-row{display:flex;justify-content:space-between;font-size:13px;color:var(--txt-2)}
+.checkout-row.checkout-total{border-top:1px dashed var(--line);margin-top:4px;padding-top:8px;font-weight:600;color:var(--ink);font-size:14px}
+.checkout-box .btn-generate{width:100%}
+.checkout-note{font-size:11px;color:var(--txt-2);margin-top:8px;text-align:center}
+
 /* ─── MODAL (buy credits) ─── */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,40,80,.55);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
 .modal-box{background:#fff;border-radius:14px;max-width:420px;width:100%;padding:24px;max-height:88vh;overflow-y:auto}
@@ -338,6 +346,18 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .modal-code-in{display:flex;gap:8px}
 .modal-code-in input{flex:1;padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
 .modal-code-in .btn-generate{padding:11px 18px;font-size:13px}
+
+/* ─── SETTINGS MODAL ─── */
+button.tf-chip{cursor:pointer;font-family:inherit}
+.settings-section{margin-bottom:22px}
+.settings-section:last-of-type{margin-bottom:6px}
+.settings-section h4{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:8px}
+.settings-radio-list{display:flex;flex-direction:column;gap:9px}
+.settings-group{margin-top:12px}
+.settings-group:first-child{margin-top:0}
+.settings-group-lbl{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);margin-bottom:7px}
+.settings-reset{font-size:12px;color:var(--txt-2);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit;padding:0}
+.settings-reset:hover{color:var(--stamp)}
 
 /* ─── ADMIN (hidden — open with ?admin=vikash2026) ─── */
 .admin-panel{position:fixed;bottom:20px;left:20px;z-index:400}
@@ -433,6 +453,23 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 .sug-tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--stamp);
   background:#fff;padding:2px 6px;border-radius:4px;margin-left:7px;vertical-align:middle}
 @media(max-width:560px){.bundle-btn{font-size:12.5px;padding:10px 14px;flex:1 1 auto;justify-content:center}}
+/* ─── ADD MORE FORMS (suggestion list) ─── */
+.suggest-list{display:flex;flex-direction:column;gap:8px}
+.suggest-row{display:flex;align-items:center;gap:14px;background:var(--white);border:1.5px solid var(--line);
+  border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;user-select:none}
+.suggest-row:hover{border-color:var(--stamp)}
+.suggest-row.added{border-color:var(--approve);background:var(--approve-soft)}
+.suggest-row-main{flex:1;min-width:0}
+.suggest-row-label{font-size:13.5px;font-weight:600;color:var(--txt)}
+.suggest-row-note{font-size:11.5px;color:var(--txt-2);margin-top:2px}
+.suggest-row-delta{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--stamp);white-space:nowrap;flex-shrink:0}
+.suggest-row.added .suggest-row-delta{color:var(--approve)}
+.suggest-row-btn{font-family:inherit;font-weight:600;font-size:12.5px;color:var(--stamp);white-space:nowrap;flex-shrink:0}
+.suggest-row.added .suggest-row-btn{color:var(--approve)}
+@media(max-width:560px){
+  .suggest-row{flex-wrap:wrap;gap:6px 14px}
+  .suggest-row-main{flex:1 1 100%}
+}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style>
 </head>
@@ -493,6 +530,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <span class="tf-chip">26 FORMS FILLABLE</span>
         <span class="tf-chip">MIX ANY COMBINATION</span>
         <span class="tf-chip">ONE PDF OUTPUT</span>
+        <button type="button" class="tf-chip" onclick="openSettingsModal()">⚙ Settings</button>
       </div>
     </div>
 
@@ -511,6 +549,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <div class="type-tabs" id="typeTabs"></div>
         <div class="picks" id="picksWrap"></div>
         <p class="pick-note">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms (across categories) and every needed field is added once, shared across all of them.</p>
+      </div>
+
+      <div class="fset" id="addMoreFset" style="display:none">
+        <div class="fset-label"><span class="fset-num">+</span><h4>Add more forms — often needed together</h4></div>
+        <div class="suggest-list" id="suggestList"></div>
+        <p class="pick-note">Same details se fill hote hain — add karne ka koi extra charge nahi.</p>
       </div>
 
       <div class="fset pro-panel" id="proPanel">
@@ -571,7 +615,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
                 <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
               </div>
             </div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="extractAadhaar()">Extract Aadhaar (₹5)</button>
+            <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="retryDoc('aadhaar')">Retry Aadhaar (₹5)</button>
           </div>
 
           <div class="upload-slot" id="docSlot-pan">
@@ -580,7 +624,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
             <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-pan" disabled onchange="handleFileSelect('pan', this.files[0])">
             <div class="doc-preview-wrap" id="preview-pan"></div>
             <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="extractSingle('pan')">Extract PAN (₹5)</button>
+            <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="retryDoc('pan')">Retry PAN (₹5)</button>
           </div>
 
           <div class="upload-slot" id="docSlot-rc">
@@ -589,7 +633,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
             <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" disabled onchange="handleFileSelect('rc', this.files[0])">
             <div class="doc-preview-wrap" id="preview-rc"></div>
             <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="extractSingle('rc')">Extract RC (₹5)</button>
+            <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
           </div>
 
           <div class="upload-slot">
@@ -597,6 +641,13 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
             <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
             <div class="doc-preview-wrap" id="preview-photo"></div>
           </div>
+        </div>
+
+        <div class="checkout-box" id="checkoutBox" style="display:none">
+          <div class="checkout-rows" id="checkoutRows"></div>
+          <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()">Pay &amp; Extract</button>
+          <p class="checkout-note">₹5 per document — sirf successful extraction par katta hai, fail hone par kuch nahi katta.</p>
+          <div class="status" id="checkoutResult"></div>
         </div>
 
         <label class="pro-attach-chk"><input type="checkbox" id="attachDocsChk"> Attach uploaded documents & photo as extra pages in the final PDF</label>
@@ -835,6 +886,38 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
       <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))">Pay</button>
     </div>
     <div class="status" id="proCodeStatus"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Settings</h3>
+      <button type="button" class="modal-close" onclick="closeSettingsModal()">&times;</button>
+    </div>
+    <p class="modal-sub">Ye preferences is browser mein save ho jaati hain — agli baar site khologe to automatically apply hongi (abhi ki selection change nahi hogi).</p>
+
+    <div class="settings-section">
+      <h4>Site kholne par default kya selected ho?</h4>
+      <div class="settings-radio-list" id="settingsDefaultBundle"></div>
+    </div>
+
+    <div class="settings-section">
+      <h4>Ye forms hamesha extra include karo</h4>
+      <p class="pick-note" style="margin-top:-4px">Upar wale default ke saath-saath, ye bhi hamesha check rahenge — jaise Money Receipt ya Delivery Note.</p>
+      <div id="settingsAlwaysInclude"></div>
+    </div>
+
+    <div class="settings-section">
+      <h4>PDF font style</h4>
+      <div class="settings-radio-list">
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontHelvetica" value="helvetica" checked onchange="setPdfFont(this.value)"> Helvetica <span style="color:var(--txt-3);font-size:11.5px">(default)</span></label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontTimes" value="times" onchange="setPdfFont(this.value)"> Times New Roman</label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontCourier" value="courier" onchange="setPdfFont(this.value)"> Courier</label>
+      </div>
+    </div>
+
+    <button type="button" class="settings-reset" onclick="resetUserPrefs()">Reset all settings</button>
   </div>
 </div>
 

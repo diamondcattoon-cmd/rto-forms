@@ -249,49 +249,141 @@ function setDocImage(key, dataUrl, keepPicker){
 }
 
 function onDocReady(key){
-  if(key==='aadhaar_front' || key==='aadhaar_back'){
-    document.getElementById('state-aadhaar').textContent='Preview ready';
-    document.getElementById('state-aadhaar').className='upload-slot-state';
-    if(DOC_STATE.aadhaar_front) document.getElementById('extract-aadhaar').style.display='block';
-  }else{
-    document.getElementById('state-'+key).textContent='Preview ready';
-    document.getElementById('state-'+key).className='upload-slot-state';
-    document.getElementById('extract-'+key).style.display='block';
+  const docType = (key==='aadhaar_front' || key==='aadhaar_back') ? 'aadhaar' : key;
+  const stateEl=document.getElementById('state-'+docType);
+  stateEl.textContent='Preview ready';
+  stateEl.className='upload-slot-state';
+  updateCheckoutBox();
+}
+
+/* ── Combined AI checkout ──
+   Documents no longer each have their own "Extract" trigger — instead every
+   ready-but-not-yet-extracted document is shown together in one checkout
+   box (updateCheckoutBox()) behind a single "Pay & Extract" button. The
+   IMPORTANT part: billing stays exactly per-document underneath — the ₹5
+   deduction still only happens inside runExtraction(), after the Worker
+   confirms a successful Gemini extraction for THAT ONE document (unchanged
+   from before, see worker/src/index.js's /extract handler). The "combined"
+   part is purely a frontend loop over runExtraction() calls; nothing about
+   the charge model changed, which is what keeps the Refund Policy's
+   "failed extraction is never charged" promise true. */
+const DOC_LABEL={aadhaar:'Aadhaar', pan:'PAN', rc:'RC'};
+const EXTRACTED_SET=new Set(); // docTypes successfully extracted this session
+
+/* Returns {docType, images, uploadsKey} for a docType if its preview is
+   ready, else null. Aadhaar combines front (+ optional back) into one call —
+   matches how extractAadhaar() used to bundle them before this refactor. */
+function getBatchItem(docType){
+  if(docType==='aadhaar'){
+    const front=DOC_STATE.aadhaar_front;
+    if(!front) return null;
+    const images=[front];
+    if(DOC_STATE.aadhaar_back) images.push(DOC_STATE.aadhaar_back);
+    return {docType:'aadhaar', images, uploadsKey:'aadhaar'};
+  }
+  const doc=DOC_STATE[docType];
+  if(!doc) return null;
+  return {docType, images:[doc], uploadsKey:docType};
+}
+
+/* Everything with a ready preview that hasn't been successfully extracted
+   yet — a doc that failed stays in this list (so clicking "Pay & Extract"
+   again naturally retries it too, on top of its own dedicated Retry button). */
+function computeReadyDocs(){
+  return ['aadhaar','pan','rc'].map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.docType));
+}
+
+/* Renders the checkout box: what's left to pay for, the running total, and
+   (when lastRun is passed, right after a batch finishes) a plain-language
+   result — how many were actually charged vs failed vs never attempted
+   because the balance ran out partway through. */
+function updateCheckoutBox(lastRun){
+  const box=document.getElementById('checkoutBox');
+  const rowsEl=document.getElementById('checkoutRows');
+  const payBtn=document.getElementById('checkoutPayBtn');
+  const resultEl=document.getElementById('checkoutResult');
+  if(!box) return;
+
+  const batch=computeReadyDocs();
+  if(!batch.length && !lastRun){ box.style.display='none'; return; }
+  box.style.display='block';
+
+  const n=batch.length, total=n*5;
+  rowsEl.innerHTML = n
+    ? batch.map(item=>`<div class="checkout-row"><span>${DOC_LABEL[item.docType]}</span><span class="mono">₹5</span></div>`).join('')
+      + `<div class="checkout-row checkout-total"><span>${n} document${n>1?'s':''} × ₹5</span><span class="mono">up to ₹${total}</span></div>`
+    : '<div class="checkout-row"><span>Sab uploaded documents extract ho chuke hain.</span></div>';
+  payBtn.style.display = n ? '' : 'none';
+  payBtn.textContent = n<=1 ? 'Pay ₹5 and fill fields' : 'Pay up to ₹'+total+' and fill fields';
+
+  if(lastRun){
+    const {succeeded,failed,stoppedOnBalance}=lastRun;
+    let msg='';
+    if(succeeded) msg+='✓ '+succeeded+' document'+(succeeded>1?'s':'')+' extracted — ₹'+(succeeded*5)+' charged. ';
+    if(failed) msg+='✗ '+failed+' failed — not charged, ₹'+(failed*5)+' still in your wallet. Us document ke "Retry" button se dobara try karo. ';
+    if(stoppedOnBalance) msg+='Balance kam pad gaya — baaki documents ke liye "Add Money" karke phir "Pay & Extract" dabao.';
+    resultEl.textContent=msg.trim();
+    resultEl.className = (failed || stoppedOnBalance) ? 'status err' : 'status ok';
+  } else {
+    resultEl.textContent=''; resultEl.className='status';
   }
 }
 
-/* ── Extract: only runs when the user clicks the button, after reviewing the preview ──
-   No wallet check upfront — runExtraction() itself sends straight to
-   Razorpay checkout if the balance is too low (which is also true for a
-   brand-new user who has never paid: PRO.balancePaise starts at 0). */
-async function extractSingle(docType){
-  const doc=DOC_STATE[docType];
-  if(!doc){ return; }
-  await runExtraction(docType, [doc], 'extract-'+docType, 'state-'+docType, docType);
+/* The "Pay & Extract" button: runs every ready document through
+   runExtraction() ONE AT A TIME (never in parallel — two concurrent
+   /extract calls could both pass the Worker's balance check before either
+   deducts, since it isn't a locked/atomic check-and-set). If a call comes
+   back 'skipped-balance' the loop stops right there rather than trying
+   (and failing) every remaining document for the same reason — the buy
+   modal is already open at that point from inside runExtraction(). */
+async function startCombinedExtraction(){
+  const batch=computeReadyDocs();
+  if(!batch.length) return;
+  const payBtn=document.getElementById('checkoutPayBtn');
+  payBtn.disabled=true;
+  let succeeded=0, failed=0, stoppedOnBalance=false;
+  for(const item of batch){
+    const result=await runExtraction(item.docType, item.images, item.uploadsKey);
+    if(result==='success') succeeded++;
+    else if(result==='failed') failed++;
+    else if(result==='skipped-balance'){ stoppedOnBalance=true; break; }
+  }
+  payBtn.disabled=false;
+  updateCheckoutBox({succeeded, failed, stoppedOnBalance});
 }
 
-async function extractAadhaar(){
-  const front=DOC_STATE.aadhaar_front;
-  if(!front){ return; }
-  const images=[front];
-  if(DOC_STATE.aadhaar_back) images.push(DOC_STATE.aadhaar_back);
-  await runExtraction('aadhaar', images, 'extract-aadhaar', 'state-aadhaar', 'aadhaar');
+/* Per-document Retry button (shown only after that specific document
+   failed for a non-balance reason, e.g. a Gemini/network error) — retries
+   just that one document, same ₹5-on-success rule, without touching
+   whatever else already succeeded. */
+async function retryDoc(docType){
+  const item=getBatchItem(docType);
+  if(!item) return;
+  await runExtraction(item.docType, item.images, item.uploadsKey);
+  updateCheckoutBox();
 }
 
-async function runExtraction(docType, images, btnId, stateId, uploadsKey){
+/* Runs one document's extraction. Returns 'success' | 'failed' |
+   'skipped-balance' (balance too low — nothing was attempted, no charge,
+   buy modal opened) so callers (startCombinedExtraction's loop, retryDoc)
+   can tell "this one worked", "this one errored — safe to try the next
+   one anyway" and "the wallet is the problem — stop asking" apart. */
+async function runExtraction(docType, images, uploadsKey){
   const statusEl=document.getElementById('proStatus');
-  const stateEl=document.getElementById(stateId);
-  const btn=document.getElementById(btnId);
+  const stateEl=document.getElementById('state-'+docType);
+  const retryBtn=document.getElementById('extract-'+docType);
+  const label=DOC_LABEL[docType]||docType.toUpperCase();
 
   if(PRO.balancePaise<500){
-    statusEl.textContent='₹5 chahiye is extraction ke liye — payment window khul raha hai...';
+    statusEl.textContent='₹5 chahiye '+label+' ke liye, balance kam hai — payment window khul raha hai...';
     statusEl.className='status';
     openBuyModal();
-    return;
+    return 'skipped-balance';
   }
 
-  btn.disabled=true; btn.textContent='Extracting...';
-  statusEl.textContent='AI se data extract ho raha hai...'; statusEl.className='status';
+  stateEl.textContent='Extracting...'; stateEl.className='upload-slot-state';
+  if(retryBtn) retryBtn.style.display='none';
+  statusEl.textContent=label+' se data extract ho raha hai...'; statusEl.className='status';
 
   try{
     const res=await fetch(WORKER_URL+'/extract',{
@@ -302,7 +394,7 @@ async function runExtraction(docType, images, btnId, stateId, uploadsKey){
     const json=await res.json();
     if(!res.ok || json.error){
       if(json.code==='AUTH_REQUIRED'){ PRO.walletId=''; saveProState(); throw new Error('Wallet reset ho gaya — dobara try karo.'); }
-      if(res.status===402){ PRO.balancePaise=json.balancePaise||0; renderProCredits(); openBuyModal(); }
+      if(res.status===402){ PRO.balancePaise=json.balancePaise||0; renderProCredits(); }
       throw new Error(json.error||'Extraction failed');
     }
 
@@ -317,16 +409,19 @@ async function runExtraction(docType, images, btnId, stateId, uploadsKey){
 
     PRO.balancePaise=json.balancePaise; renderProCredits();
 
+    EXTRACTED_SET.add(docType);
     stateEl.textContent='Extracted \u2713'; stateEl.className='upload-slot-state done';
-    btn.textContent='Extracted \u2713'; btn.disabled=true;
-    statusEl.textContent=docType.toUpperCase()+' se data auto-fill ho gaya. Balance: ₹'+json.balanceRs;
+    if(retryBtn) retryBtn.style.display='none';
+    statusEl.textContent=label+' se data auto-fill ho gaya. Balance: ₹'+json.balanceRs;
     statusEl.className='status ok';
     renderProResult(docType, data);
+    return 'success';
   }catch(err){
     stateEl.textContent='Failed'; stateEl.className='upload-slot-state err';
-    btn.disabled=false; btn.textContent='Retry Extract (₹5)';
+    if(retryBtn){ retryBtn.style.display='block'; retryBtn.disabled=false; retryBtn.textContent='Retry '+label+' (₹5)'; }
     statusEl.textContent='Error: '+err.message;
     statusEl.className='status err';
+    return 'failed';
   }
 }
 
