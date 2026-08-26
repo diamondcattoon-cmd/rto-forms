@@ -302,6 +302,14 @@ function addAffidavit(doc,d,forType){
     y=wrap(doc,25,y,'4.  That the ownership of the said vehicle may kindly be transferred in my name; the above seller has no objection.',168,11);
   }
 
+  /* Signature block: was cramming ~9-13mm of blank "sign here" space between each
+     role caption and the next line, and printing "NOTARY PUBLIC" with no reserved
+     space below it at all — content ended at y=268 on an A4 page (297mm), leaving
+     ~29mm of unused space at the bottom instead of giving anyone room to actually
+     sign or stamp. Now: every signature gets >=18mm, the notary's (round seals run
+     30-40mm) gets ~32mm, and the block still ends within a 15mm bottom margin
+     (297-15=282mm) — safe because everything below this point is fixed captions,
+     not data-driven text, so the final height doesn't vary with input. */
   let ly=204;
   normal(doc,15,ly,'Solemnly affirmed and declared'); ly+=6;
   normal(doc,15,ly,'before me to be true by the deponent'); ly+=6;
@@ -309,7 +317,7 @@ function addAffidavit(doc,d,forType){
   normal(doc,15,ly,'Sri '); dline(doc,23,ly+0.5,88); ly+=9;
   normal(doc,15,ly,'Advocate at ');
   let ax=15+doc.getTextWidth('Advocate at ');
-  dline(doc,ax,ly+0.5,88); bold(doc,ax+2,ly,d.adv_at); ly+=14;
+  dline(doc,ax,ly+0.5,88); bold(doc,ax+2,ly,d.adv_at); ly+=32; // seal + notary signature space
   bold(doc,15,ly,'NOTARY PUBLIC',11.5);
 
   let ry=204;
@@ -321,10 +329,10 @@ function addAffidavit(doc,d,forType){
   let vx=118+doc.getTextWidth('at ');
   dline(doc,vx,ry+0.5,160); bold(doc,vx+2,ry,d.adv_at);
   normal(doc,162,ry,' on 20____'); ry+=9;
-  bold(doc,118,ry,isS?'SELLER':'PURCHASER',11.5); ry+=13;
+  bold(doc,118,ry,isS?'SELLER':'PURCHASER',11.5); ry+=18; // deponent signature space
   bold(doc,118,ry,'Deponent',10.5); ry+=6;
   normal(doc,118,ry,'The deponent is known to me and has'); ry+=5;
-  normal(doc,118,ry,'signed in my presence.'); ry+=9;
+  normal(doc,118,ry,'signed in my presence.'); ry+=18; // advocate signature space
   bold(doc,118,ry,'Advocate.',11);
 }
 
@@ -719,7 +727,29 @@ function hTC(doc,y,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFon
 function hTW(doc,s,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);return doc.getTextWidth(String(s));}
 function hWrap(doc,x,y,s,w,sz){doc.setFont('helvetica','normal');doc.setFontSize(sz||9);const L=doc.splitTextToSize(String(s),w);doc.text(L,x,y);return y+L.length*(sz?sz*0.42:3.8);}
 function hRow(doc,y,label,val,R){hT(doc,15,y,label,11);const lx=15+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,193);drawFit(doc,val,lx+2,y,Math.max(193-lx-4,30),11);return y+(R||9.5);}
-function hPair(doc,y,l1,v1,l2,v2,R){hT(doc,15,y,l1,11);let x1=15+hTW(doc,l1,11)+1;dline(doc,x1,y+0.6,100);drawFit(doc,v1,x1+2,y,Math.max(100-x1-2,20),11);hT(doc,105,y,l2,11);let x2=105+hTW(doc,l2,11)+1;dline(doc,x2,y+0.6,193);drawFit(doc,v2,x2+2,y,Math.max(193-x2-2,20),11);return y+(R||9.5);}
+/* Two-column label:value pair — left column x=15..100, right column x=105..193.
+   Was: passed drawFit() a fake `Math.max(width, 20)` floor for the available width.
+   When a label ate most of its column, drawFit() was told it still had ~20mm to work
+   with (a lie) and squeezed the value in anyway, overlapping the other column's text
+   — or, for a label long enough to cross x=100 on its own (e.g. Form 27A), overlapping
+   before drawFit even ran. Now: compute the *real* remaining width per side, and if
+   either side has less than MIN_PAIR_SIDE mm free, don't attempt two columns on this
+   line at all — fall back to two stacked full-width rows via hRow(). A value on its
+   own line beats a value overlapping the other column. */
+const MIN_PAIR_SIDE=25; // mm — below this, drawFit's font-shrinking can no longer keep a value legible
+function hPair(doc,y,l1,v1,l2,v2,R){
+  const rowH=R||9.5;
+  const x1=15+hTW(doc,l1,11)+1, availL=100-x1-2;
+  const x2=105+hTW(doc,l2,11)+1, availR=193-x2-4;
+  if(availL<MIN_PAIR_SIDE || availR<MIN_PAIR_SIDE){
+    y=hRow(doc,y,l1,v1,rowH);
+    y=hRow(doc,y,l2,v2,rowH);
+    return y;
+  }
+  hT(doc,15,y,l1,11); dline(doc,x1,y+0.6,100); drawFit(doc,v1,x1+2,y,availL,11);
+  hT(doc,105,y,l2,11); dline(doc,x2,y+0.6,193); drawFit(doc,v2,x2+2,y,availR,11);
+  return y+rowH;
+}
 function hInline(doc,x,y,label,val,lineEnd){hT(doc,x,y,label,11);const lx=x+hTW(doc,label,11)+1;dline(doc,lx,y+0.6,lineEnd);drawFit(doc,val,lx+2,y,Math.max(lineEnd-lx-2,20),11);return lineEnd+2;}
 function hHead(doc,num,rule,titleLines){
   hTC(doc,17,num,17,true);
