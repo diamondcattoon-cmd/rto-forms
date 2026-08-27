@@ -17,6 +17,14 @@ let USE_LOCAL=false;
 let curCat='all';
 function renderForms(){
   const grid=document.getElementById('formsGrid');
+  /* Not every page has the full 31-form catalog grid — a task page (e.g.
+     /vehicle-transfer) deliberately omits it to stay focused, reachable
+     instead via the "Saare 31 forms dekho" toggle (#fullFormPicker) or a
+     link back to the homepage's catalog. Without this guard, the
+     unconditional renderForms() call below would throw on such a page and
+     halt this entire script — including everything after it (buildBundles,
+     applyTaskDefaults, etc.). */
+  if(!grid) return;
   const q=(document.getElementById('formSearch')?.value||'').toLowerCase().trim();
   const base=USE_LOCAL?'/forms/':'https://parivahan.gov.in/sites/default/files/DownloadForm/cmvr/';
   const dir='https://parivahan.gov.in/en/forms-all';
@@ -89,7 +97,7 @@ function showRestoreNotice(){
 }
 function dismissRestoreNotice(clear){
   if(clear){
-    VALS={adv_at:'Jamshedpur',state:'Jharkhand'};
+    VALS={adv_at:'Jamshedpur',s_state:'Jharkhand'};
     clearSavedVals();
     updateSections();
   }
@@ -104,23 +112,93 @@ function buildBundles(){
   wrap.innerHTML = BUNDLES.map(b=>
     `<button class="bundle-btn" onclick="applyBundle('${b.id}')"><span class="bundle-ico">${b.icon}</span>${b.label}</button>`
   ).join('');
+  /* On a task page, highlight the button matching what's already loaded —
+     confirms "yes, this is what you're looking at", same highlight a user
+     clicking it themselves would get (applyBundle()). Runs here (after the
+     buttons exist) rather than in applyTaskDefaults() (which runs before
+     buildBundles(), while #bundleWrap is still empty). No-op when
+     window.TASK is unset — e.g. the root index.html. */
+  if(typeof window!=='undefined' && window.TASK && TASK_BUNDLE_MAP[window.TASK]){
+    const idx=BUNDLES.findIndex(x=>x.id===TASK_BUNDLE_MAP[window.TASK]);
+    const btns=wrap.querySelectorAll('.bundle-btn');
+    if(btns[idx]) btns[idx].classList.add('on');
+  }
 }
 
-/* Apply a bundle: check its picks, uncheck others, show suggestions */
-function applyBundle(bid){
-  const b=BUNDLES.find(x=>x.id===bid);
-  if(!b) return;
+/* Core of applying a bundle: check exactly its picks, uncheck everything
+   else, and switch to the type tab of its first pick so the checked items
+   are visible once the picker is shown. Shared by applyBundle() (a user
+   clicking a "Quick start" button) and applyTaskDefaults() (a task page
+   like /vehicle-transfer pre-selecting its forms on load, before the user
+   does anything at all) — same effect, different trigger, no duplicated
+   logic between them. Returns false (and does nothing) for an unknown
+   bundle id. */
+function applyBundlePicks(bundleId){
+  const b=BUNDLES.find(x=>x.id===bundleId);
+  if(!b) return false;
   PICKS.forEach(p=>{ CHECKED[p.id]=b.picks.includes(p.id); });
+  const firstPick=PICKS.find(p=>p.id===b.picks[0]);
+  if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
+  return true;
+}
+
+/* Apply a bundle from a "Quick start" button click: applyBundlePicks()
+   plus the button-highlight/scroll/re-render side effects specific to a
+   live user click (task-page bootstrap doesn't want any of those — there's
+   no button to highlight yet, and scrolling to #tool on page load would
+   just be jarring). */
+function applyBundle(bid){
+  if(!applyBundlePicks(bid)) return;
   document.querySelectorAll('.bundle-btn').forEach(btn=>btn.classList.remove('on'));
   const idx=BUNDLES.findIndex(x=>x.id===bid);
   const btns=document.querySelectorAll('.bundle-btn');
   if(btns[idx]) btns[idx].classList.add('on');
-  /* switch to the type of the first pick so user sees the checked items */
-  const firstPick=PICKS.find(p=>p.id===b.picks[0]);
-  if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
   buildPicks();
   updateSections();
   document.getElementById('tool').scrollIntoView({behavior:'smooth'});
+}
+
+/* ── Task pages (e.g. /vehicle-transfer/index.html) ──
+   A task page sets window.TASK in an inline <script> BEFORE loading this
+   file (see that page's <head>) — this table maps a task id onto an
+   existing BUNDLES entry, so "this page is about vehicle transfer" is
+   just "start with the transfer bundle already applied", reusing
+   applyBundlePicks() rather than a second, task-specific data table that
+   could drift from BUNDLES. Add one entry here per new task page. */
+const TASK_BUNDLE_MAP={ transfer:'b_transfer' };
+
+/* Runs once at bootstrap (see the bottom of this file). No-ops completely
+   when window.TASK is unset or unrecognized — e.g. the root index.html —
+   so this can never change that page's behavior. On a real task page: (1)
+   pre-checks that task's forms (buyer/owner sections then show themselves
+   automatically via updateSections()'s existing need-based rendering — no
+   separate "which sections to show" logic needed), and (2) collapses the
+   full type-tabs+picks selector behind a "Saare 31 forms dekho" toggle
+   (#pickerToggleLine/#fullFormPicker, see toggleFullPicker()) — a task
+   page is meant to read as "here are this task's forms", not the entire
+   31-form catalog, while staying exactly one click away from it. */
+function applyTaskDefaults(){
+  if(typeof window==='undefined' || !window.TASK) return;
+  const bundleId=TASK_BUNDLE_MAP[window.TASK];
+  if(!bundleId) return;
+  applyBundlePicks(bundleId);
+  const block=document.getElementById('fullFormPicker');
+  const toggleLine=document.getElementById('pickerToggleLine');
+  if(block) block.style.display='none';
+  if(toggleLine) toggleLine.style.display='';
+}
+
+/* The "Saare 31 forms dekho" / "Forms list chhupao" toggle itself — plain
+   show/hide, no re-render needed since #fullFormPicker's contents
+   (type tabs, picks list) are already kept up to date by buildPicks()
+   regardless of whether the block is visible. */
+function toggleFullPicker(){
+  const block=document.getElementById('fullFormPicker');
+  const toggleLine=document.getElementById('pickerToggleLine');
+  if(!block || !toggleLine) return;
+  const show=block.style.display==='none';
+  block.style.display=show?'':'none';
+  toggleLine.textContent=show?'Forms list chhupao ↑':'Saare 31 forms dekho ↓';
 }
 
 /* Build the picks list grouped by active type, with type sub-tabs */
@@ -270,17 +348,27 @@ function saveUserPrefs(){
 }
 
 function applyUserPrefs(){
-  if(USER_PREFS.defaultBundle==='none'){
-    PICKS.forEach(p=>{ CHECKED[p.id]=false; });
-  } else if(USER_PREFS.defaultBundle){
-    const b=BUNDLES.find(x=>x.id===USER_PREFS.defaultBundle);
-    if(b){
-      PICKS.forEach(p=>{ CHECKED[p.id]=b.picks.includes(p.id); });
-      const firstPick=PICKS.find(p=>p.id===b.picks[0]);
-      if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
+  /* A task page's own selection (applyTaskDefaults(), run before this —
+     see the bootstrap order at the bottom of this file) is more specific
+     than a generic saved "default bundle" preference — landing on
+     /vehicle-transfer should show the transfer forms even if this
+     browser's Settings say "default to RC Renewal" elsewhere. The
+     alwaysInclude layer still applies on top regardless — "always add
+     Money Receipt" should hold everywhere, task page or not. */
+  const hasTaskDefault=typeof window!=='undefined' && window.TASK && TASK_BUNDLE_MAP[window.TASK];
+  if(!hasTaskDefault){
+    if(USER_PREFS.defaultBundle==='none'){
+      PICKS.forEach(p=>{ CHECKED[p.id]=false; });
+    } else if(USER_PREFS.defaultBundle){
+      const b=BUNDLES.find(x=>x.id===USER_PREFS.defaultBundle);
+      if(b){
+        PICKS.forEach(p=>{ CHECKED[p.id]=b.picks.includes(p.id); });
+        const firstPick=PICKS.find(p=>p.id===b.picks[0]);
+        if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
+      }
     }
+    /* '' = site default — forms-data.js's PICKS[i].def-based CHECKED already stands */
   }
-  /* '' = site default — forms-data.js's PICKS[i].def-based CHECKED already stands */
   USER_PREFS.alwaysInclude.forEach(id=>{ if(id in CHECKED) CHECKED[id]=true; });
 }
 
@@ -359,12 +447,14 @@ function fieldHTML(id){
   const counter=(f.maxlen&&f.type!=='date')?`<span class="fld-counter" id="cnt_${id}"></span>`:'';
   const dateTab=f.type==='date'?`onkeydown="dateTabFix(event,this)"`:'';
   const isAi=AI_FILLED_FIELDS.has(id);
+  const isVerified=VERIFIED_FIELDS.has(id);
   const aiBadge=isAi?'<span class="fld-ai-badge">AI</span>':'';
+  const verifiedBadge=isVerified?'<span class="fld-verified-badge">✓</span>':'';
   const conflict=PENDING_CONFLICTS[id];
   const conflictNote=conflict
     ? `<div class="fld-conflict-note" id="conflict_${id}">${DOC_LABEL_UI[conflict.winner.docType]||conflict.winner.docType} aur ${DOC_LABEL_UI[conflict.loser.docType]||conflict.loser.docType} ka data alag hai — ${DOC_LABEL_UI[conflict.winner.docType]||conflict.winner.docType} wala bhara gaya. <button type="button" onclick="switchFieldConflict('${id}')">${DOC_LABEL_UI[conflict.loser.docType]||conflict.loser.docType} wala use karo</button><button type="button" class="fld-conflict-dismiss" onclick="dismissFieldConflict('${id}')" aria-label="Dismiss">&times;</button></div>`
     : '';
-  return `<div class="fld ${f.full?'full':''}${isAi?' fld-ai':''}" id="fldwrap_${id}"><label><span>${f.label}${aiBadge}</span>${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}${conflictNote}</div>`;
+  return `<div class="fld ${f.full?'full':''}${isAi?' fld-ai':''}${isVerified?' fld-verified':''}" id="fldwrap_${id}"><label><span>${f.label}${aiBadge}${verifiedBadge}</span>${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}${conflictNote}</div>`;
 }
 
 /* Tab on a date field should move to the next input, not the calendar picker */
@@ -391,16 +481,27 @@ function handleInput(id, el){
   if(el.value!==v){ el.value=v; try{ el.setSelectionRange(caret,caret); }catch(e){} }
   VALS[id]=v;
   scheduleSaveVals();
-  /* Editing an AI-filled field means it's no longer purely AI-sourced —
-     drop the amber highlight/badge without a full re-render (which would
-     lose focus/caret mid-typing). */
+  /* Editing an AI-filled field is exactly the review this field needed —
+     drop the amber "please check this" state and mark it verified (green)
+     instead, without a full re-render (which would lose focus/caret
+     mid-typing). A field that was never AI-filled doesn't get this
+     treatment — there was no AI guess to review in the first place. */
   if(AI_FILLED_FIELDS.has(id)){
     AI_FILLED_FIELDS.delete(id);
+    VERIFIED_FIELDS.add(id);
     const wrap=document.getElementById('fldwrap_'+id);
     if(wrap){
       wrap.classList.remove('fld-ai');
+      wrap.classList.add('fld-verified');
       const badge=wrap.querySelector('.fld-ai-badge');
       if(badge) badge.remove();
+      const label=wrap.querySelector('label span');
+      if(label && !label.querySelector('.fld-verified-badge')){
+        const check=document.createElement('span');
+        check.className='fld-verified-badge';
+        check.textContent='✓';
+        label.appendChild(check);
+      }
     }
   }
   /* A manual edit supersedes whatever document(s) supplied this field —
@@ -429,13 +530,33 @@ function handleInput(id, el){
   updateProContext(new Set(PICKS.filter(p=>CHECKED[p.id]).flatMap(p=>p.fields||[])));
 }
 
-/* Tells the PRO panel how many fields the currently-selected forms need and
-   how many are still empty, e.g. "Is package mein 22 fields hain, 9 abhi
-   khali hain." Hidden entirely when no forms are selected yet. */
+/* Tells the PRO panel either (a) how many still-amber, AI-filled-and-
+   unreviewed fields exist right now, naming which document(s) supplied
+   them — "14 fields RC aur Aadhaar se bhare — please check the
+   highlighted boxes." — or, when nothing needs review, (b) the plainer
+   "Is package mein 22 fields hain, 9 abhi khali hain." (a) takes priority
+   whenever it applies: an unverified AI guess (e.g. a misread chassis
+   digit) is a more urgent thing to flag than an empty field the user
+   hasn't gotten to yet. Recalculates on every keystroke (handleInput())
+   and section rebuild, so it naturally clears field-by-field as the user
+   reviews (edits) each one — see VERIFIED_FIELDS (forms-data.js). Hidden
+   entirely when no forms are selected yet. */
 function updateProContext(need){
   const el=document.getElementById('proContext');
   if(!el) return;
   if(!need || !need.size){ el.classList.remove('show'); el.textContent=''; return; }
+
+  const unverified=[...need].filter(f=>AI_FILLED_FIELDS.has(f));
+  if(unverified.length){
+    const docTypes=[...new Set(unverified.map(f=>FIELD_SOURCE[f]).filter(Boolean))];
+    const docLabels=docTypes.map(t=>DOC_LABEL_UI[t]||t);
+    const docText=docLabels.length<=1 ? (docLabels[0]||'AI')
+      : docLabels.slice(0,-1).join(', ')+' aur '+docLabels[docLabels.length-1];
+    el.textContent=unverified.length+' field'+(unverified.length>1?'s':'')+' '+docText+' se bhare — please check the highlighted boxes.';
+    el.classList.add('show');
+    return;
+  }
+
   const total=need.size;
   const empty=[...need].filter(f=>!(VALS[f]||'').trim()).length;
   el.textContent='Is package mein '+total+' field'+(total>1?'s':'')+' hain, '+empty+' abhi khali '+(empty===1?'hai':'hain')+'.';
@@ -563,6 +684,7 @@ function updateSections(){
   if(fab) fab.classList.toggle('show', chosen.length>0);
 }
 
+applyTaskDefaults();
 applyUserPrefs();
 buildBundles();
 buildPicks();
@@ -697,16 +819,31 @@ function generatePDF(blank){
     if(!g('s_name')){highlightErr('s_name','Owner / Seller name is required.'); return;}
     if(needsReg && !g('reg_no')){highlightErr('reg_no','Registration No. is required for the selected forms.'); return;}
     if(needsBuyer && !g('b_name')){highlightErr('b_name','Purchaser name is required for the selected transfer / sale forms.'); return;}
-    /* Mobile is compulsory only for forms that actually include a mobile number field */
+    /* Mobile is compulsory only for forms that actually include a mobile
+       number field — checked separately for seller ('mobile') and buyer
+       ('b_mobile') since a pick can require either, both, or neither
+       (e.g. Form 30 needs both; most single-party forms need only
+       'mobile'). Both checks must run — this used to only check 'mobile',
+       which let a PDF generate with a required buyer mobile left blank. */
     if(need.has('mobile')){
       const mob=g('mobile');
       if(!mob){highlightErr('mobile','Mobile number is compulsory — please enter it before generating the PDF.'); return;}
       if(mob.length!==10){highlightErr('mobile','Mobile number must be exactly 10 digits.'); return;}
     }
+    if(need.has('b_mobile')){
+      const bmob=g('b_mobile');
+      if(!bmob){highlightErr('b_mobile','Purchaser mobile number is compulsory — please enter it before generating the PDF.'); return;}
+      if(bmob.length!==10){highlightErr('b_mobile','Purchaser mobile number must be exactly 10 digits.'); return;}
+    }
     allIds.forEach(k=>d[k]=g(k));
     d.veh_type=d.veh_type||'Motor Vehicle';
     d.rto=d.rto||'District Transport Office, Jamshedpur';
-    d.state=d.state||'Jharkhand';
+    /* Only the seller's state gets a default — defaulting the buyer's too
+       would silently repeat the exact bug being fixed here (assuming the
+       buyer is in the same state as the seller/site). An unset b_state
+       just prints blank via addrJoin() (pdf-generate.js), not a wrong
+       state. */
+    d.s_state=d.s_state||'Jharkhand';
     d.adv_at=d.adv_at||'Jamshedpur';
     /* A firm/company has no father's name — blank it on the printed PDF
        (the dotted "S/o" line still draws, just with nothing written on

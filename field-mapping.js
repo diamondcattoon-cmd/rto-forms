@@ -54,10 +54,14 @@ function resolveDocRole(docType, role){
    Rationale (from the RTO-forms domain, not a generic assumption):
    - name: RC's registered owner is the authoritative transferor identity
      for a transfer — Aadhaar/PAN are the fallback when no RC was supplied.
-   - addr/town/dist (and the shared, unprefixed 'state' field, folded into
-     'addr' since it's part of the same address block): Aadhaar wins over
-     RC — an Aadhaar address is far more likely to be current; an RC's
-     printed address commonly lags years behind a house move.
+   - addr/town/dist/state: Aadhaar wins over RC — an Aadhaar address is far
+     more likely to be current; an RC's printed address commonly lags
+     years behind a house move. Each of s_state/b_state is its own field
+     (NOT a single shared 'state' — that used to be one global field fed
+     by whichever document happened to extract it last, which meant a
+     seller's RC could silently overwrite the buyer's state on a printed
+     form; see AI_FIELD_MAP below, which now always writes state through
+     the same s_/b_ role prefix as every other address part).
    - father: only Aadhaar/PAN ever carry this (RC's prompt has no such
      field at all — see PROMPTS.rc in worker/src/index.js) — Aadhaar is
      preferred simply as the more complete/authoritative ID of the two
@@ -76,17 +80,16 @@ const FIELD_SOURCE_PRIORITY={
   addr:   ['aadhaar','rc'],
   town:   ['aadhaar','rc'],
   dist:   ['aadhaar','rc'],
+  state:  ['aadhaar','rc'],
   father: ['aadhaar','pan'],
 };
 
-/* Strips the s_/b_ role prefix (if any) to get the field's priority
-   "concept" — returns null for fields that only ever have one possible
-   source (no conflict is possible, so no concept to look up). */
+/* Strips the s_/b_ role prefix to get the field's priority "concept" —
+   returns null for fields that only ever have one possible source (no
+   conflict is possible, so no concept to look up). */
 function fieldConceptFor(fieldId){
-  const m=/^[sb]_(name|addr|town|dist|father)$/.exec(fieldId);
-  if(m) return m[1];
-  if(fieldId==='state') return 'addr'; // shared field, same address-block priority
-  return null;
+  const m=/^[sb]_(name|addr|town|dist|state|father)$/.exec(fieldId);
+  return m ? m[1] : null;
 }
 
 /* Merges one document's freshly-extracted field->value map into a target
@@ -195,7 +198,7 @@ const AI_FIELD_MAP={
     if(data.address_line) out[p+'addr']=data.address_line;
     if(data.town) out[p+'town']=data.town;
     if(data.district) out[p+'dist']=data.district;
-    if(data.state) out.state=data.state;
+    if(data.state) out[p+'state']=data.state;
     return out;
   },
   pan:(data,role)=>{
@@ -236,7 +239,7 @@ const AI_FIELD_MAP={
     if(data.address_line) out[p+'addr']=data.address_line;
     if(data.town) out[p+'town']=data.town;
     if(data.district) out[p+'dist']=data.district;
-    if(data.state) out.state=data.state;
+    if(data.state) out[p+'state']=data.state;
     return out;
   }
 };

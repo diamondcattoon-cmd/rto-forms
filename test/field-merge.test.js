@@ -74,7 +74,7 @@ test('scenario 1: RC only fills seller name + full address + full vehicle detail
   assert.equal(ctx.vals.s_addr, 'OLD HOUSE, RC ADDRESS ROAD');
   assert.equal(ctx.vals.s_town, 'RC-TOWN');
   assert.equal(ctx.vals.s_dist, 'RC-DISTRICT');
-  assert.equal(ctx.vals.state, 'RC-STATE');
+  assert.equal(ctx.vals.s_state, 'RC-STATE');
   assert.equal(ctx.vals.reg_no, 'JH05AB1234');
   assert.equal(ctx.vals.ch_no, 'MA3FJEB1S00123456');
   assert.equal(ctx.vals.eng_no, 'K12M1234567');
@@ -144,14 +144,14 @@ test('scenario 4: differing address — Aadhaar\'s value is applied, RC\'s is of
   assert.equal(ctx.vals.s_addr, 'NEW HOUSE, AADHAAR ADDRESS ROAD', "Aadhaar's address wins per FIELD_SOURCE_PRIORITY");
   assert.equal(ctx.vals.s_town, 'AADHAAR-TOWN');
   assert.equal(ctx.vals.s_dist, 'AADHAAR-DISTRICT');
-  assert.equal(ctx.vals.state, 'AADHAAR-STATE');
+  assert.equal(ctx.vals.s_state, 'AADHAAR-STATE');
   assert.deepEqual(ctx.pendingConflicts.s_addr, {
     winner: { docType: 'aadhaar', value: 'NEW HOUSE, AADHAAR ADDRESS ROAD' },
     loser: { docType: 'rc', value: 'OLD HOUSE, RC ADDRESS ROAD' },
   });
   assert.deepEqual(ctx.pendingConflicts.s_town, { winner: { docType: 'aadhaar', value: 'AADHAAR-TOWN' }, loser: { docType: 'rc', value: 'RC-TOWN' } });
   assert.deepEqual(ctx.pendingConflicts.s_dist, { winner: { docType: 'aadhaar', value: 'AADHAAR-DISTRICT' }, loser: { docType: 'rc', value: 'RC-DISTRICT' } });
-  assert.deepEqual(ctx.pendingConflicts.state, { winner: { docType: 'aadhaar', value: 'AADHAAR-STATE' }, loser: { docType: 'rc', value: 'RC-STATE' } });
+  assert.deepEqual(ctx.pendingConflicts.s_state, { winner: { docType: 'aadhaar', value: 'AADHAAR-STATE' }, loser: { docType: 'rc', value: 'RC-STATE' } });
   // name never conflicts here — Aadhaar and RC happen to agree on it in this sample
   assert.equal(ctx.pendingConflicts.s_name, undefined);
 });
@@ -181,6 +181,37 @@ test('reverse-order merge: RC+Aadhaar merged in either order produce an identica
   assert.deepEqual(forward.vals, reverse.vals, 'applied values must not depend on extraction order');
   assert.deepEqual(forward.fieldSource, reverse.fieldSource, 'field ownership must not depend on extraction order');
   assert.deepEqual(forward.pendingConflicts, reverse.pendingConflicts, 'conflict notices must not depend on extraction order');
+});
+
+/* ── Dedicated regression: RC's state must never land in the BUYER's
+   fields, even when a buyer's Aadhaar is extracted in the same session
+   and genuinely has a different state. This is the exact bug that was
+   reported: 'state' used to be one shared, unprefixed field, so whichever
+   document extracted last simply overwrote it — a seller's RC could stomp
+   a buyer's own (correct, different) state on the printed form. ── */
+test("RC (seller) + Aadhaar (buyer) with different states — s_state and b_state stay fully independent", () => {
+  const ctx = freshCtx();
+  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx); // RC_SAMPLE.state = 'RC-STATE'
+
+  const buyerAadhaar = { name: 'SURESH YADAV', address_line: 'Village Rampur', town: 'Baharagora', district: 'East Singhbhum', state: 'ODISHA' };
+  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(buyerAadhaar, 'buyer'), ctx);
+
+  assert.equal(ctx.vals.s_state, 'RC-STATE', "the seller's state (from RC) must be untouched");
+  assert.equal(ctx.vals.b_state, 'ODISHA', "the buyer's state (from their own Aadhaar) must be set independently");
+  /* Different fields entirely (s_state vs b_state) — not the same field
+     from two sources, so this must NOT be flagged as a conflict. */
+  assert.equal(ctx.pendingConflicts.s_state, undefined);
+  assert.equal(ctx.pendingConflicts.b_state, undefined);
+});
+
+test("RC (seller) + Aadhaar (buyer) — order reversed, same independence", () => {
+  const ctx = freshCtx();
+  const buyerAadhaar = { name: 'SURESH YADAV', state: 'ODISHA' };
+  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(buyerAadhaar, 'buyer'), ctx);
+  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx);
+
+  assert.equal(ctx.vals.s_state, 'RC-STATE');
+  assert.equal(ctx.vals.b_state, 'ODISHA');
 });
 
 /* ── Scenario 5: firm-owned RC ── */

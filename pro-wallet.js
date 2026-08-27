@@ -427,6 +427,7 @@ function switchFieldConflict(fieldId){
   VALS[fieldId]=conflict.loser.value;
   FIELD_SOURCE[fieldId]=conflict.loser.docType;
   AI_FILLED_FIELDS.add(fieldId);
+  VERIFIED_FIELDS.delete(fieldId); // a freshly-applied AI value is unreviewed again, even if this field was verified before
   delete PENDING_CONFLICTS[fieldId];
   scheduleSaveVals();
   updateSections();
@@ -490,7 +491,7 @@ async function runExtraction(docType, images, uploadsKey){
        skipped (lower priority than what's already applied) doesn't newly
        become AI-sourced from this call; whatever already owns it keeps
        owning it, untouched. */
-    Object.keys(upperMapped).forEach(k=>{ if(FIELD_SOURCE[k]===docType) AI_FILLED_FIELDS.add(k); });
+    Object.keys(upperMapped).forEach(k=>{ if(FIELD_SOURCE[k]===docType){ AI_FILLED_FIELDS.add(k); VERIFIED_FIELDS.delete(k); } });
 
     /* RC is the only document that ever signals firm-vs-individual
        ownership (see PROMPTS.rc, worker/src/index.js) — updateSections()

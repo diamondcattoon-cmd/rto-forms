@@ -26,8 +26,16 @@ test('AI_FIELD_MAP.aadhaar maps a full sample response to seller fields', () => 
     s_addr: 'H.No. 45, Station Road',
     s_town: 'Jamshedpur',
     s_dist: 'East Singhbhum',
-    state: 'Jharkhand',
+    s_state: 'Jharkhand',
   });
+});
+
+test('AI_FIELD_MAP.aadhaar writes state through the b_ prefix too, when role is buyer', () => {
+  /* Bug fix: state used to be one shared, unprefixed field regardless of
+     role — a buyer's Aadhaar state could only ever land in that one
+     global slot, indistinguishable from the seller's. */
+  const out = AI_FIELD_MAP.aadhaar({ name: 'SURESH YADAV', state: 'Odisha' }, 'buyer');
+  assert.deepEqual(out, { b_name: 'SURESH YADAV', b_state: 'Odisha' });
 });
 
 test('AI_FIELD_MAP.aadhaar uses the b_ prefix when role is buyer', () => {
@@ -107,19 +115,22 @@ test('AI_FIELD_MAP.rc maps a full sample response: vehicle fields plus role-pref
     s_addr: 'H.No. 45, Station Road',
     s_town: 'Jamshedpur',
     s_dist: 'East Singhbhum',
-    state: 'Jharkhand',
+    s_state: 'Jharkhand',
   });
 });
 
-test('AI_FIELD_MAP.rc always writes owner_name/address to s_ fields, even when role is "buyer"', () => {
+test('AI_FIELD_MAP.rc always writes owner_name/address/state to s_ fields, even when role is "buyer" — RC\'s state can never end up as b_state', () => {
   /* Bug fix: an RC (registration certificate) is only ever held by the
      vehicle's current registered owner — the seller/transferor in a
      transfer. A buyer cannot possess the seller's RC before the transfer
-     completes, so RC data must never land in b_ fields regardless of
-     which role toggle happens to be selected elsewhere in the UI. See
+     completes, so RC data — INCLUDING its state, which used to be one
+     shared unprefixed field that any document could clobber regardless of
+     whose data it actually was — must never land in b_ fields regardless
+     of which role toggle happens to be selected elsewhere in the UI. See
      DOC_RULES.rc in field-mapping.js (role: 'fixed'). */
-  const out = AI_FIELD_MAP.rc({ owner_name: 'SURESH YADAV', town: 'Baharagora' }, 'buyer');
-  assert.deepEqual(out, { s_name: 'SURESH YADAV', s_town: 'Baharagora' });
+  const out = AI_FIELD_MAP.rc({ owner_name: 'SURESH YADAV', town: 'Baharagora', state: 'Odisha' }, 'buyer');
+  assert.deepEqual(out, { s_name: 'SURESH YADAV', s_town: 'Baharagora', s_state: 'Odisha' });
+  assert.equal(out.b_state, undefined, "RC's state must never be written to b_state, no matter the role passed in");
 });
 
 test('AI_FIELD_MAP.rc ignores an explicit "seller" role too — same fixed outcome either way', () => {

@@ -30,6 +30,18 @@ function dline(doc,x1,y,x2){
   doc.line(x1,y,x2,y);
   doc.setLineDashPattern([],0);
 }
+/* Joins address-like parts (house/street, town, district, state, ...)
+   with ", " — filtering out empty/missing parts FIRST, so a missing part
+   anywhere in the sequence never leaves a stray leading/trailing comma or
+   a run of commas in the printed PDF. This is exactly what a hand-rolled
+   ternary chain like `d.addr+(d.town?', '+d.town:'')` gets wrong: it only
+   guards the parts AFTER the first one — if the first part itself
+   (usually address_line) is empty but a later part isn't, the result
+   starts with a bare ", ". Every address concatenation in this file goes
+   through this instead. */
+function addrJoin(...parts){
+  return parts.filter(p=>p && String(p).trim()).join(', ');
+}
 function bold(doc,x,y,t,sz){doc.setFont('helvetica','bold');doc.setFontSize(sz||11);doc.text(String(t),x,y);doc.setFont('helvetica','normal');}
 function normal(doc,x,y,t,sz){doc.setFont('helvetica','normal');doc.setFontSize(sz||11);doc.text(String(t),x,y);}
 function center(doc,y,t,sz,b){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz||11);doc.text(String(t),105,y,{align:'center'});doc.setFont('helvetica','normal');}
@@ -104,7 +116,7 @@ function addForm29(doc,d){
   hT(doc,22,y,'( in whose jurisdiction the transferee resides )',8.5); y+=9;
 
   y=hRow(doc,y,'I / We :  ',d.s_name,8.5);
-  y=hRow(doc,y,'resident of :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''),8.5);
+  y=hRow(doc,y,'resident of :  ',addrJoin(d.s_addr,d.s_town,d.s_dist),8.5);
   hT(doc,15,y,'have on the ',11);
   let x=15+hTW(doc,'have on the ',11)+1;
   dline(doc,x,y+0.6,115);
@@ -114,7 +126,7 @@ function addForm29(doc,d){
   y=hPair(doc,y,'Chassis No. :  ',d.ch_no,'Engine No. / Motor No. ( BOV ) :  ',d.eng_no,8.5);
   y=hRow(doc,y,'to Shri / Smt. ( Name ) :  ',d.b_name,8.5);
   y=hRow(doc,y,'Son / wife / daughter of :  ',d.b_father,8.5);
-  y=hRow(doc,y,'residing at ( house No. / street, village / town, distt. and State ) :  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:'')+(d.state?', '+d.state:''),8.5);
+  y=hRow(doc,y,'residing at ( house No. / street, village / town, distt. and State ) :  ',addrJoin(d.b_addr,d.b_town,d.b_dist,d.b_state),8.5);
   y=hRow(doc,y,'under an agreement of hire / purchase / lease / hypothecation with :  ','',9);
   y=hWrap(doc,15,y,'The registration certificate and insurance certificate have been handed over to him / her / them.',180,10.5); y+=1;
   y=hWrap(doc,15,y,'To the best of my / our knowledge and belief the vehicle is not superdari and free from all encumbrances and the information furnished is true. I / We undertake to hold my / our self responsible for any inaccuracy or suppression of information.',180,10.5); y+=3;
@@ -171,7 +183,7 @@ function addForm30(doc,d){
 
   hTC(doc,y,'PART I \u2014 FOR THE USE OF THE TRANSFEROR',11,true); y+=8;
   y=hPair(doc,y,'Name of the transferor :  ',d.s_name,'son / wife / daughter of :  ',d.s_father,8);
-  y=hRow(doc,y,'Full address :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),8);
+  y=hRow(doc,y,'Full address :  ',addrJoin(d.s_addr,d.s_town,d.s_dist&&('Dist. '+d.s_dist)),8);
   hT(doc,15,y,'I / We hereby declare that I / We have on this ',10.5);
   x=15+hTW(doc,'I / We hereby declare that I / We have on this ',10.5)+1;
   dline(doc,x,y+0.6,165);
@@ -179,7 +191,7 @@ function addForm30(doc,d){
   hT(doc,168,y,'( day, year )',8); y+=8;
   y=hRow(doc,y,'sold my / our motor vehicle bearing registration mark :  ',d.reg_no,8);
   y=hPair(doc,y,'to Sh. / Smt. :  ',d.b_name,'son / wife / daughter of :  ',d.b_father,8);
-  y=hRow(doc,y,'residing at ( full address ) :  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''),8);
+  y=hRow(doc,y,'residing at ( full address ) :  ',addrJoin(d.b_addr,d.b_town,d.b_dist),8);
   y=hWrap(doc,15,y,'and handed over the certificate of registration and the certificate of insurance to him / her / them.',180,10); y+=1;
   y=hWrap(doc,15,y,'I / We hereby declare that to the best of my / our knowledge the certificate of registration of the vehicle has not been suspended* or cancelled.',180,10); y+=1;
   y=hWrap(doc,15,y,'*  I / We enclose the \u201CNo Objection Certificate\u201D issued by the registering authority.',180,10);
@@ -192,7 +204,7 @@ function addForm30(doc,d){
   hTC(doc,y,'PART II \u2014 FOR THE USE OF TRANSFEREE',11,true); y+=8;
   y=hPair(doc,y,'Name of the transferee :  ',d.b_name,'son / wife / daughter of :  ',d.b_father,8);
   y=hPair(doc,y,'Age :  ','','Mobile number :  ',d.b_mobile,8);
-  y=hRow(doc,y,'Full address ( proof of address to be enclosed ) :  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''),8);
+  y=hRow(doc,y,'Full address ( proof of address to be enclosed ) :  ',addrJoin(d.b_addr,d.b_town,d.b_dist),8);
   y=hRow(doc,y,'I / We hereby declare ............................ as the nominee for this vehicle, who is my / our :  ','',8);
   hT(doc,15,y,'I / We hereby declare that I / We have on this ',10.5);
   x=15+hTW(doc,'I / We hereby declare that I / We have on this ',10.5)+1;
@@ -201,7 +213,7 @@ function addForm30(doc,d){
   hT(doc,168,y,'( day, year )',8); y+=8;
   y=hRow(doc,y,'purchased the motor vehicle bearing registration No. :  ',d.reg_no,8);
   y=hRow(doc,y,'from ( seller ) :  ',d.s_name,8);
-  y=hRow(doc,y,'( name and full address ) :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''),8);
+  y=hRow(doc,y,'( name and full address ) :  ',addrJoin(d.s_addr,d.s_town,d.s_dist),8);
   y=hWrap(doc,15,y,'and request that necessary entries regarding the transfer of ownership of the vehicle in my / our name may be recorded in the certificate of registration / certificate of fitness of the vehicle, which is enclosed.',180,10); y+=1;
   y=hWrap(doc,15,y,'The certificate of insurance is also enclosed. To the best of my knowledge and belief I / we have not suppressed any facts and information furnished is true. The vehicle is not superdari and free from all encumbrances. I / we undertake to hold myself responsible for any inaccuracy.',180,10); y+=2;
   hT(doc,15,y,'Date : ________________',10.5);
@@ -355,7 +367,7 @@ function addForm28(doc,d){
   y+=8;
   y=hWrap(doc,15,y,'who resides in the jurisdiction of the registering authority .................................... of the State .................... . I / We, therefore, request the issue of a \u201CNo Objection Certificate\u201D for my / our vehicle, the particulars of which are furnished below :\u2014',180,10);
   y+=2;
-  y=hRow(doc,y,'1.    Name and address :  ',d.s_name+', '+d.s_addr+(d.s_town?', '+d.s_town:''),8.5);
+  y=hRow(doc,y,'1.    Name and address :  ',addrJoin(d.s_name,d.s_addr,d.s_town),8.5);
   y=hRow(doc,y,'2.    Son / wife / daughter of :  ',d.s_father,8.5);
   y=hRow(doc,y,'2a.  Mobile number of the owner :  ',d.mobile,8.5);
   y=hPair(doc,y,'3.    Registration number :  ',d.reg_no,'4.  Class of vehicle :  ',d.veh_type,8.5);
@@ -452,7 +464,7 @@ function addForm25(doc,d){
   dline(doc,x,y+0.5,193); if(d.rto){drawFit(doc,d.rto,x+2,y,Math.max(193-x-4,40),11);} y+=8;
 
   /* present address declaration */
-  const addrFull=(d.s_addr||'')+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:'');
+  const addrFull=addrJoin(d.s_addr,d.s_town,d.s_dist);
   y=wrap(doc,15,y,'My present address is '+(addrFull||'..............................')+'. If this address is not entered in the certificate of registration, I do / do not wish that it should be so entered. The renewal of the certificate has not been refused by any registering authority.',180,10);
   y+=2;
   y=wrap(doc,15,y,'I hereby declare that the certificate of registration has not been cancelled or suspended by any registering authority.',180,10);
@@ -572,7 +584,7 @@ function addDeliveryNote(doc,d){
   /* From / Through / at */
   normal(doc,20,y,'From :');
   dline(doc,42,y+0.5,193);
-  drawFit(doc,(d.s_name?d.s_name+', ':'')+(d.s_addr||''),44,y,147,10.5); y+=7;
+  drawFit(doc,addrJoin(d.s_name,d.s_addr),44,y,147,10.5); y+=7;
   dline(doc,42,y+0.5,193); y+=8;
   normal(doc,20,y,'Through');
   dline(doc,42,y+0.5,193); drawFit(doc,d.del_through,44,y,147,10.5); y+=8;
@@ -624,7 +636,7 @@ function addMoneyReceipt(doc,d){
   normal(doc,134,y,'S/O·W/O·D/O');x=134+doc.getTextWidth('S/O·W/O·D/O')+2;dline(doc,x,y+0.5,193);if(d.s_father)drawFit(doc,d.s_father,x+2,y,193-x-2,10.5);y+=9;
 
   normal(doc,15,y,'Resident of');x=15+doc.getTextWidth('Resident of')+2;dline(doc,x,y+0.5,193);
-  drawFit(doc,(d.s_addr||'')+(d.s_town?', '+d.s_town:'')+(d.s_dist?', '+d.s_dist:''),x+2,y,193-x-2,10.5);y+=12;
+  drawFit(doc,addrJoin(d.s_addr,d.s_town,d.s_dist),x+2,y,193-x-2,10.5);y+=12;
 
   normal(doc,15,y,'That I have received a sum of Rs.');
   x=15+doc.getTextWidth('That I have received a sum of Rs.')+2;dline(doc,x,y+0.5,120);if(d.amount_rs)bold(doc,x+2,y,d.amount_rs);
@@ -635,7 +647,7 @@ function addMoneyReceipt(doc,d){
 
   normal(doc,15,y,'From');x=15+doc.getTextWidth('From')+2;dline(doc,x,y+0.5,130);if(d.b_name)drawFit(doc,d.b_name,x+2,y,113-x,10.5);
   normal(doc,134,y,'S/O·W/O·D/O');x=134+doc.getTextWidth('S/O·W/O·D/O')+2;dline(doc,x,y+0.5,193);if(d.b_father)drawFit(doc,d.b_father,x+2,y,193-x-2,10.5);y+=9;
-  dline(doc,15,y+0.5,193);drawFit(doc,(d.b_addr||'')+(d.b_town?', '+d.b_town:'')+(d.b_dist?', '+d.b_dist:''),15,y,178,10);y+=11;
+  dline(doc,15,y+0.5,193);drawFit(doc,addrJoin(d.b_addr,d.b_town,d.b_dist),15,y,178,10);y+=11;
 
   normal(doc,15,y,'towards the sale price of my vehicle');
   x=15+doc.getTextWidth('towards the sale price of my vehicle')+2;dline(doc,x,y+0.5,160);
@@ -767,7 +779,7 @@ function addForm23B(doc,d){
   y=hRow(doc,y,'Application No. :  ','',10);
   y=hRow(doc,y,'Owner Name :  ',d.s_name,10);
   y=hRow(doc,y,'Son / wife / daughter of :  ',d.s_father,10);
-  y=hRow(doc,y,'Address :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),10);
+  y=hRow(doc,y,'Address :  ',addrJoin(d.s_addr,d.s_town,d.s_dist&&('Dist. '+d.s_dist)),10);
   y=hRow(doc,y,'Mobile Number :  ',d.mobile,10);
   y=hRow(doc,y,'Description of Vehicle :  ','',10);
   y=hRow(doc,y,'Class of Vehicle :  ',d.veh_type,10);
@@ -941,7 +953,7 @@ function addForm33(doc,d){
   y=hRow(doc,y,'',d.rto,11);
   y=hRow(doc,y,'I / We :  ',d.s_name,9.5);
   y=hRow(doc,y,'son / wife / daughter of :  ',d.s_father,9.5);
-  y=hRow(doc,y,'( full address ) :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),9.5);
+  y=hRow(doc,y,'( full address ) :  ',addrJoin(d.s_addr,d.s_town,d.s_dist&&('Dist. '+d.s_dist)),9.5);
   y=hRow(doc,y,'registered owner of motor vehicle No. :  ',d.reg_no,9.5);
   y=hWrap(doc,15,y,'have ceased to reside / do not have the place of business at the address recorded in the certificate of registration with effect from ........................ . The present address is given below ( evidence to be enclosed ) :',180,10.5); y+=2;
   dline(doc,15,y+0.6,193);
@@ -1114,7 +1126,7 @@ function addForm20(doc,d){
   doc.setFont(F,'bold');doc.setFontSize(11.5);doc.text(d.s_name||'',24,y); y+=10;
   y=ROW(y,'      Son / Wife / Daughter of :  ',d.s_father,11);
   y=ROW(y,'2.   Age of person to be registered as Registered Owner :  ','',11);
-  y=ROW(y,'3.   Permanent address :  ',d.s_addr+(d.s_town?', '+d.s_town:'')+(d.s_dist?', Dist. '+d.s_dist:''),8);
+  y=ROW(y,'3.   Permanent address :  ',addrJoin(d.s_addr,d.s_town,d.s_dist&&('Dist. '+d.s_dist)),8);
   y=WRAP(22,y,'( Electoral Roll / LIC Policy / Passport / Pay slip of Central or State Government office or local body / any other prescribed document / Affidavit sworn before a Magistrate or Notary Public to be enclosed )',170,8);
   y+=5;
   y=ROW(y,'4.   Temporary address / Official address, if any :  ','',11);
@@ -1272,7 +1284,7 @@ function addForm21(doc,d){
   y=lrow(doc,y,'Name of the buyer:  ',d.b_name);
   y=lrow(doc,y,'Mobile number:  ','');
   y=lrow(doc,y,'Son / wife / daughter of:  ',d.b_father);
-  y=lrow(doc,y,'Address ( permanent ):  ',d.b_addr+(d.b_town?', '+d.b_town:'')+(d.b_dist?', Dist. '+d.b_dist:''));
+  y=lrow(doc,y,'Address ( permanent ):  ',addrJoin(d.b_addr,d.b_town,d.b_dist&&('Dist. '+d.b_dist)));
   y=lrow(doc,y,'Address ( temporary ):  ','');
   y=lrow(doc,y,'The vehicle is held under agreement of HP / lease / hypothecation with:  ','');
   y+=2;
@@ -1377,7 +1389,7 @@ function addGeneric(doc,d,def){
   normal(doc,15,y,'The Registering Authority'); y+=6;
   y=lrow(doc,y,'',d.rto); y+=2;
   const nm=def.useBuyer?d.b_name:d.s_name, fa=def.useBuyer?d.b_father:d.s_father;
-  const ad=(def.useBuyer?d.b_addr:d.s_addr)+((def.useBuyer?d.b_town:d.s_town)?', '+(def.useBuyer?d.b_town:d.s_town):'')+((def.useBuyer?d.b_dist:d.s_dist)?', Dist. '+(def.useBuyer?d.b_dist:d.s_dist):'');
+  const ad=addrJoin(def.useBuyer?d.b_addr:d.s_addr, def.useBuyer?d.b_town:d.s_town, (def.useBuyer?d.b_dist:d.s_dist)&&('Dist. '+(def.useBuyer?d.b_dist:d.s_dist)));
   normal(doc,15,y,'I / We ');
   let x=15+doc.getTextWidth('I / We ');
   dline(doc,x,y+0.5,118); bold(doc,x+2,y,nm);
@@ -1450,7 +1462,7 @@ const DEFS={
    decl:['The vehicle has not been registered earlier with any registering authority.','Sale certificate (Form 21) and roadworthiness certificate (Form 22) are enclosed.'],
    req:'I / We request that the vehicle may be registered and a registration mark assigned.',sign:'Signature of Owner'},
  f21:{n:'21',rule:'See Rule 47',title:'SALE CERTIFICATE',vehicle:true,useBuyer:false,
-   intro:function(d){return 'Certified that the vehicle described below has been delivered by us on (date) ____________ to Shri/Smt. '+(d.b_name||'____________')+', resident of '+((d.b_addr||'')+(d.b_town?', '+d.b_town:'')||'____________')+':';},
+   intro:function(d){return 'Certified that the vehicle described below has been delivered by us on (date) ____________ to Shri/Smt. '+(d.b_name||'____________')+', resident of '+(addrJoin(d.b_addr,d.b_town)||'____________')+':';},
    decl:['The vehicle is brand new / unregistered at the time of sale.'],sign:'Signature of Dealer / Manufacturer',endorse:false},
  f27:{n:'27',rule:'See Rule 54',title:'APPLICATION FOR ASSIGNMENT OF A NEW REGISTRATION MARK',vehicle:true,
    blanks:['Previous registering authority:  ','No Objection Certificate No. and date:  '],
@@ -1496,4 +1508,13 @@ const DEFS={
    req:'I / We request that authorisation may kindly be granted.',sign:'Signature of Permit Holder'},
 };
 const G=k=>(doc,d)=>addGeneric(doc,d,DEFS[k]);
+
+/* addrJoin is a pure string function (no jsPDF/doc dependency, unlike
+   everything else in this file) — exported the same way field-mapping.js
+   exports its pure functions, so the Node test suite can exercise the
+   exact production code instead of a hand-copied reimplementation. This
+   block is a no-op in the browser (typeof module is undefined there). */
+if(typeof module!=='undefined' && module.exports){
+  module.exports={ addrJoin };
+}
 

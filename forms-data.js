@@ -76,6 +76,7 @@ const FIELDS={
  s_addr:   {sec:'owner',label:'Address (house / street)',ph:'H.No. 45, Station Road',full:true},
  s_town:   {sec:'owner',label:'Town',ph:'Jamshedpur'},
  s_dist:   {sec:'owner',label:'District',ph:'East Singhbhum'},
+ s_state:  {sec:'owner',label:'State',ph:'Jharkhand'},
  mobile:   {sec:'owner',label:'Mobile number',ph:'98XXXXXXXX',maxlen:10,type:'tel',inputmode:'numeric',pat:/[^0-9]/g,hint:'10 digits only'},
 
  b_name:   {sec:'buyer',label:'Full name *',ph:'Suresh Kumar Yadav'},
@@ -83,6 +84,7 @@ const FIELDS={
  b_addr:   {sec:'buyer',label:'Address (house / street)',ph:'Village Rampur, NH-33',full:true},
  b_town:   {sec:'buyer',label:'Town',ph:'Baharagora'},
  b_dist:   {sec:'buyer',label:'District',ph:'East Singhbhum'},
+ b_state:  {sec:'buyer',label:'State',ph:'e.g. Odisha, West Bengal — if different from seller’s'},
  b_mobile: {sec:'buyer',label:'Purchaser mobile number',ph:'98XXXXXXXX',maxlen:10,type:'tel',inputmode:'numeric',pat:/[^0-9]/g,hint:'10 digits only'},
 
  deceased:  {sec:'extra',label:'Deceased owner name — Form 31',ph:'Late Shri ...'},
@@ -124,10 +126,14 @@ const FIELDS={
  wit2_addr: {sec:'receipt',label:'Witness 2 address',ph:'Address',full:true},
 
  adv_at: {sec:'advocate',label:'Advocate at'},
- state:  {sec:'advocate',label:'State'},
 };
 
-let VALS={adv_at:'Jamshedpur',state:'Jharkhand'};
+/* s_state defaults to Jharkhand (this site's home state, same as adv_at)
+   since the seller/vehicle is the common case; b_state is deliberately
+   left unset — assuming the buyer is in the same state was exactly the
+   bug (see s_state/b_state split below), so it stays blank until the
+   user fills it or a document supplies it. */
+let VALS={adv_at:'Jamshedpur',s_state:'Jharkhand'};
 
 /* Field ids whose current VALS entry came from AI extraction, not typing —
    drives the amber "AI"-badge highlight in fieldHTML() (ui.js). A field
@@ -137,6 +143,20 @@ let VALS={adv_at:'Jamshedpur',state:'Jharkhand'};
    which ones were AI-sourced, which is fine since it's a review aid, not
    data the app depends on. */
 const AI_FILLED_FIELDS=new Set();
+
+/* Field ids that WERE AI-filled and have since been reviewed by the
+   user — either edited (handleInput(), ui.js) or explicitly kept via a
+   conflict-resolution choice. Rendered green (the site's existing
+   "verified/approved" color — see .upload-slot-state.done,
+   .suggest-row.added, .status.ok) instead of AI_FILLED_FIELDS' amber,
+   which deliberately means the OPPOSITE: "AI wrote this, a human hasn't
+   looked at it yet — please check it before this goes into a PDF an RTO
+   will read" (e.g. a misread chassis-number digit). Mutually exclusive
+   with AI_FILLED_FIELDS — a field is in at most one of the two sets at
+   any time. Cleared (back to amber/unverified) if a fresh AI extraction
+   overwrites the field again — see runExtraction()/switchFieldConflict()
+   in pro-wallet.js — since that's new, not-yet-reviewed data. */
+const VERIFIED_FIELDS=new Set();
 
 /* Which document type currently "owns" a given field's applied value —
    used by mergeExtractedFields() (field-mapping.js, called from
@@ -203,7 +223,7 @@ const BUY=['b_name','b_father','b_addr','b_town','b_dist'];
 
 const PICKS=[
  {id:'pk29', type:'rto', pages:1, gen:addForm29, label:'Form 29 \u2014 Transfer notice', def:true, needB:true,
-  fields:[...VEH,'sale_date',...OWN,...BUY,'state']},
+  fields:[...VEH,'sale_date',...OWN,...BUY,'b_state']},
  {id:'pk30', type:'rto', pages:2, gen:addForm30, label:'Form 30 \u2014 Transfer report', def:true, needB:true,
   fields:[...VEH,'sale_date',...OWN,...BUY,'mobile','b_mobile']},
  {id:'pkAS', type:'affidavit', pages:1, gen:(doc,d)=>addAffidavit(doc,d,'SELLER'), label:'Affidavit \u2014 Seller', def:true, needB:true, adv:true,
