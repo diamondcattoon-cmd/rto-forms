@@ -165,7 +165,13 @@ function applyBundle(bid){
    just "start with the transfer bundle already applied", reusing
    applyBundlePicks() rather than a second, task-specific data table that
    could drift from BUNDLES. Add one entry here per new task page. */
-const TASK_BUNDLE_MAP={ transfer:'b_transfer' };
+const TASK_BUNDLE_MAP={
+  'vehicle-transfer': 'b_transfer',
+  'rc-renewal':       'b_rcrenew',
+  'duplicate-rc':     'b_duprc',
+  'hp-removal':       'b_hpremove',
+  'address-change':   'b_address',
+};
 
 /* Runs once at bootstrap (see the bottom of this file). No-ops completely
    when window.TASK is unset or unrecognized — e.g. the root index.html —
@@ -816,7 +822,7 @@ function generatePDF(blank){
         setTimeout(()=>{inp.classList.remove('fld-blink');},2200);
       }
     };
-    if(!g('s_name')){highlightErr('s_name','Owner / Seller name is required.'); return;}
+    if(need.has('s_name') && !g('s_name')){highlightErr('s_name','Owner / Seller name is required.'); return;}
     if(needsReg && !g('reg_no')){highlightErr('reg_no','Registration No. is required for the selected forms.'); return;}
     if(needsBuyer && !g('b_name')){highlightErr('b_name','Purchaser name is required for the selected transfer / sale forms.'); return;}
     /* Mobile is compulsory only for forms that actually include a mobile

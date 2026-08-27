@@ -308,6 +308,13 @@ const BUNDLES=[
    picks:['pk31'], suggest:['pkAS','pk26']},
   {id:'b_hp', label:'HP / Loan', icon:'🏦',
    picks:['pk34'], suggest:['pk35','pk33']},
+  /* Deliberately separate from b_hp above — that one is for ADDING a
+     hire-purchase/loan note to the RC (Form 34); this one is for the
+     opposite, much more common task once a loan is paid off: REMOVING it
+     (Form 35). Conflating the two under one bundle would mean whichever
+     form is "primary" silently wrongs the other use case. */
+  {id:'b_hpremove', label:'Remove Hypothecation', icon:'🔓',
+   picks:['pk35'], suggest:['pk33']},
   {id:'b_address', label:'Address Change', icon:'📍',
    picks:['pk33'], suggest:['pk26']},
   {id:'b_newreg', label:'New Registration', icon:'🆕',
