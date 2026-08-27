@@ -18,12 +18,55 @@
    — see sendWalletLink()/claimWalletLinkFromUrl(). */
 const WORKER_URL='https://rto-ai-extract.diamondcattoon.workers.dev';
 
-let PRO=Object.assign({role:'seller',walletId:''}, JSON.parse(localStorage.getItem('rtoProState')||'{}'));
+let PRO=Object.assign({walletId:''}, JSON.parse(localStorage.getItem('rtoProState')||'{}'));
+delete PRO.role; /* migrate away from the old single global role (pre-per-document DOC_ROLE) if a stale copy is still in localStorage */
 PRO.uploads={}; /* images kept in memory only for this session — used for PDF attachment */
 PRO.balancePaise=0;
 
-function saveProState(){ localStorage.setItem('rtoProState', JSON.stringify({role:PRO.role, walletId:PRO.walletId})); }
-function setProRole(role){ PRO.role=role; saveProState(); }
+/* ── Per-document role ──
+   Replaces the old single global "fill as seller/buyer" toggle. Each
+   document type that DOC_RULES (field-mapping.js) marks as 'choice' (i.e.
+   could belong to either party — aadhaar, pan) gets its OWN role, so a user
+   can extract the seller's Aadhaar and the buyer's Aadhaar in the same
+   session without one overwriting the other's setting. A 'fixed'-role doc
+   type (rc) has no entry here at all — its role is never asked for, never
+   stored, and AI_FIELD_MAP.rc ignores whatever's passed to it anyway (see
+   field-mapping.js). Defaults come from DOC_RULES itself, not hardcoded
+   here, so a new 'choice' doc type added there needs no change in this file. */
+let DOC_ROLE={};
+Object.keys(DOC_RULES).forEach(docType=>{
+  if(DOC_RULES[docType].role==='choice') DOC_ROLE[docType]=DOC_RULES[docType].defaultRole;
+});
+try{
+  const savedRoles=JSON.parse(localStorage.getItem('rtoProState')||'{}').docRole;
+  if(savedRoles && typeof savedRoles==='object'){
+    Object.keys(DOC_ROLE).forEach(docType=>{ if(savedRoles[docType]==='seller'||savedRoles[docType]==='buyer') DOC_ROLE[docType]=savedRoles[docType]; });
+  }
+}catch(e){}
+
+function saveProState(){ localStorage.setItem('rtoProState', JSON.stringify({walletId:PRO.walletId, docRole:DOC_ROLE})); }
+function setDocRole(docType, role){
+  if(!(docType in DOC_ROLE)) return; /* not a 'choice' doc type — nothing to set */
+  DOC_ROLE[docType]=(role==='buyer')?'buyer':'seller';
+  saveProState();
+}
+
+/* The role actually used for a given extraction:
+   - 'fixed'-role doc types (rc) always resolve through resolveDocRole() to
+     their defaultRole, ignoring everything below (field-mapping.js already
+     enforces this too — this is belt-and-suspenders, not the only guard).
+   - Otherwise, if none of the currently CHECKED forms need a buyer at all
+     (PICKS[i].needB — see forms-data.js), there's no buyer to fill in, so
+     force 'seller' regardless of what DOC_ROLE has stored. This covers the
+     case where a buyer role was chosen earlier and the user then switched
+     to a buyer-less package (e.g. RC renewal) without manually resetting it. */
+function getEffectiveRole(docType){
+  const rule=DOC_RULES[docType];
+  if(rule && rule.role==='fixed') return rule.defaultRole;
+  const anyB=typeof PICKS!=='undefined' && PICKS.filter(p=>CHECKED[p.id]).some(p=>p.needB);
+  if(!anyB) return 'seller';
+  return DOC_ROLE[docType] || (rule && rule.defaultRole) || 'seller';
+}
 
 function renderProCredits(){
   const el=document.getElementById('proCreditsBadge');
@@ -399,7 +442,7 @@ async function runExtraction(docType, images, uploadsKey){
     }
 
     const data=json.data;
-    const mapped=AI_FIELD_MAP[docType](data, PRO.role);
+    const mapped=AI_FIELD_MAP[docType](data, getEffectiveRole(docType));
     Object.keys(mapped).forEach(k=>{ if(mapped[k]){ VALS[k]=String(mapped[k]).toUpperCase(); AI_FILLED_FIELDS.add(k); } });
     scheduleSaveVals();
     updateSections();

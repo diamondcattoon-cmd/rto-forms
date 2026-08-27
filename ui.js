@@ -426,21 +426,35 @@ function updateProContext(need){
 /* Which target field ids a given AI_FIELD_MAP[docType] can ever write —
    derived from its own source (regex over out.xxx=/out[p+'xxx'] patterns)
    instead of a separately hand-maintained list, so this can't drift out of
-   sync with field-mapping.js the way the Worker/frontend contract once did. */
+   sync with field-mapping.js the way the Worker/frontend contract once did.
+   The out[p+'xxx'] patterns are role-prefixed (s_/b_) — which prefixes are
+   actually reachable is governed by DOC_RULES (field-mapping.js): a
+   'fixed'-role doc type (e.g. rc, always seller) can only ever write its
+   one prefix, never both, so reporting both here would make the RC upload
+   slot appear "relevant" for a buyer-only field it can never actually fill. */
 function docTypeOutputFields(docType){
   const src=AI_FIELD_MAP[docType].toString();
   const fields=new Set();
   for(const m of src.matchAll(/out\.(\w+)\s*=/g)) fields.add(m[1]);
-  for(const m of src.matchAll(/out\[p\+'(\w+)'\]/g)){ fields.add('s_'+m[1]); fields.add('b_'+m[1]); }
+  const rule=DOC_RULES[docType];
+  const prefixes = (rule && rule.role==='fixed') ? [rule.defaultRole==='buyer'?'b_':'s_'] : ['s_','b_'];
+  for(const m of src.matchAll(/out\[p\+'(\w+)'\]/g)){
+    prefixes.forEach(pre=>fields.add(pre+m[1]));
+  }
   return fields;
 }
 
 /* Only show the document-upload slots that could actually fill a field the
    currently-selected forms need — e.g. no RC slot if nothing needs vehicle
    fields. Face Photo is a plain attachment, not tied to AI extraction, so
-   it's excluded from this and always stays visible. */
+   it's excluded from this and always stays visible.
+   anyB mirrors updateSections()'s own "do any selected forms need a buyer"
+   check (PICKS[i].needB) — reused here to show/hide each slot's per-document
+   role selector (see DOC_RULES): no buyer-needing form selected means there
+   is no buyer to fill in, so the choice is pointless and just confusing
+   (e.g. RC renewal / duplicate RC, which never involve a buyer at all). */
 const DOC_SLOT_TYPES=['aadhaar','pan','rc'];
-function updateDocSlotVisibility(need){
+function updateDocSlotVisibility(need, anyB){
   const grid=document.getElementById('docSlotGrid');
   let anyVisible=false;
   DOC_SLOT_TYPES.forEach(docType=>{
@@ -449,6 +463,12 @@ function updateDocSlotVisibility(need){
     const relevant=need && need.size && [...docTypeOutputFields(docType)].some(f=>need.has(f));
     slot.style.display=relevant?'':'none';
     if(relevant) anyVisible=true;
+
+    const roleRow=document.getElementById('docRole-'+docType);
+    if(roleRow){
+      const rule=DOC_RULES[docType];
+      roleRow.style.display=(relevant && anyB && rule && rule.role==='choice') ? '' : 'none';
+    }
   });
   const emptyNote=document.getElementById('docSlotEmptyNote');
   if(emptyNote) emptyNote.style.display=anyVisible?'none':'';
@@ -461,7 +481,7 @@ function updateSections(){
   chosen.forEach(p=>(p.fields||[]).forEach(f=>need.add(f)));
   const anyB=chosen.some(p=>p.needB);
   updateProContext(need);
-  updateDocSlotVisibility(need);
+  updateDocSlotVisibility(need, anyB);
   renderSuggestions(need);
 
   /* Update dynamic page count note */

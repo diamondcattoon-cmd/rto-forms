@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { AI_FIELD_MAP } = require('../field-mapping.js');
+const { AI_FIELD_MAP, DOC_RULES, resolveDocRole } = require('../field-mapping.js');
 
 /* Sample payloads below mirror the exact JSON shape each PROMPTS.<docType>
    in worker/src/index.js tells Gemini to return — see
@@ -111,9 +111,20 @@ test('AI_FIELD_MAP.rc maps a full sample response: vehicle fields plus role-pref
   });
 });
 
-test('AI_FIELD_MAP.rc uses the b_ prefix for owner_name/address when role is buyer', () => {
+test('AI_FIELD_MAP.rc always writes owner_name/address to s_ fields, even when role is "buyer"', () => {
+  /* Bug fix: an RC (registration certificate) is only ever held by the
+     vehicle's current registered owner — the seller/transferor in a
+     transfer. A buyer cannot possess the seller's RC before the transfer
+     completes, so RC data must never land in b_ fields regardless of
+     which role toggle happens to be selected elsewhere in the UI. See
+     DOC_RULES.rc in field-mapping.js (role: 'fixed'). */
   const out = AI_FIELD_MAP.rc({ owner_name: 'SURESH YADAV', town: 'Baharagora' }, 'buyer');
-  assert.deepEqual(out, { b_name: 'SURESH YADAV', b_town: 'Baharagora' });
+  assert.deepEqual(out, { s_name: 'SURESH YADAV', s_town: 'Baharagora' });
+});
+
+test('AI_FIELD_MAP.rc ignores an explicit "seller" role too — same fixed outcome either way', () => {
+  const out = AI_FIELD_MAP.rc({ owner_name: 'SURESH YADAV', town: 'Baharagora' }, 'seller');
+  assert.deepEqual(out, { s_name: 'SURESH YADAV', s_town: 'Baharagora' });
 });
 
 test('AI_FIELD_MAP.rc converts dates through toISODate and drops unparsable ones', () => {
@@ -124,4 +135,25 @@ test('AI_FIELD_MAP.rc converts dates through toISODate and drops unparsable ones
 test('AI_FIELD_MAP.rc omits empty/zero-length fields entirely', () => {
   const out = AI_FIELD_MAP.rc({ registration_number: 'JH05AB1234', cylinders: '' }, 'seller');
   assert.deepEqual(out, { reg_no: 'JH05AB1234' });
+});
+
+/* ── DOC_RULES / resolveDocRole ── */
+
+test('DOC_RULES declares rc as fixed-to-seller, aadhaar and pan as either-party choice', () => {
+  assert.deepEqual(DOC_RULES.rc, { role: 'fixed', defaultRole: 'seller' });
+  assert.equal(DOC_RULES.aadhaar.role, 'choice');
+  assert.equal(DOC_RULES.pan.role, 'choice');
+});
+
+test('resolveDocRole: a fixed-role doc type always returns its defaultRole, ignoring the passed role', () => {
+  assert.equal(resolveDocRole('rc', 'buyer'), 'seller');
+  assert.equal(resolveDocRole('rc', 'seller'), 'seller');
+  assert.equal(resolveDocRole('rc', undefined), 'seller');
+});
+
+test('resolveDocRole: a choice-role doc type passes through a valid role, and falls back to defaultRole otherwise', () => {
+  assert.equal(resolveDocRole('aadhaar', 'buyer'), 'buyer');
+  assert.equal(resolveDocRole('aadhaar', 'seller'), 'seller');
+  assert.equal(resolveDocRole('aadhaar', undefined), 'seller');
+  assert.equal(resolveDocRole('pan', 'buyer'), 'buyer');
 });

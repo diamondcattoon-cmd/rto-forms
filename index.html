@@ -280,8 +280,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .pro-context.show{display:block}
 .pro-context b{color:var(--stamp)}
 .pro-toprow{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0 18px}
-.pro-role-lbl{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px}
-.pro-role-opts{display:flex;gap:14px}
 .pro-radio{display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer}
 .pro-radio input{accent-color:var(--stamp)}
 .pro-credits{display:flex;align-items:center;gap:10px}
@@ -316,6 +314,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .consent-chk a{color:var(--stamp);text-decoration:underline}
 .upload-slot input[type=file]:disabled{opacity:.45;cursor:not-allowed}
 .consent-hint{font-size:11px;font-weight:600;color:var(--stamp);margin-bottom:8px}
+.doc-role-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.doc-role-lbl{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.3px}
+.doc-role-opt{display:flex;align-items:center;gap:4px;font-size:12.5px;color:var(--txt);cursor:pointer}
+.doc-role-opt input{accent-color:var(--stamp);width:13px;height:13px;cursor:pointer}
+.doc-role-note{font-size:11px;color:var(--txt-2);font-style:italic;margin-bottom:8px}
 .pro-result-card{background:var(--approve-soft);border:1px solid var(--approve);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12.5px}
 .pro-result-card b{color:var(--approve)}
 .pro-result-row{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
@@ -565,20 +568,13 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <p class="pick-note">Aadhaar / PAN / RC ki clear photo upload karo — naam, address, reg. no, chassis/engine no. jaisi details apne aap fields mein fill ho jayengi. Har extraction ₹5 leta hai.</p>
         <p class="pro-context" id="proContext"></p>
 
-        <div class="pro-toprow">
-          <div class="pro-role">
-            <label class="pro-role-lbl">Data fill karo as</label>
-            <div class="pro-role-opts">
-              <label class="pro-radio"><input type="radio" name="proRole" value="seller" checked onchange="setProRole(this.value)"> Owner / Seller</label>
-              <label class="pro-radio"><input type="radio" name="proRole" value="buyer" onchange="setProRole(this.value)"> Purchaser / Buyer</label>
-            </div>
-          </div>
+        <div class="pro-toprow" style="justify-content:flex-end">
           <div class="pro-credits">
             <span class="pro-credits-badge" id="proCreditsBadge">₹0.00</span>
             <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()">+ Add Money</button>
           </div>
         </div>
-        <p class="fld-hint">Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna.</p>
+        <p class="fld-hint">Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN par kiska document hai wo waheen select karo.</p>
 
         <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;">Purana wallet is device pe wapas chahiye?</a></p>
         <div class="pro-wallet-row" id="recoveryForm" style="display:none">
@@ -600,6 +596,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
         <div class="upload-grid" id="docSlotGrid">
           <div class="upload-slot upload-slot-wide" id="docSlot-aadhaar">
             <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card</span><span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></div>
+            <div class="doc-role-row" id="docRole-aadhaar" style="display:none">
+              <span class="doc-role-lbl">Kiska hai?</span>
+              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> Seller</label>
+              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> Buyer</label>
+            </div>
             <p class="consent-hint" id="consentHint-aadhaar">Upload karne ke liye upar consent dein ↑</p>
             <div class="aadhaar-two-col">
               <div>
@@ -620,6 +621,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 
           <div class="upload-slot" id="docSlot-pan">
             <div class="upload-slot-top"><span class="upload-slot-name">PAN Card</span><span class="upload-slot-state" id="state-pan">Not uploaded</span></div>
+            <div class="doc-role-row" id="docRole-pan" style="display:none">
+              <span class="doc-role-lbl">Kiska hai?</span>
+              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> Seller</label>
+              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> Buyer</label>
+            </div>
             <p class="consent-hint" id="consentHint-pan">Upload karne ke liye upar consent dein ↑</p>
             <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-pan" disabled onchange="handleFileSelect('pan', this.files[0])">
             <div class="doc-preview-wrap" id="preview-pan"></div>
@@ -629,6 +635,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 
           <div class="upload-slot" id="docSlot-rc">
             <div class="upload-slot-top"><span class="upload-slot-name">RC (Registration Certificate)</span><span class="upload-slot-state" id="state-rc">Not uploaded</span></div>
+            <p class="doc-role-note">RC se seller ki details bharenge</p>
             <p class="consent-hint" id="consentHint-rc">Upload karne ke liye upar consent dein ↑</p>
             <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" disabled onchange="handleFileSelect('rc', this.files[0])">
             <div class="doc-preview-wrap" id="preview-rc"></div>
