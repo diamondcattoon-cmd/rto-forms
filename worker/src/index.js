@@ -110,6 +110,7 @@ Rules:
 Return ONLY valid JSON, no markdown, no explanation, in this exact shape:
 {
   "owner_name": "",
+  "owner_type": "",
   "registration_number": "",
   "chassis_number": "",
   "engine_number": "",
@@ -136,6 +137,7 @@ Return ONLY valid JSON, no markdown, no explanation, in this exact shape:
   "pincode": ""
 }
 Rules:
+- owner_type: "individual" or "firm". The owner_name is a "firm" if it carries a business/organization marker — e.g. it starts with "M/S" or "M/s.", or contains "Pvt Ltd", "Private Limited", "LLP", "& Sons", "& Co", "& Company", "Enterprises", "Industries", "Trust", or "Society". An ordinary person's name (with or without a title like Shri/Smt/Kumari) is "individual". If you are unsure, default to "individual" — never guess "firm".
 - maker: the manufacturer only, e.g. "Maruti Suzuki", "Honda", "Tata Motors" — NOT the model name.
 - model: the model name/variant only, e.g. "Swift VXi", "Activa 6G" — NOT the manufacturer name.
 - registration_date, expiry_date: format DD/MM/YYYY. expiry_date is usually labelled "Regd Validity" or "Valid Upto".

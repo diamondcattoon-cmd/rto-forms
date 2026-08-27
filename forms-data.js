@@ -138,6 +138,36 @@ let VALS={adv_at:'Jamshedpur',state:'Jharkhand'};
    data the app depends on. */
 const AI_FILLED_FIELDS=new Set();
 
+/* Which document type currently "owns" a given field's applied value —
+   used by mergeExtractedFields() (field-mapping.js, called from
+   runExtraction() in pro-wallet.js) to arbitrate when two different
+   uploaded documents supply different values for the same field, instead
+   of simple last-write-wins. Declared here (not in pro-wallet.js, which
+   is the only file that writes to it) because ui.js's own bootstrap call
+   to updateSections() runs during ui.js's script evaluation — i.e. before
+   pro-wallet.js (loaded after ui.js) has even executed — so anything
+   fieldHTML()/updateSections() read at that point must already exist;
+   forms-data.js loads first, same reasoning as VALS/AI_FILLED_FIELDS. */
+const FIELD_SOURCE={};
+
+/* Fields where two different document types disagreed and the
+   lower-priority one's value was NOT applied — fieldHTML() (ui.js) shows
+   a small notice + a button to switch to the other document's value
+   instead (resolveFieldConflict(), pro-wallet.js). Cleared the instant
+   the user edits the field by hand (handleInput(), ui.js) or picks a
+   side. Shape: { fieldId: {winner:{docType,value}, loser:{docType,value}} } */
+const PENDING_CONFLICTS={};
+
+/* Individual vs firm/company ownership — only ever set for the SELLER
+   side, since it's driven entirely by the RC's extracted owner_type (see
+   PROMPTS.rc, worker/src/index.js) and DOC_RULES.rc is fixed to seller —
+   there's no document this site reads that could signal a buyer being a
+   firm. Defaults to 'individual'; updated either by a fresh RC extraction
+   or by the user's own Individual/Firm toggle next to the Seller section
+   — whichever happened most recently wins (same model as every other
+   AI-filled field: AI fills it, a later user action overrides it). */
+let SELLER_OWNER_TYPE='individual';
+
 /* ── Persist in-progress field values across accidental refresh/tab-close ──
    Only field VALUES go into localStorage (debounced, not on every keystroke).
    Uploaded document images (PRO.uploads) are kept in memory only — they'd

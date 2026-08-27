@@ -346,6 +346,10 @@ function closeSettingsModal(){
   document.getElementById('settingsModal').style.display='none';
 }
 
+/* Which document a field's value came from, for the conflict notice's
+   wording — e.g. "RC aur Aadhaar ka data alag hai". */
+const DOC_LABEL_UI={rc:'RC', aadhaar:'Aadhaar', pan:'PAN'};
+
 function fieldHTML(id){
   const f=FIELDS[id];
   const v=(VALS[id]||'').replace(/"/g,'&quot;');
@@ -356,7 +360,11 @@ function fieldHTML(id){
   const dateTab=f.type==='date'?`onkeydown="dateTabFix(event,this)"`:'';
   const isAi=AI_FILLED_FIELDS.has(id);
   const aiBadge=isAi?'<span class="fld-ai-badge">AI</span>':'';
-  return `<div class="fld ${f.full?'full':''}${isAi?' fld-ai':''}" id="fldwrap_${id}"><label><span>${f.label}${aiBadge}</span>${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}</div>`;
+  const conflict=PENDING_CONFLICTS[id];
+  const conflictNote=conflict
+    ? `<div class="fld-conflict-note" id="conflict_${id}">${DOC_LABEL_UI[conflict.winner.docType]||conflict.winner.docType} aur ${DOC_LABEL_UI[conflict.loser.docType]||conflict.loser.docType} ka data alag hai — ${DOC_LABEL_UI[conflict.winner.docType]||conflict.winner.docType} wala bhara gaya. <button type="button" onclick="switchFieldConflict('${id}')">${DOC_LABEL_UI[conflict.loser.docType]||conflict.loser.docType} wala use karo</button><button type="button" class="fld-conflict-dismiss" onclick="dismissFieldConflict('${id}')" aria-label="Dismiss">&times;</button></div>`
+    : '';
+  return `<div class="fld ${f.full?'full':''}${isAi?' fld-ai':''}" id="fldwrap_${id}"><label><span>${f.label}${aiBadge}</span>${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}${conflictNote}</div>`;
 }
 
 /* Tab on a date field should move to the next input, not the calendar picker */
@@ -394,6 +402,17 @@ function handleInput(id, el){
       const badge=wrap.querySelector('.fld-ai-badge');
       if(badge) badge.remove();
     }
+  }
+  /* A manual edit supersedes whatever document(s) supplied this field —
+     there's no longer an AI "source" to arbitrate future extractions
+     against (the next AI value for this field, from anywhere, is treated
+     as fresh — see mergeExtractedFields's "nothing here yet" branch), and
+     any pending conflict notice for it is now moot. */
+  if(id in FIELD_SOURCE) delete FIELD_SOURCE[id];
+  if(id in PENDING_CONFLICTS){
+    delete PENDING_CONFLICTS[id];
+    const note=document.getElementById('conflict_'+id);
+    if(note) note.remove();
   }
   const cnt=document.getElementById('cnt_'+id);
   if(cnt && f.maxlen && f.type!=='date'){
@@ -474,6 +493,22 @@ function updateDocSlotVisibility(need, anyB){
   if(emptyNote) emptyNote.style.display=anyVisible?'none':'';
 }
 
+/* Small Individual/Firm toggle shown above the Seller section's fields —
+   reflects SELLER_OWNER_TYPE (forms-data.js), which a fresh RC extraction
+   sets automatically (see runExtraction(), pro-wallet.js) and this toggle
+   lets the user correct or set manually, with or without ever using AI
+   extraction. Always shown when the Seller section itself is showing —
+   there's no "only relevant sometimes" case here, unlike the per-document
+   AI role selectors, since every seller either is or isn't a firm. */
+function ownerTypeToggleHTML(){
+  const isFirm=SELLER_OWNER_TYPE==='firm';
+  return `<div class="owner-type-row">
+    <span class="doc-role-lbl">Owner type</span>
+    <label class="doc-role-opt"><input type="radio" name="sellerOwnerType" value="individual"${!isFirm?' checked':''} onchange="setSellerOwnerType(this.value)"> Individual</label>
+    <label class="doc-role-opt"><input type="radio" name="sellerOwnerType" value="firm"${isFirm?' checked':''} onchange="setSellerOwnerType(this.value)"> Firm / Company</label>
+  </div>`;
+}
+
 /* Build the input sections from the union of selected forms' fields */
 function updateSections(){
   const chosen=PICKS.filter(p=>CHECKED[p.id]);
@@ -509,10 +544,16 @@ function updateSections(){
   let html=''; let n=1;
   const fieldOrder=Object.keys(FIELDS);
   SECTIONS.forEach(s=>{
-    const ids=fieldOrder.filter(k=>FIELDS[k].sec===s.id && need.has(k));
+    const isOwnerSection=s.id==='owner';
+    let ids=fieldOrder.filter(k=>FIELDS[k].sec===s.id && need.has(k));
+    /* A firm/company doesn't have a "father's name" — see SELLER_OWNER_TYPE
+       (forms-data.js) and generatePDF() below, which also blanks it on the
+       printed PDF regardless of any stray leftover value in VALS.s_father. */
+    if(isOwnerSection && SELLER_OWNER_TYPE==='firm') ids=ids.filter(k=>k!=='s_father');
     if(!ids.length) return;
     const title=(s.id==='owner') ? (anyB?'Seller (transferor)':'Owner / Applicant details') : s.title;
-    html+=`<div class="fset"><div class="fset-label"><span class="fset-num">${n++}</span><h4>${title}</h4></div><div class="grid2">${ids.map(fieldHTML).join('')}</div></div>`;
+    const ownerTypeRow=isOwnerSection ? ownerTypeToggleHTML() : '';
+    html+=`<div class="fset"><div class="fset-label"><span class="fset-num">${n++}</span><h4>${title}</h4></div>${ownerTypeRow}<div class="grid2">${ids.map(fieldHTML).join('')}</div></div>`;
   });
   document.getElementById('dynFields').innerHTML = html ||
     '<p style="color:var(--txt-2);font-size:13.5px;padding:6px 0 14px">Select at least one form above to see its fields.</p>';
@@ -667,6 +708,12 @@ function generatePDF(blank){
     d.rto=d.rto||'District Transport Office, Jamshedpur';
     d.state=d.state||'Jharkhand';
     d.adv_at=d.adv_at||'Jamshedpur';
+    /* A firm/company has no father's name — blank it on the printed PDF
+       (the dotted "S/o" line still draws, just with nothing written on
+       it) regardless of whatever happens to be sitting in VALS.s_father
+       (e.g. leftover from an earlier Individual selection, or a stray AI
+       extraction) — see SELLER_OWNER_TYPE (forms-data.js). */
+    if(SELLER_OWNER_TYPE==='firm') d.s_father='';
   }
 
   btn.disabled=true; if(bbtn) bbtn.disabled=true;

@@ -406,6 +406,40 @@ async function retryDoc(docType){
   updateCheckoutBox();
 }
 
+/* Manual Individual/Firm toggle next to the Seller section (index.html,
+   rendered by ui.js's updateSections()) — lets the user correct a wrong
+   AI guess, or set this without ever using AI extraction at all. Latest
+   action wins over whatever RC extraction last set — see SELLER_OWNER_TYPE's
+   doc comment in forms-data.js. */
+function setSellerOwnerType(type){
+  SELLER_OWNER_TYPE=(type==='firm')?'firm':'individual';
+  updateSections();
+}
+
+/* The "use <other document>'s value instead" button rendered under a
+   field by fieldHTML() (ui.js) when PENDING_CONFLICTS has an entry for
+   it — switches to the document that LOST the priority comparison (see
+   mergeExtractedFields, field-mapping.js) and makes that the field's new
+   source, exactly as if that document had won in the first place. */
+function switchFieldConflict(fieldId){
+  const conflict=PENDING_CONFLICTS[fieldId];
+  if(!conflict) return;
+  VALS[fieldId]=conflict.loser.value;
+  FIELD_SOURCE[fieldId]=conflict.loser.docType;
+  AI_FILLED_FIELDS.add(fieldId);
+  delete PENDING_CONFLICTS[fieldId];
+  scheduleSaveVals();
+  updateSections();
+}
+
+/* Dismisses a conflict notice without changing anything — the
+   higher-priority value already applied stays applied, the notice just
+   stops showing (e.g. the user already knows and doesn't need reminding). */
+function dismissFieldConflict(fieldId){
+  delete PENDING_CONFLICTS[fieldId];
+  updateSections();
+}
+
 /* Runs one document's extraction. Returns 'success' | 'failed' |
    'skipped-balance' (balance too low — nothing was attempted, no charge,
    buy modal opened) so callers (startCombinedExtraction's loop, retryDoc)
@@ -443,7 +477,28 @@ async function runExtraction(docType, images, uploadsKey){
 
     const data=json.data;
     const mapped=AI_FIELD_MAP[docType](data, getEffectiveRole(docType));
-    Object.keys(mapped).forEach(k=>{ if(mapped[k]){ VALS[k]=String(mapped[k]).toUpperCase(); AI_FILLED_FIELDS.add(k); } });
+    /* Uppercase first (matches every other AI-written or manually-typed
+       value in this app — see handleInput() in ui.js), THEN merge — so
+       the values compared/stored by mergeExtractedFields, including
+       whatever ends up in a conflict notice, are already in the app's
+       one display convention. */
+    const upperMapped={};
+    Object.keys(mapped).forEach(k=>{ if(mapped[k]) upperMapped[k]=String(mapped[k]).toUpperCase(); });
+    mergeExtractedFields(docType, upperMapped, {vals:VALS, fieldSource:FIELD_SOURCE, pendingConflicts:PENDING_CONFLICTS});
+    /* Only mark a field as "AI-filled" (amber badge) if THIS extraction is
+       the one whose value is actually showing — a field mergeExtractedFields
+       skipped (lower priority than what's already applied) doesn't newly
+       become AI-sourced from this call; whatever already owns it keeps
+       owning it, untouched. */
+    Object.keys(upperMapped).forEach(k=>{ if(FIELD_SOURCE[k]===docType) AI_FILLED_FIELDS.add(k); });
+
+    /* RC is the only document that ever signals firm-vs-individual
+       ownership (see PROMPTS.rc, worker/src/index.js) — updateSections()
+       below picks this up to hide the (inapplicable) father's-name field
+       for a firm, and generatePDF() (ui.js) blanks it on the printed PDF
+       regardless of any stray value sitting in VALS.s_father. */
+    if(docType==='rc') SELLER_OWNER_TYPE=resolveOwnerType(data);
+
     scheduleSaveVals();
     updateSections();
 

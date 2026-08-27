@@ -41,6 +41,150 @@ function resolveDocRole(docType, role){
   return (role==='buyer'||role==='seller') ? role : rule.defaultRole;
 }
 
+/* ── Field source priority (order-independent merge) ──
+   When more than one uploaded document could supply the same target
+   field, which one should win? Keyed by the field's ROLE-STRIPPED
+   concept (e.g. both s_name and b_name are the 'name' concept, both
+   s_addr and b_addr are 'addr', etc.) so the same priority order applies
+   whichever side — seller or buyer — the field belongs to; DOC_RULES
+   above already governs which document types can ever reach which side
+   (rc is seller-only, so it can never actually compete for a b_ field in
+   practice, but the table doesn't need to know that).
+
+   Rationale (from the RTO-forms domain, not a generic assumption):
+   - name: RC's registered owner is the authoritative transferor identity
+     for a transfer — Aadhaar/PAN are the fallback when no RC was supplied.
+   - addr/town/dist (and the shared, unprefixed 'state' field, folded into
+     'addr' since it's part of the same address block): Aadhaar wins over
+     RC — an Aadhaar address is far more likely to be current; an RC's
+     printed address commonly lags years behind a house move.
+   - father: only Aadhaar/PAN ever carry this (RC's prompt has no such
+     field at all — see PROMPTS.rc in worker/src/index.js) — Aadhaar is
+     preferred simply as the more complete/authoritative ID of the two
+     when both are present (this ordering wasn't specified as load-bearing
+     by the product requirement; either order would satisfy it — Aadhaar
+     first is the codebase's existing default-role convention carried
+     through consistently).
+   Field ids with no entry here (all the RC-only vehicle/registration
+   fields: reg_no, ch_no, eng_no, veh_type, make, model, colour, rto,
+   date_issue, date_expiry, reg_as, body_type, cylinders, cubic_cap,
+   seating, standing, sleeper, unladen, fuel) have exactly one possible
+   source, so there is nothing to arbitrate — fieldConceptFor() returns
+   null for them and mergeExtractedFields() just writes the value. */
+const FIELD_SOURCE_PRIORITY={
+  name:   ['rc','aadhaar','pan'],
+  addr:   ['aadhaar','rc'],
+  town:   ['aadhaar','rc'],
+  dist:   ['aadhaar','rc'],
+  father: ['aadhaar','pan'],
+};
+
+/* Strips the s_/b_ role prefix (if any) to get the field's priority
+   "concept" — returns null for fields that only ever have one possible
+   source (no conflict is possible, so no concept to look up). */
+function fieldConceptFor(fieldId){
+  const m=/^[sb]_(name|addr|town|dist|father)$/.exec(fieldId);
+  if(m) return m[1];
+  if(fieldId==='state') return 'addr'; // shared field, same address-block priority
+  return null;
+}
+
+/* Merges one document's freshly-extracted field->value map into a target
+   VALS-shaped object, honoring FIELD_SOURCE_PRIORITY instead of simple
+   last-write-wins — the whole point being that the OUTCOME (which value
+   ends up applied, and which fields get flagged as disagreeing) is the
+   same no matter what order documents are extracted in.
+     docType         — which document this batch of values came from
+     mapped           — AI_FIELD_MAP[docType](...)'s output for this call
+     ctx.vals         — target object to write into (mutated in place,
+                         e.g. VALS in forms-data.js)
+     ctx.fieldSource  — { fieldId: docType } tracking who currently owns
+                         each field's applied value (mutated in place,
+                         e.g. FIELD_SOURCE in forms-data.js)
+     ctx.pendingConflicts — { fieldId: {winner:{docType,value},
+                         loser:{docType,value}} } for fields where two
+                         DIFFERENT document types disagreed (mutated in
+                         place, e.g. PENDING_CONFLICTS in forms-data.js) —
+                         the UI uses this to show "X and Y disagree,
+                         showing X's value" with a button to switch to Y's.
+   A conflict is recorded (or refreshed) whenever a field ends up with two
+   different non-empty values from two different document types, REGARDLESS
+   of which one ends up applied and regardless of extraction order — see
+   the doc comment on FIELD_SOURCE_PRIORITY for why the applied value alone
+   isn't enough; the notice needs to exist either way. */
+function mergeExtractedFields(docType, mapped, ctx){
+  const vals=ctx.vals, fieldSource=ctx.fieldSource, pendingConflicts=ctx.pendingConflicts||{};
+  Object.keys(mapped).forEach(fieldId=>{
+    const newVal=mapped[fieldId];
+    if(newVal==null || newVal==='') return;
+
+    const concept=fieldConceptFor(fieldId);
+    if(!concept){
+      /* Single possible source — nothing to arbitrate. */
+      vals[fieldId]=newVal;
+      fieldSource[fieldId]=docType;
+      return;
+    }
+
+    const existingSource=fieldSource[fieldId];
+    const existingVal=vals[fieldId];
+
+    if(!existingSource || existingVal==null || existingVal===''){
+      /* Nothing here yet from any source — just take it. */
+      vals[fieldId]=newVal;
+      fieldSource[fieldId]=docType;
+      return;
+    }
+
+    if(existingSource===docType){
+      /* Same document type re-extracted (e.g. a Retry) — not a source
+         conflict, just fresher data from the same place. If this field
+         happens to be the "winner" side of a pending conflict, keep that
+         conflict's winner value in sync with the refreshed extraction. */
+      vals[fieldId]=newVal;
+      if(pendingConflicts[fieldId] && pendingConflicts[fieldId].winner.docType===docType){
+        pendingConflicts[fieldId].winner.value=newVal;
+      }
+      return;
+    }
+
+    if(existingVal===newVal){
+      /* Two different documents agree — nothing to flag, but let the
+         higher-priority one own the field's source going forward. */
+      const order=FIELD_SOURCE_PRIORITY[concept]||[];
+      if(order.indexOf(docType)!==-1 && (order.indexOf(docType)<order.indexOf(existingSource) || order.indexOf(existingSource)===-1)){
+        fieldSource[fieldId]=docType;
+      }
+      return;
+    }
+
+    /* Two different documents genuinely disagree — resolve by priority,
+       and record the loser either way so the UI can offer a switch. */
+    const order=FIELD_SOURCE_PRIORITY[concept]||[docType, existingSource];
+    const newRank=order.indexOf(docType); const newEff=newRank===-1?order.length:newRank;
+    const existingRank=order.indexOf(existingSource); const existingEff=existingRank===-1?order.length:existingRank;
+
+    if(newEff<existingEff){
+      pendingConflicts[fieldId]={ winner:{docType,value:newVal}, loser:{docType:existingSource,value:existingVal} };
+      vals[fieldId]=newVal;
+      fieldSource[fieldId]=docType;
+    }else{
+      pendingConflicts[fieldId]={ winner:{docType:existingSource,value:existingVal}, loser:{docType,value:newVal} };
+      /* existing value stays applied — higher (or equal, arbitrary-tie) priority */
+    }
+  });
+}
+
+/* Whether an RC's registered owner is an individual or a firm/company —
+   see PROMPTS.rc's "owner_type" field and its Gemini-facing heuristics in
+   worker/src/index.js. Deliberately conservative: anything other than the
+   literal string "firm" (missing, malformed, or genuinely uncertain) is
+   treated as "individual" — matching the prompt's own instruction to
+   default to individual rather than guess "firm". */
+function resolveOwnerType(data){
+  return (data && data.owner_type==='firm') ? 'firm' : 'individual';
+}
+
 /* Maps Gemini's extracted fields (worker/src/index.js PROMPTS output shape)
    onto the site's existing FIELDS ids (s_/b_ prefix by role) */
 const AI_FIELD_MAP={
@@ -98,5 +242,5 @@ const AI_FIELD_MAP={
 };
 
 if(typeof module!=='undefined' && module.exports){
-  module.exports={ toISODate, AI_FIELD_MAP, DOC_RULES, resolveDocRole };
+  module.exports={ toISODate, AI_FIELD_MAP, DOC_RULES, resolveDocRole, FIELD_SOURCE_PRIORITY, fieldConceptFor, mergeExtractedFields, resolveOwnerType };
 }
