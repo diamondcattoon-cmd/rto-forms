@@ -110,10 +110,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
 .fld{display:flex;flex-direction:column;gap:5px}
 .fld.full{grid-column:1/-1}
-.fld label{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
-.fld-counter{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--txt-3);font-family:'IBM Plex Mono',monospace}
-.fld-hint{font-size:10.5px;color:var(--txt-3);margin-top:3px;letter-spacing:0;text-transform:none;font-weight:400}
-.fld input{padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s,background .15s}
+.fld label{font-size:13px;font-weight:600;color:var(--txt-2);letter-spacing:.4px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;line-height:1.4}
+.fld-counter{font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--txt-3);font-family:'IBM Plex Mono',monospace}
+.fld-hint{font-size:12px;color:var(--txt-3);margin-top:4px;letter-spacing:0;text-transform:none;font-weight:400;line-height:1.5}
+.fld input{padding:12px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:16px;line-height:1.5;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s,background .15s}
 .fld input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer}
 .fld input:focus{outline:none;border-color:var(--ink);background:#fff}
 .fld input::placeholder{color:var(--txt-3)}
@@ -133,7 +133,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .btn-blank:hover{background:var(--ink);color:#fff}
 .gen-note{font-size:12.5px;color:var(--txt-2)}
 .gen-note .mono{color:var(--approve);font-weight:600}
-.status{font-size:13.5px;min-height:22px;font-weight:500;padding-top:8px}
+.status{font-size:14px;line-height:1.5;min-height:22px;font-weight:500;padding-top:8px}
 .status.ok{color:var(--approve)}
 .status.err{color:var(--stamp)}
 
@@ -147,7 +147,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 
 /* ─── FORMS CATALOG ─── */
 .search-row{margin:32px 0 0}
-.form-search{width:100%;max-width:520px;padding:12px 16px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--white);transition:border-color .15s}
+.form-search{width:100%;max-width:520px;padding:12px 16px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;color:var(--txt);background:var(--white);transition:border-color .15s}
 .form-search:focus{outline:none;border-color:var(--ink)}
 .form-search::placeholder{color:var(--txt-3)}
 .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 22px}
@@ -208,7 +208,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .pro-panel{background:linear-gradient(180deg,var(--stamp-soft) 0%,var(--white) 140px);border:1.5px solid var(--stamp);border-radius:12px;padding:20px 20px 22px;margin-bottom:26px}
 .pro-num{background:var(--stamp)!important;color:#fff!important}
 .pro-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;background:var(--stamp);color:#fff;padding:2px 8px;border-radius:4px;vertical-align:middle;margin-left:8px;transform:translateY(-1px)}
-.pro-context{display:none;font-size:12.5px;font-weight:600;color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-top:8px}
+.pro-context{display:none;font-size:13.5px;line-height:1.5;font-weight:600;color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:7px;padding:8px 12px;margin-top:8px}
 .pro-context.show{display:block}
 .pro-context b{color:var(--stamp)}
 .pro-toprow{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0 18px}
@@ -223,11 +223,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .upload-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:14px}
 .upload-slot{background:var(--white);border:1.5px dashed var(--line);border-radius:10px;padding:12px 14px}
 .upload-slot-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
-.upload-slot-name{font-size:13px;font-weight:600}
-.upload-slot-state{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--txt-3);letter-spacing:.4px;text-transform:uppercase}
+.upload-slot-name{font-size:14.5px;font-weight:600}
+.upload-slot-name .upload-slot-state{margin-left:9px}
+.upload-slot-state{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt-3);letter-spacing:.4px;text-transform:uppercase}
 .upload-slot-state.done{color:var(--approve)}
 .upload-slot-state.err{color:var(--stamp)}
-.upload-slot input[type=file]{width:100%;font-size:12px;color:var(--txt-2)}
+.upload-slot input[type=file]{width:100%;font-size:13.5px;color:var(--txt-2)}
+.doc-remove-btn{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--stamp);background:none;border:none;cursor:pointer;padding:2px 0;white-space:nowrap;flex-shrink:0}
+.doc-remove-btn:hover{text-decoration:underline}
 .doc-preview-wrap{margin-top:10px}
 .doc-preview-wrap img{width:100%;max-height:160px;object-fit:contain;border-radius:7px;border:1.5px solid var(--line);background:#f4f4f4;display:block}
 .pdf-page-picker{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -239,18 +242,32 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .aadhaar-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .aadhaar-two-col .fld-hint{display:block;margin-bottom:5px;font-weight:600;color:var(--txt-2)}
 @media(max-width:560px){.aadhaar-two-col{grid-template-columns:1fr}}
-.pro-attach-chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt-2);cursor:pointer;margin-bottom:6px}
+.pro-attach-chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--txt-2);cursor:pointer;margin-bottom:6px}
 .pro-attach-chk input{accent-color:var(--stamp)}
-.consent-chk{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.5;color:var(--txt-2);background:var(--white);border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin:2px 0 14px;cursor:pointer}
+.consent-chk{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.55;color:var(--txt-2);background:var(--white);border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin:2px 0 14px;cursor:pointer}
 .consent-chk input{margin-top:2px;accent-color:var(--stamp);flex-shrink:0;width:15px;height:15px;cursor:pointer}
 .consent-chk a{color:var(--stamp);text-decoration:underline}
 .upload-slot input[type=file]:disabled{opacity:.45;cursor:not-allowed}
-.consent-hint{font-size:11px;font-weight:600;color:var(--stamp);margin-bottom:8px}
+.consent-hint{font-size:12px;font-weight:600;color:var(--stamp);margin-bottom:8px}
 .doc-role-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-.doc-role-lbl{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.3px}
-.doc-role-opt{display:flex;align-items:center;gap:4px;font-size:12.5px;color:var(--txt);cursor:pointer}
-.doc-role-opt input{accent-color:var(--stamp);width:13px;height:13px;cursor:pointer}
-.doc-role-note{font-size:11px;color:var(--txt-2);font-style:italic;margin-bottom:8px}
+.doc-role-lbl{font-size:12px;font-weight:600;color:var(--txt-2);letter-spacing:.3px}
+.doc-role-opt{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--txt);cursor:pointer}
+.doc-role-opt input{accent-color:var(--stamp);width:14px;height:14px;cursor:pointer}
+.doc-role-note{font-size:12px;color:var(--txt-2);font-style:italic;margin-bottom:8px}
+
+/* ─── AI box picker: consent as the header of the SAME card (no separate
+   boxed look), and locked upload cards that nudge the user back to
+   consent instead of doing nothing when clicked — see onDocSlotGridClick()
+   / removeDoc() (pro-wallet.js). Scoped to .ai-box-picker so the root
+   page's older, separate PRO panel (still using bare .consent-chk /
+   .upload-slot) is completely unaffected. */
+.ai-box-picker .consent-chk{background:none;border:none;border-bottom:1.5px dashed var(--stamp);border-radius:0;padding:0 0 16px;margin:0 0 18px;font-size:14.5px;line-height:1.6;color:var(--txt)}
+.ai-box-picker .consent-chk input{width:20px;height:20px;margin-top:1px}
+@keyframes consentShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.consent-chk.shake{animation:consentShake .4s ease}
+.consent-chk.consent-highlight{outline:3px solid rgba(214,72,31,.35);outline-offset:5px;border-radius:6px}
+.ai-box-picker .upload-slot.locked{opacity:.5;position:relative;cursor:pointer}
+.ai-box-picker .upload-slot.locked::after{content:'🔒';position:absolute;top:12px;right:12px;font-size:14px;opacity:.85;pointer-events:none}
 .owner-type-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .fld-conflict-note{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--stamp);background:var(--stamp-soft);border:1px solid var(--stamp);border-radius:6px;padding:6px 9px;margin-top:6px}
 .fld-conflict-note button{font-family:inherit;font-size:11px;font-weight:600;color:var(--stamp);background:#fff;border:1px solid var(--stamp);border-radius:5px;padding:3px 8px;cursor:pointer}
@@ -264,10 +281,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 /* ─── COMBINED AI CHECKOUT ─── */
 .checkout-box{background:var(--white);border:1.5px solid var(--stamp);border-radius:10px;padding:14px 16px;margin:2px 0 14px}
 .checkout-rows{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-.checkout-row{display:flex;justify-content:space-between;font-size:13px;color:var(--txt-2)}
-.checkout-row.checkout-total{border-top:1px dashed var(--line);margin-top:4px;padding-top:8px;font-weight:600;color:var(--ink);font-size:14px}
+.checkout-row{display:flex;justify-content:space-between;font-size:14px;color:var(--txt-2)}
+.checkout-row.checkout-total{border-top:1px dashed var(--line);margin-top:4px;padding-top:8px;font-weight:600;color:var(--ink);font-size:15px}
 .checkout-box .btn-generate{width:100%}
-.checkout-note{font-size:11px;color:var(--txt-2);margin-top:8px;text-align:center}
+.checkout-note{font-size:12px;color:var(--txt-2);margin-top:8px;text-align:center}
 
 /* ─── MODAL (buy credits) ─── */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,40,80,.55);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
@@ -275,7 +292,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .modal-head{display:flex;justify-content:space-between;align-items:center}
 .modal-head h3{font-size:17px;font-weight:700}
 .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--txt-2);line-height:1}
-.modal-sub{font-size:13px;color:var(--txt-2);margin:8px 0 16px}
+.modal-sub{font-size:13.5px;line-height:1.5;color:var(--txt-2);margin:8px 0 16px}
 .pack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
 .pack-card{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:14px 8px;cursor:pointer;font-family:inherit;transition:all .15s}
 .pack-card:hover{border-color:var(--stamp);background:var(--stamp-soft)}
@@ -284,8 +301,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .pack-p{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--stamp);margin-top:4px}
 .modal-code-lbl{font-size:12px;font-weight:600;color:var(--txt-2);display:block;margin-bottom:8px}
 .modal-code-in{display:flex;gap:8px}
-.modal-code-in input{flex:1;padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
-.modal-code-in .btn-generate{padding:11px 18px;font-size:13px}
+.modal-code-in input{flex:1;padding:12px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:16px}
+.modal-code-in .btn-generate{padding:11px 18px;font-size:13.5px}
 
 /* ─── SETTINGS MODAL ─── */
 button.tf-chip{cursor:pointer;font-family:inherit}
@@ -303,7 +320,7 @@ button.tf-chip{cursor:pointer;font-family:inherit}
 .admin-panel{position:fixed;bottom:20px;left:20px;z-index:400}
 .admin-box{background:#fff;border:2px solid var(--stamp);border-radius:10px;padding:14px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .admin-box h4{font-size:12.5px;margin-bottom:10px}
-.admin-box input{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;margin-bottom:8px}
+.admin-box input{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:7px;font-size:16px;margin-bottom:8px}
 
 /* ─── PRINT ─── */
 @media print{
@@ -321,10 +338,10 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 .calc-card{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:28px;box-shadow:0 1px 3px rgba(20,40,80,.04)}
 .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
 .calc-fld{display:flex;flex-direction:column;gap:6px}
-.calc-fld label{font-size:11px;font-weight:600;color:var(--txt-2);letter-spacing:.6px;text-transform:uppercase}
-.calc-fld input,.calc-fld select{padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s;width:100%}
+.calc-fld label{font-size:13px;font-weight:600;color:var(--txt-2);letter-spacing:.4px;text-transform:uppercase}
+.calc-fld input,.calc-fld select{padding:12px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:16px;line-height:1.5;font-family:inherit;color:var(--txt);background:var(--paper);transition:border-color .15s;width:100%}
 .calc-fld input:focus,.calc-fld select:focus{outline:none;border-color:var(--ink);background:#fff}
-.calc-hint{font-size:10.5px;color:var(--txt-3)}
+.calc-hint{font-size:12px;color:var(--txt-3)}
 .calc-result{margin-top:24px;border-top:2px dotted var(--line);padding-top:20px}
 .calc-placeholder{color:var(--txt-3);font-size:13.5px;text-align:center;padding:16px 0}
 .calc-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--paper-2);font-size:14px}
@@ -510,5 +527,20 @@ body.no-scroll{overflow:hidden}
 .pdf-preview-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);flex-shrink:0}
 .pdf-preview-head h3{font-size:15.5px;font-weight:700}
 .pdf-preview-frame{flex:1;border:none;width:100%}
+
+/* ─── FONT-SIZE BUMP ON MOBILE — held closer, deserves to be a little
+   bigger still, not smaller. Input font-size never drops below 16px
+   anywhere (mobile or desktop) — under 16px, iOS Safari auto-zooms the
+   page on focus, which is jarring; see .fld input above. ─── */
+@media(max-width:680px){
+  .fld label,.calc-fld label{font-size:13.5px}
+  .fld-hint,.calc-hint{font-size:12.5px}
+  .fld input{font-size:16.5px}
+  .calc-fld input,.calc-fld select{font-size:16.5px}
+  .upload-slot-name{font-size:15px}
+  .upload-slot-state{font-size:11.5px}
+  .status{font-size:14.5px}
+  .consent-chk,.ai-box-picker .consent-chk{font-size:15px}
+}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

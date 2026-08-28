@@ -128,7 +128,7 @@
         </div>
 
         <div class="ai-box-picker" id="aiBoxPicker" style="display:none">
-          <div class="ai-box-picker-head"><h4>Kaunse document aapke paas hain?</h4></div>
+          <div class="ai-box-picker-head"><h4>RC, Aadhaar ya PAN ki photo daalo</h4></div>
 
           <label class="consent-chk" for="uploadConsentChk">
             <input type="checkbox" id="uploadConsentChk" onchange="onConsentChange()">
@@ -137,9 +137,9 @@
 
           <p class="fld-hint" id="docSlotEmptyNote" style="display:none">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
 
-          <div class="upload-grid" id="docSlotGrid">
-            <div class="upload-slot" id="docSlot-rc">
-              <div class="upload-slot-top"><span class="upload-slot-name">RC</span><span class="upload-slot-state" id="state-rc">Not uploaded</span></div>
+          <div class="upload-grid" id="docSlotGrid" onclick="onDocSlotGridClick(event)">
+            <div class="upload-slot locked" id="docSlot-rc">
+              <div class="upload-slot-top"><span class="upload-slot-name">RC<span class="upload-slot-state" id="state-rc">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-rc" style="display:none" onclick="removeDoc('rc')">✕ Remove</button></div>
               <p class="doc-role-note">RC se seller ki details bharenge</p>
               <p class="consent-hint" id="consentHint-rc">Upload karne ke liye upar consent dein ↑</p>
               <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" disabled onchange="handleFileSelect('rc', this.files[0])">
@@ -148,8 +148,8 @@
               <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
             </div>
 
-            <div class="upload-slot" id="docSlot-aadhaar">
-              <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar</span><span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></div>
+            <div class="upload-slot locked" id="docSlot-aadhaar">
+              <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar<span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar" style="display:none" onclick="removeDoc('aadhaar')">✕ Remove</button></div>
               <div class="doc-role-row" id="docRole-aadhaar" style="display:none">
                 <span class="doc-role-lbl">Kiska hai?</span>
                 <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> Seller</label>
@@ -173,8 +173,8 @@
               <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="retryDoc('aadhaar')">Retry Aadhaar (₹5)</button>
             </div>
 
-            <div class="upload-slot" id="docSlot-pan">
-              <div class="upload-slot-top"><span class="upload-slot-name">PAN</span><span class="upload-slot-state" id="state-pan">Not uploaded</span></div>
+            <div class="upload-slot locked" id="docSlot-pan">
+              <div class="upload-slot-top"><span class="upload-slot-name">PAN<span class="upload-slot-state" id="state-pan">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan" style="display:none" onclick="removeDoc('pan')">✕ Remove</button></div>
               <div class="doc-role-row" id="docRole-pan" style="display:none">
                 <span class="doc-role-lbl">Kiska hai?</span>
                 <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> Seller</label>
@@ -215,7 +215,7 @@
           <details class="extra-photo-block">
             <summary>+ Face photo bhi attach karni hai PDF mein? (optional)</summary>
             <div class="upload-slot" style="margin-top:10px">
-              <div class="upload-slot-top"><span class="upload-slot-name">Face Photo</span><span class="upload-slot-state" id="state-photo">Not uploaded</span></div>
+              <div class="upload-slot-top"><span class="upload-slot-name">Face Photo<span class="upload-slot-state" id="state-photo">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-photo" style="display:none" onclick="removeDoc('photo')">✕ Remove</button></div>
               <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
               <div class="doc-preview-wrap" id="preview-photo"></div>
             </div>

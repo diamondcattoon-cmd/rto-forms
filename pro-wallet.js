@@ -198,6 +198,11 @@ const CONSENT_GATED_INPUT_IDS=['file-aadhaar-front','file-aadhaar-back','file-pa
    consentHint-* in index.html, sitting right above the greyed-out inputs so it's obvious
    why they're disabled. */
 const CONSENT_HINT_IDS=['consentHint-aadhaar','consentHint-pan','consentHint-rc'];
+/* Task-page v2 layout only — these three cards get a visibly "locked" look
+   (faded + lock icon, see .ai-box-picker .upload-slot.locked in style.css)
+   until consent is given. The root page's older PRO panel doesn't use this
+   class at all, so toggling it there is a harmless no-op. */
+const CONSENT_GATED_SLOT_IDS=['docSlot-rc','docSlot-aadhaar','docSlot-pan'];
 function onConsentChange(){
   const checked=document.getElementById('uploadConsentChk').checked;
   CONSENT_GATED_INPUT_IDS.forEach(id=>{
@@ -208,6 +213,30 @@ function onConsentChange(){
     const el=document.getElementById(id);
     if(el) el.style.display=checked?'none':'block';
   });
+  CONSENT_GATED_SLOT_IDS.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('locked', !checked);
+  });
+}
+
+/* Clicking a locked upload card (task-page v2 layout) does nothing to the
+   card itself (its file input is disabled) — instead it nudges the user
+   back to the consent checkbox they haven't ticked yet, rather than
+   silently doing nothing. Wired via onclick="onDocSlotGridClick(event)"
+   on #docSlotGrid in the task-page HTML — root's #docSlotGrid has no such
+   handler, so this is never called there. */
+function onDocSlotGridClick(e){
+  const consentEl=document.getElementById('uploadConsentChk');
+  if(!consentEl || consentEl.checked) return;
+  if(!e.target.closest('.upload-slot')) return;
+  const box=document.querySelector('.consent-chk');
+  if(!box) return;
+  box.classList.remove('shake');
+  void box.offsetWidth; /* restart the CSS animation even on a repeat click */
+  box.classList.add('shake','consent-highlight');
+  box.scrollIntoView({behavior:'smooth', block:'center'});
+  setTimeout(()=>box.classList.remove('shake'), 450);
+  setTimeout(()=>box.classList.remove('consent-highlight'), 1500);
 }
 
 /* ── File selection: shows a preview immediately. PDFs render to page thumbnails so the
@@ -302,6 +331,78 @@ function onDocReady(key){
      unconditionally here since it's the same slot element either way. */
   const slotEl=document.getElementById('docSlot-'+docType);
   if(slotEl) slotEl.classList.add('ready');
+  const removeBtn=document.getElementById('remove-'+docType);
+  if(removeBtn) removeBtn.style.display='inline';
+  updateCheckoutBox();
+}
+
+/* Clears one document's uploaded photo(s) and, if it had already been
+   successfully extracted, everything that extraction wrote — after
+   confirming, since that ₹5 was already charged and won't be refunded by
+   removing the result. 'aadhaar' clears both front and back as one unit
+   (they're billed and extracted together — see getBatchItem()); 'photo'
+   is the plain (never billed, never extracted) face-photo attachment and
+   skips all of that. Task-page v2 layout only — root's markup has no
+   #remove-* buttons wired to this. */
+function removeDoc(docType){
+  if(docType==='photo'){
+    delete PRO.uploads.photo;
+    const prev=document.getElementById('preview-photo'); if(prev) prev.innerHTML='';
+    const f=document.getElementById('file-photo'); if(f) f.value='';
+    const stateEl=document.getElementById('state-photo');
+    if(stateEl){ stateEl.textContent='Not uploaded'; stateEl.className='upload-slot-state'; }
+    const removeBtn=document.getElementById('remove-photo');
+    if(removeBtn) removeBtn.style.display='none';
+    return;
+  }
+
+  const alreadyExtracted=EXTRACTED_SET.has(docType);
+  if(alreadyExtracted){
+    const ok=confirm('Isse hatane par bhare hue fields khali ho jaayenge. Paisa wapas nahi hoga.');
+    if(!ok) return;
+  }
+
+  if(docType==='aadhaar'){
+    delete DOC_STATE.aadhaar_front;
+    delete DOC_STATE.aadhaar_back;
+    ['aadhaar_front','aadhaar_back'].forEach(key=>{
+      const prev=document.getElementById('preview-'+key); if(prev) prev.innerHTML='';
+      const pages=document.getElementById('pages-'+key); if(pages){ pages.style.display='none'; pages.innerHTML=''; }
+    });
+    const fFront=document.getElementById('file-aadhaar-front'); if(fFront) fFront.value='';
+    const fBack=document.getElementById('file-aadhaar-back'); if(fBack) fBack.value='';
+  } else {
+    delete DOC_STATE[docType];
+    const prev=document.getElementById('preview-'+docType); if(prev) prev.innerHTML='';
+    const pages=document.getElementById('pages-'+docType); if(pages){ pages.style.display='none'; pages.innerHTML=''; }
+    const f=document.getElementById('file-'+docType); if(f) f.value='';
+  }
+
+  const slotEl=document.getElementById('docSlot-'+docType);
+  if(slotEl) slotEl.classList.remove('ready');
+  const stateEl=document.getElementById('state-'+docType);
+  if(stateEl){ stateEl.textContent='Not uploaded'; stateEl.className='upload-slot-state'; }
+  const removeBtn=document.getElementById('remove-'+docType);
+  if(removeBtn) removeBtn.style.display='none';
+  const retryBtn=document.getElementById('extract-'+docType);
+  if(retryBtn) retryBtn.style.display='none';
+
+  if(alreadyExtracted){
+    EXTRACTED_SET.delete(docType);
+    /* Only fields THIS document still owns — a field the user has since
+       manually edited is no longer in FIELD_SOURCE (handleInput() deletes
+       it there), so it's correctly left untouched. */
+    Object.keys(FIELD_SOURCE).forEach(f=>{
+      if(FIELD_SOURCE[f]===docType){
+        VALS[f]='';
+        delete FIELD_SOURCE[f];
+        AI_FILLED_FIELDS.delete(f);
+        VERIFIED_FIELDS.delete(f);
+      }
+    });
+    scheduleSaveVals();
+    updateSections();
+  }
   updateCheckoutBox();
 }
 
@@ -599,6 +700,8 @@ async function handlePhotoUpload(file){
   const img=document.createElement('img'); img.src=dataUrl;
   previewEl.appendChild(img);
   stateEl.textContent='Uploaded \u2713'; stateEl.className='upload-slot-state done';
+  const removeBtn=document.getElementById('remove-photo');
+  if(removeBtn) removeBtn.style.display='inline';
 }
 
 function renderProResult(docType, data){
