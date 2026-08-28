@@ -32,7 +32,7 @@ function renderForms(){
     return catOk && qOk;
   });
   if(!list.length){
-    grid.innerHTML='<p style="grid-column:1/-1;color:var(--txt-2);font-size:14px;padding:20px 0">No forms match your search. Try a form number (e.g. 26) or a word like "duplicate", "renewal", "NOC".</p>';
+    grid.innerHTML='<p style="grid-column:1/-1;color:var(--txt-2);font-size:14px;padding:20px 0">'+t('catalog.noMatch')+'</p>';
     return;
   }
   grid.innerHTML=list.map((f,idx)=>{
@@ -83,7 +83,7 @@ function g(id){return (VALS[id]||'').trim();}
 function showRestoreNotice(){
   const el=document.getElementById('restoreNotice');
   if(!el) return;
-  el.innerHTML=`<div class="restore-notice"><span class="rn-msg">Aapka pichla data restore kar diya.</span><button class="rn-clear" onclick="dismissRestoreNotice(true)">Clear karo</button><button class="rn-dismiss" onclick="dismissRestoreNotice(false)" aria-label="Dismiss">&times;</button></div>`;
+  el.innerHTML=`<div class="restore-notice"><span class="rn-msg">${t('restore.msg')}</span><button class="rn-clear" onclick="dismissRestoreNotice(true)">${t('restore.clear')}</button><button class="rn-dismiss" onclick="dismissRestoreNotice(false)" aria-label="Dismiss">&times;</button></div>`;
 }
 function dismissRestoreNotice(clear){
   if(clear){
@@ -288,7 +288,7 @@ function renderSuggestions(need){
     const isChecked=!!CHECKED[id];
     const newCount=(p.fields||[]).filter(f=>!need.has(f)).length;
     const delta=isChecked ? 'Added ✓' : (newCount===0 ? 'No new fields' : ('+'+newCount+' new field'+(newCount===1?'':'s')));
-    const note=isChecked ? 'Included in your PDF' : (newCount===0 ? 'No extra fields needed' : 'Same details, no extra charge');
+    const note=isChecked ? t('status.included') : (newCount===0 ? t('status.noExtraFields') : t('status.sameDetails'));
     return `<div class="suggest-row${isChecked?' added':''}" onclick="toggleSuggest('${id}')">
       <div class="suggest-row-main">
         <div class="suggest-row-label">${p.label}</div>
@@ -465,7 +465,11 @@ function fieldHTML(id){
   const verifiedBadge=isVerified?'<span class="fld-verified-badge">✓</span>':'';
   const conflict=PENDING_CONFLICTS[id];
   const conflictNote=conflict
-    ? `<div class="fld-conflict-note" id="conflict_${id}">${DOC_LABEL_UI[conflict.winner.docType]||conflict.winner.docType} aur ${DOC_LABEL_UI[conflict.loser.docType]||conflict.loser.docType} ka data alag hai — ${DOC_LABEL_UI[conflict.winner.docType]||conflict.winner.docType} wala bhara gaya. <button type="button" onclick="switchFieldConflict('${id}')">${DOC_LABEL_UI[conflict.loser.docType]||conflict.loser.docType} wala use karo</button><button type="button" class="fld-conflict-dismiss" onclick="dismissFieldConflict('${id}')" aria-label="Dismiss">&times;</button></div>`
+    ? (()=>{
+        const winnerLbl=DOC_LABEL_UI[conflict.winner.docType]||conflict.winner.docType;
+        const loserLbl=DOC_LABEL_UI[conflict.loser.docType]||conflict.loser.docType;
+        return `<div class="fld-conflict-note" id="conflict_${id}">${t('conflict.differs',{winner:winnerLbl,loser:loserLbl})} <button type="button" onclick="switchFieldConflict('${id}')">${t('conflict.useOther',{loser:loserLbl})}</button><button type="button" class="fld-conflict-dismiss" onclick="dismissFieldConflict('${id}')" aria-label="Dismiss">&times;</button></div>`;
+      })()
     : '';
   return `<div class="fld ${f.full?'full':''}${isAi?' fld-ai':''}${isVerified?' fld-verified':''}" id="fldwrap_${id}"><label><span>${f.label}${aiBadge}${verifiedBadge}</span>${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}${conflictNote}</div>`;
 }
@@ -545,8 +549,8 @@ function handleInput(id, el){
 
 /* Tells the PRO panel either (a) how many still-amber, AI-filled-and-
    unreviewed fields exist right now, naming which document(s) supplied
-   them — "14 fields RC aur Aadhaar se bhare — please check the
-   highlighted boxes." — or, when nothing needs review, (b) the plainer
+   them — "14 fields RC aur Aadhaar se bhare — highlighted boxes check
+   kar lo." — or, when nothing needs review, (b) the plainer
    "Is package mein 22 fields hain, 9 abhi khali hain." (a) takes priority
    whenever it applies: an unverified AI guess (e.g. a misread chassis
    digit) is a more urgent thing to flag than an empty field the user
@@ -562,17 +566,17 @@ function updateProContext(need){
   const unverified=[...need].filter(f=>AI_FILLED_FIELDS.has(f));
   if(unverified.length){
     const docTypes=[...new Set(unverified.map(f=>FIELD_SOURCE[f]).filter(Boolean))];
-    const docLabels=docTypes.map(t=>DOC_LABEL_UI[t]||t);
+    const docLabels=docTypes.map(dt=>DOC_LABEL_UI[dt]||dt);
     const docText=docLabels.length<=1 ? (docLabels[0]||'AI')
-      : docLabels.slice(0,-1).join(', ')+' aur '+docLabels[docLabels.length-1];
-    el.textContent=unverified.length+' field'+(unverified.length>1?'s':'')+' '+docText+' se bhare — please check the highlighted boxes.';
+      : docLabels.slice(0,-1).join(', ')+' '+t('word.and')+' '+docLabels[docLabels.length-1];
+    el.textContent=t('status.reviewAmber',{n:unverified.length,s:unverified.length>1?'s':'',docs:docText});
     el.classList.add('show');
     return;
   }
 
   const total=need.size;
   const empty=[...need].filter(f=>!(VALS[f]||'').trim()).length;
-  el.textContent='Is package mein '+total+' field'+(total>1?'s':'')+' hain, '+empty+' abhi khali '+(empty===1?'hai':'hain')+'.';
+  el.textContent=t('status.packageSummary',{n:total,s:total>1?'s':'',empty:empty,hai:empty===1?t('word.hai'):t('word.hain')});
   el.classList.add('show');
 }
 
@@ -657,7 +661,7 @@ function updateSections(){
   const pcEl=document.getElementById('pageCountNote');
   if(pcEl){
     if(!chosen.length){
-      pcEl.textContent='select forms above';
+      pcEl.textContent=t('catalog.selectAbove');
     } else {
       const totalPages=chosen.reduce((s,p)=>s+(p.pages||1),0);
       const formNames=chosen.map(p=>p.label.split('—')[0].trim()).join(', ');
@@ -804,7 +808,7 @@ function generatePDF(blank, mode){
 
   const chosen=PICKS.filter(p=>CHECKED[p.id]);
   if(!chosen.length){
-    st.textContent='Select at least one form to include.';
+    st.textContent=t('err.selectForm');
     st.className='status err';
     return;
   }
@@ -829,9 +833,9 @@ function generatePDF(blank, mode){
         setTimeout(()=>{inp.classList.remove('fld-blink');},2200);
       }
     };
-    if(need.has('s_name') && !g('s_name')){highlightErr('s_name','Owner / Seller name is required.'); return;}
-    if(needsReg && !g('reg_no')){highlightErr('reg_no','Registration No. is required for the selected forms.'); return;}
-    if(needsBuyer && !g('b_name')){highlightErr('b_name','Purchaser name is required for the selected transfer / sale forms.'); return;}
+    if(need.has('s_name') && !g('s_name')){highlightErr('s_name',t('err.ownerName')); return;}
+    if(needsReg && !g('reg_no')){highlightErr('reg_no',t('err.regNo')); return;}
+    if(needsBuyer && !g('b_name')){highlightErr('b_name',t('err.buyerName')); return;}
     /* Mobile is compulsory only for forms that actually include a mobile
        number field — checked separately for seller ('mobile') and buyer
        ('b_mobile') since a pick can require either, both, or neither
@@ -840,13 +844,13 @@ function generatePDF(blank, mode){
        which let a PDF generate with a required buyer mobile left blank. */
     if(need.has('mobile')){
       const mob=g('mobile');
-      if(!mob){highlightErr('mobile','Mobile number is compulsory — please enter it before generating the PDF.'); return;}
-      if(mob.length!==10){highlightErr('mobile','Mobile number must be exactly 10 digits.'); return;}
+      if(!mob){highlightErr('mobile',t('err.mobile')); return;}
+      if(mob.length!==10){highlightErr('mobile',t('err.mobileDigits')); return;}
     }
     if(need.has('b_mobile')){
       const bmob=g('b_mobile');
-      if(!bmob){highlightErr('b_mobile','Purchaser mobile number is compulsory — please enter it before generating the PDF.'); return;}
-      if(bmob.length!==10){highlightErr('b_mobile','Purchaser mobile number must be exactly 10 digits.'); return;}
+      if(!bmob){highlightErr('b_mobile',t('err.buyerMobile')); return;}
+      if(bmob.length!==10){highlightErr('b_mobile',t('err.buyerMobileDigits')); return;}
     }
     allIds.forEach(k=>d[k]=g(k));
     d.veh_type=d.veh_type||'Motor Vehicle';
@@ -924,18 +928,18 @@ function generatePDF(blank, mode){
          Generate actually produces. */
       if(mode==='preview'){
         showPdfPreview(doc.output('bloburl'), fname);
-        st.textContent='Preview ready — nothing downloaded yet.';
+        st.textContent=t('status.previewReady');
         st.className='status ok';
         btn.disabled=false; if(bbtn) bbtn.disabled=false;
         return;
       }
       doc.save(fname);
       st.textContent = blank
-        ? 'Blank forms downloaded \u2014 '+chosen.length+' empty form(s) ready to print and fill by hand.'
-        : 'PDF downloaded \u2014 '+chosen.length+' filled form(s) ready. Print, stamp and submit.';
+        ? t('status.blankDownloaded',{n:chosen.length})
+        : t('status.pdfDownloaded',{n:chosen.length});
       st.className='status ok';
     }catch(e){
-      st.textContent='Error: '+e.message;
+      st.textContent=t('err.generic',{msg:e.message});
       st.className='status err';
     }
     btn.disabled=false; if(bbtn) bbtn.disabled=false;

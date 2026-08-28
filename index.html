@@ -100,11 +100,15 @@
       <span class="brand-txt">RTO Forms India<small>Motor Vehicle Act Forms</small></span>
     </a>
     <nav class="hdr-nav">
-      <a href="#forms">All Forms</a>
-      <a href="#calc">Tax Calculator</a>
-      <a href="#how">How it works</a>
-      <a href="#faq">FAQ</a>
-      <a href="#tool" class="live-link">Fill Forms →</a>
+      <a href="#forms" data-i18n="nav.allForms">All Forms</a>
+      <a href="#calc" data-i18n="nav.calc">Tax Calculator</a>
+      <a href="#how" data-i18n="nav.how">How it works</a>
+      <a href="#faq" data-i18n="nav.faq">FAQ</a>
+      <a href="#tool" class="live-link" data-i18n="nav.fill">Fill Forms →</a>
+      <div class="lang-toggle" id="langToggle">
+        <button type="button" class="lang-opt" data-lang="en" onclick="setLang('en')" data-i18n="lang.en">EN</button>
+        <button type="button" class="lang-opt" data-lang="hi" onclick="setLang('hi')" data-i18n="lang.hi">Hinglish</button>
+      </div>
     </nav>
   </div>
 </header>
@@ -112,18 +116,18 @@
 <!-- ════════ HERO ════════ -->
 <section class="hero" id="top">
   <div class="hero-in">
-    <div class="hero-eyebrow">// India's RTO paperwork, simplified</div>
-    <h1>Every RTO form.<br>Filled online, <span class="accent">print-ready</span> in minutes.</h1>
-    <p class="hero-sub">RTO Forms India is a free online filler for Motor Vehicles Act forms. Type the details once and download submission-ready A4 PDFs — or print blank forms to fill by hand. No login, no fees, and your data never leaves your browser.</p>
+    <div class="hero-eyebrow" data-i18n="hero.eyebrow">// India's RTO paperwork, simplified</div>
+    <h1><span data-i18n="hero.title1">Every RTO form.</span><br><span data-i18n="hero.title2">Filled online, </span><span class="accent" data-i18n="hero.titleAccent">print-ready</span><span data-i18n="hero.title3"> in minutes.</span></h1>
+    <p class="hero-sub" data-i18n="hero.sub">RTO Forms India is a free online filler for Motor Vehicles Act forms. Type the details once and download submission-ready A4 PDFs — or print blank forms to fill by hand. No login, no fees, and your data never leaves your browser.</p>
     <div class="hero-cta">
-      <a href="#tool" class="btn-stamp">Start filling forms</a>
-      <a href="#forms" class="btn-ghost">Browse all forms</a>
+      <a href="#tool" class="btn-stamp" data-i18n="hero.ctaStart">Start filling forms</a>
+      <a href="#forms" class="btn-ghost" data-i18n="hero.ctaBrowse">Browse all forms</a>
     </div>
     <div class="hero-stats">
-      <div class="hstat"><span class="n">44</span><span class="l">Forms, serial-wise</span></div>
-      <div class="hstat"><span class="n">26</span><span class="l">Fillable online now</span></div>
-      <div class="hstat"><span class="n">₹0</span><span class="l">Completely free</span></div>
-      <div class="hstat"><span class="n">A4</span><span class="l">Filled or blank PDFs</span></div>
+      <div class="hstat"><span class="n">44</span><span class="l" data-i18n="hero.stat.forms">Forms, serial-wise</span></div>
+      <div class="hstat"><span class="n">26</span><span class="l" data-i18n="hero.stat.fillable">Fillable online now</span></div>
+      <div class="hstat"><span class="n">₹0</span><span class="l" data-i18n="hero.stat.free">Completely free</span></div>
+      <div class="hstat"><span class="n">A4</span><span class="l" data-i18n="hero.stat.pdfs">Filled or blank PDFs</span></div>
     </div>
   </div>
 </section>
@@ -131,16 +135,16 @@
 <!-- ════════ TOOL: VEHICLE TRANSFER ════════ -->
 <section class="sec sec-wide" id="tool">
   <div class="sec-eyebrow">Live tool</div>
-  <h2 class="sec-title">Fill RTO forms online</h2>
-  <p class="sec-sub">Enter the details once and tick any combination of forms — transfer set, NOC, RC renewal, DL renewal, permits and more. Everything downloads as one print-ready PDF. Need empty forms? Use the blank download.</p>
+  <h2 class="sec-title" data-i18n="root.toolTitle">Fill RTO forms online</h2>
+  <p class="sec-sub" data-i18n="root.toolSub">Enter the details once and tick any combination of forms — transfer set, NOC, RC renewal, DL renewal, permits and more. Everything downloads as one print-ready PDF. Need empty forms? Use the blank download.</p>
 
   <div class="tool-wrap">
     <div class="tool-head">
       <div class="tool-head-l">
         <span class="tool-badge">LIVE</span>
         <div>
-          <h3>RTO Form Filler — Any Combination</h3>
-          <p>Tick the forms you need — one print-ready PDF</p>
+          <h3 data-i18n="root.toolHeadH3">RTO Form Filler — Any Combination</h3>
+          <p data-i18n="root.toolHeadP">Tick the forms you need — one print-ready PDF</p>
         </div>
       </div>
       <div class="tool-forms">
@@ -156,77 +160,87 @@
       <div id="restoreNotice"></div>
 
       <div class="fset">
-        <div class="fset-label"><span class="fset-num">0</span><h4>Quick start — pick a task</h4></div>
+        <div class="fset-label"><span class="fset-num">0</span><h4 data-i18n="root.quickStart">Quick start — pick a task</h4></div>
         <div class="bundle-wrap" id="bundleWrap"></div>
-        <p class="pick-note">Ek task chuno — related forms apne aap select ho jaate hain. Ya neeche se manually koi bhi combination choose karo.</p>
+        <p class="pick-note" data-i18n="root.quickStartNote">Ek task chuno — related forms apne aap select ho jaate hain. Ya neeche se manually koi bhi combination choose karo.</p>
       </div>
 
       <div class="fset" id="fullFormPicker">
-        <div class="fset-label"><span class="fset-num">1</span><h4>Forms to include in the PDF</h4></div>
+        <div class="fset-label"><span class="fset-num">1</span><h4 data-i18n="root.formsInclude">Forms to include in the PDF</h4></div>
         <div class="type-tabs" id="typeTabs"></div>
         <div class="picks" id="picksWrap"></div>
-        <p class="pick-note">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms (across categories) and every needed field is added once, shared across all of them.</p>
+        <p class="pick-note" data-i18n="root.formsIncludeNote">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms (across categories) and every needed field is added once, shared across all of them.</p>
       </div>
       <button type="button" class="picker-toggle-line" id="pickerToggleLine" onclick="toggleFullPicker()" style="display:none">Saare 31 forms dekho ↓</button>
 
       <div class="fset" id="addMoreFset" style="display:none">
-        <div class="fset-label"><span class="fset-num">+</span><h4>Add more forms — often needed together</h4></div>
+        <div class="fset-label"><span class="fset-num">+</span><h4 data-i18n="root.addMoreForms">Add more forms — often needed together</h4></div>
         <div class="suggest-list" id="suggestList"></div>
-        <p class="pick-note">Same details se fill hote hain — add karne ka koi extra charge nahi.</p>
+        <p class="pick-note" data-i18n="root.addMoreNote">Same details se fill hote hain — add karne ka koi extra charge nahi.</p>
       </div>
 
       <div class="fset pro-panel" id="proPanel">
         <div class="fset-label">
           <span class="fset-num pro-num">AI</span>
-          <h4>Auto-fill from documents <span class="pro-tag">PRO</span></h4>
+          <h4><span data-i18n="root.autoFillTitle">Auto-fill from documents</span> <span class="pro-tag">PRO</span></h4>
         </div>
-        <p class="pick-note">Aadhaar / PAN / RC ki clear photo upload karo — naam, address, reg. no, chassis/engine no. jaisi details apne aap fields mein fill ho jayengi. Har extraction ₹5 leta hai.</p>
+        <p class="pick-note" data-i18n="root.autoFillDesc">Aadhaar / PAN / RC ki clear photo upload karo — naam, address, reg. no, chassis/engine no. jaisi details apne aap fields mein fill ho jayengi. Har extraction ₹5 leta hai.</p>
         <p class="pro-context" id="proContext"></p>
 
         <div class="pro-toprow" style="justify-content:flex-end">
           <div class="pro-credits">
             <span class="pro-credits-badge" id="proCreditsBadge">₹0.00</span>
-            <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()">+ Add Money</button>
+            <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()" data-i18n="ai.addMoney">+ Add Money</button>
           </div>
         </div>
-        <p class="fld-hint">Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN par kiska document hai wo waheen select karo.</p>
+        <p class="fld-hint" data-i18n="root.uploadInstructions">Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN par kiska document hai wo waheen select karo.</p>
 
-        <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;">Purana wallet is device pe wapas chahiye?</a></p>
+        <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;" data-i18n="ai.recoveryToggle">Purana wallet is device pe wapas chahiye?</a></p>
         <div class="pro-wallet-row" id="recoveryForm" style="display:none">
           <div class="modal-code-in">
-            <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono">
-            <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()">Recovery link bhejo</button>
+            <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono" data-i18n-placeholder="ai.recoveryPlaceholder">
+            <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()" data-i18n="ai.recoverySend">Recovery link bhejo</button>
           </div>
           <div class="status" id="walletLinkStatus"></div>
-          <p class="fld-hint">Jis number se payment kiya tha wo daalo — SMS mein ek link aayega, usi phone pe click karo (30 min valid, ek hi baar use hota hai).</p>
+          <p class="fld-hint" data-i18n="ai.recoveryHint">Jis number se payment kiya tha wo daalo — SMS mein ek link aayega, usi phone pe click karo (30 min valid, ek hi baar use hota hai).</p>
         </div>
 
-        <p class="fld-hint" id="docSlotEmptyNote" style="display:none">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
+        <p class="fld-hint" id="docSlotEmptyNote" style="display:none" data-i18n="ai.emptyNote">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
 
         <label class="consent-chk" for="uploadConsentChk">
           <input type="checkbox" id="uploadConsentChk" onchange="onConsentChange()">
-          <span>Main confirm karta/karti hoon ki main is document (Aadhaar/PAN/RC) ka authorized user hoon. Main samajhta/samajhti hoon ki iski photo, extraction ke liye Google Gemini API ko bheji jaati hai aur hamare server par store nahi hoti — <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a> padh li hai.</span>
+          <span data-i18n="ai.consent">Main confirm karta/karti hoon ki main is document (Aadhaar/PAN/RC) ka authorized user hoon. Main samajhta/samajhti hoon ki iski photo, extraction ke liye Google Gemini API ko bheji jaati hai aur hamare server par store nahi hoti — <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a> padh li hai.</span>
         </label>
 
         <div class="upload-grid" id="docSlotGrid">
           <div class="upload-slot upload-slot-wide" id="docSlot-aadhaar">
-            <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card</span><span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></div>
+            <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card</span><span class="upload-slot-state" id="state-aadhaar" data-i18n="ai.notUploaded">Not uploaded</span></div>
             <div class="doc-role-row" id="docRole-aadhaar" style="display:none">
-              <span class="doc-role-lbl">Kiska hai?</span>
-              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> Seller</label>
-              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> Buyer</label>
+              <span class="doc-role-lbl" data-i18n="ai.whoseDoc">Whose is this?</span>
+              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
+              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
             </div>
-            <p class="consent-hint" id="consentHint-aadhaar">Upload karne ke liye upar consent dein ↑</p>
+            <p class="consent-hint" id="consentHint-aadhaar" data-i18n="ai.consentHint">Upload karne ke liye upar consent dein ↑</p>
             <div class="aadhaar-two-col">
               <div>
-                <span class="fld-hint">Front side</span>
-                <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-front" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                <span class="fld-hint" data-i18n="ai.frontSide">Front side</span>
+                <div class="doc-input-row">
+                  <label class="btn-camera" for="file-aadhaar-front-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                  <input type="file" accept="image/*" capture="environment" id="file-aadhaar-front-camera" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                  <label class="btn-choose" for="file-aadhaar-front-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-front-file" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                </div>
                 <div class="doc-preview-wrap" id="preview-aadhaar_front"></div>
                 <div class="pdf-page-picker" id="pages-aadhaar_front" style="display:none"></div>
               </div>
               <div>
-                <span class="fld-hint">Back side (optional — for address)</span>
-                <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-back" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                <span class="fld-hint" data-i18n="ai.backSide">Back side (optional)</span>
+                <div class="doc-input-row">
+                  <label class="btn-camera" for="file-aadhaar-back-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                  <input type="file" accept="image/*" capture="environment" id="file-aadhaar-back-camera" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                  <label class="btn-choose" for="file-aadhaar-back-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-back-file" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                </div>
                 <div class="doc-preview-wrap" id="preview-aadhaar_back"></div>
                 <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
               </div>
@@ -235,44 +249,59 @@
           </div>
 
           <div class="upload-slot" id="docSlot-pan">
-            <div class="upload-slot-top"><span class="upload-slot-name">PAN Card</span><span class="upload-slot-state" id="state-pan">Not uploaded</span></div>
+            <div class="upload-slot-top"><span class="upload-slot-name">PAN Card</span><span class="upload-slot-state" id="state-pan" data-i18n="ai.notUploaded">Not uploaded</span></div>
             <div class="doc-role-row" id="docRole-pan" style="display:none">
-              <span class="doc-role-lbl">Kiska hai?</span>
-              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> Seller</label>
-              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> Buyer</label>
+              <span class="doc-role-lbl" data-i18n="ai.whoseDoc">Whose is this?</span>
+              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
+              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
             </div>
-            <p class="consent-hint" id="consentHint-pan">Upload karne ke liye upar consent dein ↑</p>
-            <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-pan" disabled onchange="handleFileSelect('pan', this.files[0])">
+            <p class="consent-hint" id="consentHint-pan" data-i18n="ai.consentHint">Upload karne ke liye upar consent dein ↑</p>
+            <div class="doc-input-row">
+              <label class="btn-camera" for="file-pan-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+              <input type="file" accept="image/*" capture="environment" id="file-pan-camera" disabled onchange="handleFileSelect('pan', this.files[0])">
+              <label class="btn-choose" for="file-pan-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+              <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-file" disabled onchange="handleFileSelect('pan', this.files[0])">
+            </div>
             <div class="doc-preview-wrap" id="preview-pan"></div>
             <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
             <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="retryDoc('pan')">Retry PAN (₹5)</button>
           </div>
 
           <div class="upload-slot" id="docSlot-rc">
-            <div class="upload-slot-top"><span class="upload-slot-name">RC (Registration Certificate)</span><span class="upload-slot-state" id="state-rc">Not uploaded</span></div>
-            <p class="doc-role-note">RC se seller ki details bharenge</p>
-            <p class="consent-hint" id="consentHint-rc">Upload karne ke liye upar consent dein ↑</p>
-            <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" disabled onchange="handleFileSelect('rc', this.files[0])">
+            <div class="upload-slot-top"><span class="upload-slot-name">RC (Registration Certificate)</span><span class="upload-slot-state" id="state-rc" data-i18n="ai.notUploaded">Not uploaded</span></div>
+            <p class="doc-role-note" data-i18n="ai.rcNote">RC se seller ki details bharenge</p>
+            <p class="consent-hint" id="consentHint-rc" data-i18n="ai.consentHint">Upload karne ke liye upar consent dein ↑</p>
+            <div class="doc-input-row">
+              <label class="btn-camera" for="file-rc-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+              <input type="file" accept="image/*" capture="environment" id="file-rc-camera" disabled onchange="handleFileSelect('rc', this.files[0])">
+              <label class="btn-choose" for="file-rc-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+              <input type="file" accept="image/*,.pdf,application/pdf" id="file-rc-file" disabled onchange="handleFileSelect('rc', this.files[0])">
+            </div>
             <div class="doc-preview-wrap" id="preview-rc"></div>
             <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
             <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
           </div>
 
           <div class="upload-slot">
-            <div class="upload-slot-top"><span class="upload-slot-name">Face Photo (for attachment)</span><span class="upload-slot-state" id="state-photo">Not uploaded</span></div>
-            <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
+            <div class="upload-slot-top"><span class="upload-slot-name">Face Photo (for attachment)</span><span class="upload-slot-state" id="state-photo" data-i18n="ai.notUploaded">Not uploaded</span></div>
+            <div class="doc-input-row">
+              <label class="btn-camera" for="file-photo-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+              <input type="file" accept="image/*" capture="user" id="file-photo-camera" onchange="handlePhotoUpload(this.files[0])">
+              <label class="btn-choose" for="file-photo-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+              <input type="file" accept="image/*" id="file-photo-file" onchange="handlePhotoUpload(this.files[0])">
+            </div>
             <div class="doc-preview-wrap" id="preview-photo"></div>
           </div>
         </div>
 
         <div class="checkout-box" id="checkoutBox" style="display:none">
           <div class="checkout-rows" id="checkoutRows"></div>
-          <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()">Pay &amp; Extract</button>
-          <p class="checkout-note">₹5 per document — sirf successful extraction par katta hai, fail hone par kuch nahi katta.</p>
+          <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()" data-i18n="ai.payExtract">Pay &amp; Extract</button>
+          <p class="checkout-note" data-i18n="ai.checkoutNote">₹5 per document — sirf successful extraction par katta hai, fail hone par kuch nahi katta.</p>
           <div class="status" id="checkoutResult"></div>
         </div>
 
-        <label class="pro-attach-chk"><input type="checkbox" id="attachDocsChk"> Attach uploaded documents & photo as extra pages in the final PDF</label>
+        <label class="pro-attach-chk"><input type="checkbox" id="attachDocsChk"> <span data-i18n="ai.attachChk">Attach uploaded documents &amp; photo as extra pages in the final PDF</span></label>
 
 
         <div class="status" id="proStatus" role="status"></div>
@@ -283,8 +312,8 @@
 
       <div class="gen-row">
         <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate selected forms — Download PDF</button>
-        <button class="btn-blank" id="blankBtn" onclick="generatePDF(true)">Download blank forms</button>
-        <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote">select forms above</span></span>
+        <button class="btn-blank" id="blankBtn" onclick="generatePDF(true)" data-i18n="root.downloadBlank">Download blank forms</button>
+        <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote" data-i18n="catalog.selectAbove">upar se forms select karo</span></span>
       </div>
       <div class="status" id="statusMsg" role="status"></div>
 
@@ -347,7 +376,7 @@
       </div>
 
       <div class="calc-result" id="calcResult">
-        <p class="calc-placeholder">Ex-showroom price daalo — estimate yahan dikhega.</p>
+        <p class="calc-placeholder" data-i18n="calc.placeholder">Ex-showroom price daalo — estimate yahan dikhega.</p>
       </div>
 
       <p class="calc-disclaimer">⚠️ <strong>Approximate estimate only.</strong> Actual RTO charges state notifications ke hisaab se vary kar sakte hain. Final amount apne DTO / RTO se confirm karein. Rates last updated: review pending.</p>
@@ -364,7 +393,7 @@
   <p class="sec-sub">The complete CMVR 1989 catalog, serial-wise — each card states the form's official purpose and rule, links to the official blank PDF on parivahan.gov.in, and live forms can be filled online right here.</p>
 
   <div class="search-row">
-    <input type="search" id="formSearch" class="form-search" placeholder="Search by form number or purpose — e.g. 26, duplicate, NOC, renewal…" oninput="renderForms()">
+    <input type="search" id="formSearch" class="form-search" data-i18n-placeholder="catalog.searchPlaceholder" placeholder="Search by form number or purpose — e.g. 26, duplicate, NOC, renewal…" oninput="renderForms()">
   </div>
 
   <div class="cat-tabs" id="catTabs">
@@ -485,6 +514,7 @@
   </div>
 </footer>
 
+<script src="/i18n.js"></script>
 <script src="/field-mapping.js"></script>
 <script src="/pdf-generate.js"></script>
 <script src="/forms-data.js"></script>
@@ -493,19 +523,19 @@
 <div class="modal-overlay" id="proBuyModal" style="display:none">
   <div class="modal-box">
     <div class="modal-head">
-      <h3>Add Money to Wallet</h3>
+      <h3 data-i18n="modal.buyTitle">Add Money to Wallet</h3>
       <button type="button" class="modal-close" onclick="closeBuyModal()">&times;</button>
     </div>
-    <p class="modal-sub">UPI / card se turant add ho jayega — koi wait nahi. ₹5 per document extraction katega.</p>
+    <p class="modal-sub" data-i18n="modal.buySub">UPI / card se turant add ho jayega — koi wait nahi. ₹5 per document extraction katega.</p>
     <div class="pack-grid">
-      <button type="button" class="pack-card" onclick="startPayment(50)"><span class="pack-n">₹50</span><span class="pack-l">10 extractions</span></button>
-      <button type="button" class="pack-card" onclick="startPayment(100)"><span class="pack-n">₹100</span><span class="pack-l">20 extractions</span></button>
-      <button type="button" class="pack-card" onclick="startPayment(200)"><span class="pack-n">₹200</span><span class="pack-l">40 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(50)"><span class="pack-n">₹50</span><span class="pack-l" data-i18n="modal.extractions10">10 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(100)"><span class="pack-n">₹100</span><span class="pack-l" data-i18n="modal.extractions20">20 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(200)"><span class="pack-n">₹200</span><span class="pack-l" data-i18n="modal.extractions40">40 extractions</span></button>
     </div>
-    <label class="modal-code-lbl">Ya custom amount</label>
+    <label class="modal-code-lbl" data-i18n="modal.orCustom">Ya custom amount</label>
     <div class="modal-code-in">
-      <input type="number" id="customAmountInput" placeholder="e.g. 150" min="1" class="mono">
-      <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))">Pay</button>
+      <input type="number" id="customAmountInput" min="1" class="mono" data-i18n-placeholder="modal.amountPlaceholder" placeholder="e.g. 150">
+      <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))" data-i18n="modal.pay">Pay</button>
     </div>
     <div class="status" id="proCodeStatus"></div>
   </div>
@@ -514,32 +544,32 @@
 <div class="modal-overlay" id="settingsModal" style="display:none">
   <div class="modal-box">
     <div class="modal-head">
-      <h3>Settings</h3>
+      <h3 data-i18n="modal.settingsTitle">Settings</h3>
       <button type="button" class="modal-close" onclick="closeSettingsModal()">&times;</button>
     </div>
-    <p class="modal-sub">Ye preferences is browser mein save ho jaati hain — agli baar site khologe to automatically apply hongi (abhi ki selection change nahi hogi).</p>
+    <p class="modal-sub" data-i18n="modal.settingsSub">Ye preferences is browser mein save ho jaati hain — agli baar site khologe to automatically apply hongi (abhi ki selection change nahi hogi).</p>
 
     <div class="settings-section">
-      <h4>Site kholne par default kya selected ho?</h4>
+      <h4 data-i18n="modal.defaultTitle">Site kholne par default kya selected ho?</h4>
       <div class="settings-radio-list" id="settingsDefaultBundle"></div>
     </div>
 
     <div class="settings-section">
-      <h4>Ye forms hamesha extra include karo</h4>
-      <p class="pick-note" style="margin-top:-4px">Upar wale default ke saath-saath, ye bhi hamesha check rahenge — jaise Money Receipt ya Delivery Note.</p>
+      <h4 data-i18n="modal.alwaysTitle">Ye forms hamesha extra include karo</h4>
+      <p class="pick-note" style="margin-top:-4px" data-i18n="modal.alwaysSub">Upar wale default ke saath-saath, ye bhi hamesha check rahenge — jaise Money Receipt ya Delivery Note.</p>
       <div id="settingsAlwaysInclude"></div>
     </div>
 
     <div class="settings-section">
-      <h4>PDF font style</h4>
+      <h4 data-i18n="modal.fontTitle">PDF font style</h4>
       <div class="settings-radio-list">
-        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontHelvetica" value="helvetica" checked onchange="setPdfFont(this.value)"> Helvetica <span style="color:var(--txt-3);font-size:11.5px">(default)</span></label>
-        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontTimes" value="times" onchange="setPdfFont(this.value)"> Times New Roman</label>
-        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontCourier" value="courier" onchange="setPdfFont(this.value)"> Courier</label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontHelvetica" value="helvetica" checked onchange="setPdfFont(this.value)"> <span data-i18n="modal.fontHelvetica">Helvetica</span> <span style="color:var(--txt-3);font-size:11.5px" data-i18n="modal.fontDefault">(default)</span></label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontTimes" value="times" onchange="setPdfFont(this.value)"> <span data-i18n="modal.fontTimes">Times New Roman</span></label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontCourier" value="courier" onchange="setPdfFont(this.value)"> <span data-i18n="modal.fontCourier">Courier</span></label>
       </div>
     </div>
 
-    <button type="button" class="settings-reset" onclick="resetUserPrefs()">Reset all settings</button>
+    <button type="button" class="settings-reset" onclick="resetUserPrefs()" data-i18n="modal.reset">Reset all settings</button>
   </div>
 </div>
 

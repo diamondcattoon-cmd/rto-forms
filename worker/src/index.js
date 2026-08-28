@@ -117,6 +117,7 @@ Return ONLY valid JSON, no markdown, no explanation, in this exact shape:
   "vehicle_class": "",
   "maker": "",
   "model": "",
+  "manufacture_date": "",
   "colour": "",
   "rto_office": "",
   "registration_date": "",
@@ -140,6 +141,7 @@ Rules:
 - owner_type: "individual" or "firm". The owner_name is a "firm" if it carries a business/organization marker — e.g. it starts with "M/S" or "M/s.", or contains "Pvt Ltd", "Private Limited", "LLP", "& Sons", "& Co", "& Company", "Enterprises", "Industries", "Trust", or "Society". An ordinary person's name (with or without a title like Shri/Smt/Kumari) is "individual". If you are unsure, default to "individual" — never guess "firm".
 - maker: the manufacturer only, e.g. "Maruti Suzuki", "Honda", "Tata Motors" — NOT the model name.
 - model: the model name/variant only, e.g. "Swift VXi", "Activa 6G" — NOT the manufacturer name.
+- manufacture_date: month and year of manufacture only, format MM/YYYY (e.g. "06/2015") — usually labelled "Mfg Dt." or "Manufacturing Date". This is NOT the same as registration_date and NOT the model name — do not confuse the three.
 - registration_date, expiry_date: format DD/MM/YYYY. expiry_date is usually labelled "Regd Validity" or "Valid Upto".
 - registered_as: e.g. "New", "Ex-Army", "Imported" (often left blank on the card — leave empty if not printed).
 - body_type: e.g. "Saloon", "Sedan", "Hatchback", "SUV", "Motor Cycle".

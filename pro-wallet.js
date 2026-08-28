@@ -88,24 +88,24 @@ async function sendWalletLink(){
   const input=document.getElementById('walletMobileInput');
   const v=input.value.replace(/\D/g,'');
   const statusEl=document.getElementById('walletLinkStatus');
-  if(v.length!==10 || !/^[6-9]/.test(v)){ statusEl.textContent='Valid 10-digit mobile number daalo.'; statusEl.className='status err'; return; }
+  if(v.length!==10 || !/^[6-9]/.test(v)){ statusEl.textContent=t('err.validMobile'); statusEl.className='status err'; return; }
 
   const btn=document.getElementById('sendLinkBtn');
-  btn.disabled=true; statusEl.textContent='Link bhej rahe hain...'; statusEl.className='status';
+  btn.disabled=true; statusEl.textContent=t('status.linkSending'); statusEl.className='status';
   try{
     const res=await fetch(WORKER_URL+'/link/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile:v})});
     const j=await res.json();
     if(!res.ok || j.error){
       statusEl.textContent = j.code==='NO_WALLET_FOUND'
-        ? 'Is number se koi wallet linked nahi mila. Pehli baar hai to seedha document upload karke extract try karo — payment ke waqt wallet ban jayega.'
-        : (j.error||'Link bhejne mein error aaya.');
+        ? t('status.noWalletFound')
+        : (j.error||t('status.linkError'));
       statusEl.className='status err';
       btn.disabled=false;
       return;
     }
-    statusEl.textContent='Recovery link bhej diya '+v+' par — SMS kholke usi phone pe link click karo (30 min valid).'; statusEl.className='status ok';
+    statusEl.textContent=t('status.linkSent',{mobile:v}); statusEl.className='status ok';
   }catch(e){
-    statusEl.textContent='Network error — dobara try karo.'; statusEl.className='status err';
+    statusEl.textContent=t('err.networkRetry'); statusEl.className='status err';
     btn.disabled=false;
   }
 }
@@ -120,20 +120,20 @@ async function claimWalletLinkFromUrl(){
   history.replaceState(null,'','/'); // scrub the token from the address bar right away
 
   const statusEl=document.getElementById('walletLinkStatus');
-  if(statusEl){ statusEl.textContent='Recover ho raha hai...'; statusEl.className='status'; }
+  if(statusEl){ statusEl.textContent=t('status.recovering'); statusEl.className='status'; }
   try{
     const res=await fetch(WORKER_URL+'/link/claim/'+encodeURIComponent(claimToken),{method:'POST'});
     const j=await res.json();
     if(!res.ok || j.error){
-      if(statusEl){ statusEl.textContent=j.error||'Link invalid ya expire ho chuka hai — naya link mangwao.'; statusEl.className='status err'; }
+      if(statusEl){ statusEl.textContent=j.error||t('err.linkExpired'); statusEl.className='status err'; }
       return;
     }
     PRO.walletId=j.walletId; PRO.balancePaise=j.balancePaise; saveProState();
     renderProCredits();
-    if(statusEl){ statusEl.textContent='Wallet recover ho gaya ✓ Balance: ₹'+j.balanceRs; statusEl.className='status ok'; }
+    if(statusEl){ statusEl.textContent=t('status.walletRecovered',{bal:j.balanceRs}); statusEl.className='status ok'; }
     document.getElementById('tool').scrollIntoView({behavior:'smooth'});
   }catch(e){
-    if(statusEl){ statusEl.textContent='Network error — link dobara mangwao.'; statusEl.className='status err'; }
+    if(statusEl){ statusEl.textContent=t('err.networkRetry'); statusEl.className='status err'; }
   }
 }
 async function fetchWalletBalance(){
@@ -193,7 +193,15 @@ function compressImage(dataUrl, maxDim, quality){
    `disabled` in the HTML — this just mirrors that state once the user ticks the consent
    checkbox above them. The face-photo upload is intentionally excluded: it never leaves
    the browser (attached to the PDF locally), so it isn't sent to Gemini and needs no consent. */
-const CONSENT_GATED_INPUT_IDS=['file-aadhaar-front','file-aadhaar-back','file-pan','file-rc'];
+/* Each original single input is now a camera/gallery pair (see the
+   doc-input-row markup) — both members of every pair still gate on the
+   same consent checkbox. */
+const CONSENT_GATED_INPUT_IDS=[
+  'file-aadhaar-front-camera','file-aadhaar-front-file',
+  'file-aadhaar-back-camera','file-aadhaar-back-file',
+  'file-pan-camera','file-pan-file',
+  'file-rc-camera','file-rc-file'
+];
 /* One hint per gated slot (not per input — aadhaar front+back share one slot/hint) — see
    consentHint-* in index.html, sitting right above the greyed-out inputs so it's obvious
    why they're disabled. */
@@ -207,7 +215,10 @@ function onConsentChange(){
   const checked=document.getElementById('uploadConsentChk').checked;
   CONSENT_GATED_INPUT_IDS.forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.disabled=!checked;
+    if(!el) return;
+    el.disabled=!checked;
+    const row=el.closest('.doc-input-row');
+    if(row) row.classList.toggle('doc-input-disabled', !checked);
   });
   CONSENT_HINT_IDS.forEach(id=>{
     const el=document.getElementById(id);
@@ -250,7 +261,7 @@ async function handleFileSelect(key, file){
   const isPdf = file.type==='application/pdf' || /\.pdf$/i.test(file.name||'');
   const previewEl=document.getElementById('preview-'+key);
   const pickerEl=document.getElementById('pages-'+key);
-  previewEl.innerHTML='<p class="fld-hint">Loading preview...</p>';
+  previewEl.innerHTML='<p class="fld-hint">'+t('status.loadingPreview')+'</p>';
   pickerEl.style.display='none'; pickerEl.innerHTML='';
 
   if(isPdf){
@@ -273,17 +284,17 @@ async function handleFileSelect(key, file){
       if(thumbs.length===1){
         setDocImage(key, thumbs[0]);
       }else{
-        previewEl.innerHTML='<p class="fld-hint">Is PDF mein '+thumbs.length+' pages hain — sahi page choose karo:</p>';
+        previewEl.innerHTML='<p class="fld-hint">'+t('status.pdfPagePicker',{n:thumbs.length})+'</p>';
         pickerEl.style.display='flex';
-        thumbs.forEach((t,i)=>{
+        thumbs.forEach((th,i)=>{
           const img=document.createElement('img');
-          img.src=t; img.className='pdf-page-thumb'; img.title='Page '+(i+1);
-          img.onclick=()=>{ selectPdfPage(key, t, pickerEl); };
+          img.src=th; img.className='pdf-page-thumb'; img.title=t('ai.pageN',{n:i+1});
+          img.onclick=()=>{ selectPdfPage(key, th, pickerEl); };
           pickerEl.appendChild(img);
         });
       }
     }catch(err){
-      previewEl.innerHTML='<p class="fld-hint" style="color:var(--stamp)">PDF read nahi ho paayi: '+err.message+'</p>';
+      previewEl.innerHTML='<p class="fld-hint" style="color:var(--stamp)">'+t('status.pdfReadError',{msg:err.message})+'</p>';
     }
   }else{
     const rawDataUrl=await fileToBase64(file);
@@ -323,7 +334,7 @@ function setDocImage(key, dataUrl, keepPicker){
 function onDocReady(key){
   const docType = (key==='aadhaar_front' || key==='aadhaar_back') ? 'aadhaar' : key;
   const stateEl=document.getElementById('state-'+docType);
-  stateEl.textContent='Preview ready';
+  stateEl.textContent=t('ai.previewReady');
   stateEl.className='upload-slot-state';
   /* Purely additive visual cue ("this card is ready") — harmless on the
      root page too (no CSS targets .ready outside the task-page v2 layout,
@@ -350,7 +361,7 @@ function removeDoc(docType){
     const prev=document.getElementById('preview-photo'); if(prev) prev.innerHTML='';
     const f=document.getElementById('file-photo'); if(f) f.value='';
     const stateEl=document.getElementById('state-photo');
-    if(stateEl){ stateEl.textContent='Not uploaded'; stateEl.className='upload-slot-state'; }
+    if(stateEl){ stateEl.textContent=t('ai.notUploaded'); stateEl.className='upload-slot-state'; }
     const removeBtn=document.getElementById('remove-photo');
     if(removeBtn) removeBtn.style.display='none';
     return;
@@ -358,7 +369,7 @@ function removeDoc(docType){
 
   const alreadyExtracted=EXTRACTED_SET.has(docType);
   if(alreadyExtracted){
-    const ok=confirm('Isse hatane par bhare hue fields khali ho jaayenge. Paisa wapas nahi hoga.');
+    const ok=confirm(t('ai.removeConfirm'));
     if(!ok) return;
   }
 
@@ -381,7 +392,7 @@ function removeDoc(docType){
   const slotEl=document.getElementById('docSlot-'+docType);
   if(slotEl) slotEl.classList.remove('ready');
   const stateEl=document.getElementById('state-'+docType);
-  if(stateEl){ stateEl.textContent='Not uploaded'; stateEl.className='upload-slot-state'; }
+  if(stateEl){ stateEl.textContent=t('ai.notUploaded'); stateEl.className='upload-slot-state'; }
   const removeBtn=document.getElementById('remove-'+docType);
   if(removeBtn) removeBtn.style.display='none';
   const retryBtn=document.getElementById('extract-'+docType);
@@ -461,17 +472,17 @@ function updateCheckoutBox(lastRun){
   const n=batch.length, total=n*5;
   rowsEl.innerHTML = n
     ? batch.map(item=>`<div class="checkout-row"><span>${DOC_LABEL[item.docType]}</span><span class="mono">₹5</span></div>`).join('')
-      + `<div class="checkout-row checkout-total"><span>${n} document${n>1?'s':''} × ₹5</span><span class="mono">up to ₹${total}</span></div>`
-    : '<div class="checkout-row"><span>Sab uploaded documents extract ho chuke hain.</span></div>';
+      + `<div class="checkout-row checkout-total"><span>${t('checkout.rowTotal',{n,s:n>1?'s':''})}</span><span class="mono">${t('checkout.upTo',{total})}</span></div>`
+    : `<div class="checkout-row"><span>${t('status.allExtracted')}</span></div>`;
   payBtn.style.display = n ? '' : 'none';
-  payBtn.textContent = n<=1 ? 'Pay ₹5 and fill fields' : 'Pay up to ₹'+total+' and fill fields';
+  payBtn.textContent = n<=1 ? t('checkout.payBtn1') : t('checkout.payBtnN',{total});
 
   if(lastRun){
     const {succeeded,failed,stoppedOnBalance}=lastRun;
     let msg='';
-    if(succeeded) msg+='✓ '+succeeded+' document'+(succeeded>1?'s':'')+' extracted — ₹'+(succeeded*5)+' charged. ';
-    if(failed) msg+='✗ '+failed+' failed — not charged, ₹'+(failed*5)+' still in your wallet. Us document ke "Retry" button se dobara try karo. ';
-    if(stoppedOnBalance) msg+='Balance kam pad gaya — baaki documents ke liye "Add Money" karke phir "Pay & Extract" dabao.';
+    if(succeeded) msg+=t('status.batchSucceeded',{n:succeeded,s:succeeded>1?'s':'',amt:succeeded*5});
+    if(failed) msg+=t('status.batchFailed',{n:failed,amt:failed*5});
+    if(stoppedOnBalance) msg+=t('status.balancePartial');
     resultEl.textContent=msg.trim();
     resultEl.className = (failed || stoppedOnBalance) ? 'status err' : 'status ok';
   } else {
@@ -514,7 +525,7 @@ function updateAiBoxBalanceNote(){
   const totalPaise=n*500;
   if(PRO.balancePaise>=totalPaise){ el.style.display='none'; return; }
   el.style.display='flex';
-  el.innerHTML='<span>Aapke paas ₹'+(PRO.balancePaise/100).toFixed(0)+' hai</span><button type="button" class="btn-blank" onclick="openBuyModal()">+ ₹50 add karo</button>';
+  el.innerHTML='<span>'+t('ai.balancePrefix',{n:(PRO.balancePaise/100).toFixed(0)})+'</span><button type="button" class="btn-blank" onclick="openBuyModal()">'+t('ai.addFifty')+'</button>';
 }
 
 /* Collapses the AI box to its one-line summary — only on a batch that
@@ -530,7 +541,7 @@ function collapseAiBoxToSummary(){
   if(!n) return;
   const need=new Set(typeof PICKS!=='undefined' ? PICKS.filter(p=>CHECKED[p.id]).flatMap(p=>p.fields||[]) : []);
   const filled=[...need].filter(f=>FIELD_SOURCE[f] && EXTRACTED_SET.has(FIELD_SOURCE[f])).length;
-  el.textContent=n+' document'+(n>1?'s':'')+' se '+filled+' field'+(filled===1?'':'s')+' bhare ✓';
+  el.textContent=t('status.docsExtractedSummary',{n,s:n>1?'s':'',filled,fs:filled===1?'':'s'});
   setAiBoxState('summary');
 }
 
@@ -616,15 +627,15 @@ async function runExtraction(docType, images, uploadsKey){
   const label=DOC_LABEL[docType]||docType.toUpperCase();
 
   if(PRO.balancePaise<500){
-    statusEl.textContent='₹5 chahiye '+label+' ke liye, balance kam hai — payment window khul raha hai...';
+    statusEl.textContent=t('status.needBalance',{label});
     statusEl.className='status';
     openBuyModal();
     return 'skipped-balance';
   }
 
-  stateEl.textContent='Extracting...'; stateEl.className='upload-slot-state';
+  stateEl.textContent=t('ai.extractingBadge'); stateEl.className='upload-slot-state';
   if(retryBtn) retryBtn.style.display='none';
-  statusEl.textContent=label+' se data extract ho raha hai...'; statusEl.className='status';
+  statusEl.textContent=t('status.extractingDoc',{label}); statusEl.className='status';
 
   try{
     const res=await fetch(WORKER_URL+'/extract',{
@@ -634,9 +645,9 @@ async function runExtraction(docType, images, uploadsKey){
     });
     const json=await res.json();
     if(!res.ok || json.error){
-      if(json.code==='AUTH_REQUIRED'){ PRO.walletId=''; saveProState(); throw new Error('Wallet reset ho gaya — dobara try karo.'); }
+      if(json.code==='AUTH_REQUIRED'){ PRO.walletId=''; saveProState(); throw new Error(t('err.walletReset')); }
       if(res.status===402){ PRO.balancePaise=json.balancePaise||0; renderProCredits(); }
-      throw new Error(json.error||'Extraction failed');
+      throw new Error(json.error||t('err.extractionFailed'));
     }
 
     const data=json.data;
@@ -672,16 +683,16 @@ async function runExtraction(docType, images, uploadsKey){
     PRO.balancePaise=json.balancePaise; renderProCredits();
 
     EXTRACTED_SET.add(docType);
-    stateEl.textContent='Extracted \u2713'; stateEl.className='upload-slot-state done';
+    stateEl.textContent=t('status.extracted'); stateEl.className='upload-slot-state done';
     if(retryBtn) retryBtn.style.display='none';
-    statusEl.textContent=label+' se data auto-fill ho gaya. Balance: ₹'+json.balanceRs;
+    statusEl.textContent=t('status.extractedOk',{label,bal:json.balanceRs});
     statusEl.className='status ok';
     renderProResult(docType, data);
     return 'success';
   }catch(err){
-    stateEl.textContent='Failed'; stateEl.className='upload-slot-state err';
-    if(retryBtn){ retryBtn.style.display='block'; retryBtn.disabled=false; retryBtn.textContent='Retry '+label+' (₹5)'; }
-    statusEl.textContent='Error: '+err.message;
+    stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err';
+    if(retryBtn){ retryBtn.style.display='block'; retryBtn.disabled=false; retryBtn.textContent=t('status.retry',{label}); }
+    statusEl.textContent=t('err.generic',{msg:err.message});
     statusEl.className='status err';
     return 'failed';
   }
@@ -690,7 +701,7 @@ async function runExtraction(docType, images, uploadsKey){
 async function handlePhotoUpload(file){
   if(!file) return;
   const stateEl=document.getElementById('state-photo');
-  stateEl.textContent='Reading...';
+  stateEl.textContent=t('status.reading');
   const rawDataUrl=await fileToBase64(file);
   const dataUrl=await compressImage(rawDataUrl, 1400, 0.85);
   const dims=await loadImageDims(dataUrl);
@@ -699,7 +710,7 @@ async function handlePhotoUpload(file){
   previewEl.innerHTML='';
   const img=document.createElement('img'); img.src=dataUrl;
   previewEl.appendChild(img);
-  stateEl.textContent='Uploaded \u2713'; stateEl.className='upload-slot-state done';
+  stateEl.textContent=t('status.uploaded'); stateEl.className='upload-slot-state done';
   const removeBtn=document.getElementById('remove-photo');
   if(removeBtn) removeBtn.style.display='inline';
 }
@@ -724,9 +735,9 @@ function openBuyModal(){
 function closeBuyModal(){ document.getElementById('proBuyModal').style.display='none'; }
 
 async function startPayment(amountRs){
-  if(!amountRs || amountRs<=0){ alert('Sahi amount daalo.'); return; }
+  if(!amountRs || amountRs<=0){ alert(t('err.amount')); return; }
   const statusEl=document.getElementById('proCodeStatus');
-  statusEl.textContent='Payment shuru ho raha hai...'; statusEl.className='status';
+  statusEl.textContent=t('status.paymentStarting'); statusEl.className='status';
 
   try{
     /* Only send walletId if we already have one (returning user topping
@@ -756,7 +767,7 @@ async function startPayment(amountRs){
          only ever as a recovery contact, never as the wallet identity. */
       theme:{ color:'#D6481F' },
       handler:async function(resp){
-        statusEl.textContent='Payment confirm ho raha hai...'; statusEl.className='status';
+        statusEl.textContent=t('status.paymentConfirming'); statusEl.className='status';
         try{
           const verifyRes=await fetch(WORKER_URL+'/verify',{
             method:'POST',
@@ -769,13 +780,13 @@ async function startPayment(amountRs){
             })
           });
           const v=await verifyRes.json();
-          if(!verifyRes.ok || v.error) throw new Error(v.error||'Verification failed');
+          if(!verifyRes.ok || v.error) throw new Error(v.error||t('err.verificationFailed'));
           PRO.balancePaise=v.balancePaise; renderProCredits();
-          statusEl.textContent='₹'+amountRs+' add ho gaye! Balance: ₹'+v.balanceRs;
+          statusEl.textContent=t('status.amountAdded',{n:amountRs,bal:v.balanceRs});
           statusEl.className='status ok';
           setTimeout(closeBuyModal, 1500);
         }catch(err){
-          statusEl.textContent='Payment hua par confirm nahi ho paya: '+err.message+'. Refresh karke balance check karo.';
+          statusEl.textContent=t('status.paymentUnconfirmed',{msg:err.message});
           statusEl.className='status err';
         }
       },
@@ -794,11 +805,11 @@ async function startPayment(amountRs){
       const err=(resp && resp.error) || {};
       statusEl.textContent='';
       const msg=document.createElement('span');
-      msg.textContent='Payment fail ho gaya: '+(err.description||'Wajah pata nahi chali')+(err.reason?' ('+err.reason+')':'')+'. ';
+      msg.textContent=t('status.paymentFailed',{reason:err.description||t('status.unknownReason'),extra:err.reason?' ('+err.reason+')':''});
       const retryBtn=document.createElement('button');
       retryBtn.type='button';
       retryBtn.className='settings-reset';
-      retryBtn.textContent='Retry';
+      retryBtn.textContent=t('status.retryBtn');
       retryBtn.onclick=function(){ startPayment(amountRs); };
       statusEl.appendChild(msg);
       statusEl.appendChild(retryBtn);
@@ -807,7 +818,7 @@ async function startPayment(amountRs){
 
     rzp.open();
   }catch(err){
-    statusEl.textContent='Error: '+err.message;
+    statusEl.textContent=t('err.generic',{msg:err.message});
     statusEl.className='status err';
   }
 }

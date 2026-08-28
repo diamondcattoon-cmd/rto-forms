@@ -222,6 +222,12 @@ const AI_FIELD_MAP={
     if(data.vehicle_class) out.veh_type=data.vehicle_class;
     if(data.maker) out.make=data.maker;
     if(data.model) out.model=data.model;
+    /* Month/year of manufacture (RC's own "Mfg Dt." field) — a separate
+       concept from both the model name (out.model, above) and the
+       registration date (out.date_issue, below). Kept as plain MM/YYYY
+       text rather than run through toISODate(), which expects a full
+       DD/MM/YYYY date and would silently drop a month-only value. */
+    if(data.manufacture_date) out.mfg_date=data.manufacture_date;
     if(data.colour) out.colour=data.colour;
     if(data.rto_office) out.rto=data.rto_office;
     if(data.registration_date){ const iso=toISODate(data.registration_date); if(iso) out.date_issue=iso; }

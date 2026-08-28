@@ -7,13 +7,26 @@
    names directly (e.g. gen:addForm29), so they must already exist as
    globals by the time that array literal is evaluated. */
 
+/* 11th/12th/13th are always "th" regardless of their last digit — only
+   then does the last-digit rule (1→st, 2→nd, 3→rd, else th) apply. The
+   old `n===1?'st':n===2?'nd':n===3?'rd':'th'` version ignored the teens
+   entirely, so every 11th/12th/13th/21st.../31st of a month printed a
+   plain "th" glued onto the wrong day (e.g. "22th" instead of "22nd"). */
+function ordinalSuffix(n){
+  const rem100=n%100;
+  if(rem100>=11 && rem100<=13) return 'th';
+  const rem10=n%10;
+  if(rem10===1) return 'st';
+  if(rem10===2) return 'nd';
+  if(rem10===3) return 'rd';
+  return 'th';
+}
 function fmtDate(d){
   if(!d) return '_______________';
   const dt=new Date(d);
   const m=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const n=dt.getDate();
-  const s=n===1?'st':n===2?'nd':n===3?'rd':'th';
-  return n+s+' day of '+m[dt.getMonth()]+', '+dt.getFullYear();
+  return n+ordinalSuffix(n)+' day of '+m[dt.getMonth()]+', '+dt.getFullYear();
 }
 
 /* ── Page overflow helper (auto-paginate) ── */
@@ -495,7 +508,7 @@ function addForm25(doc,d){
 
   f25row('3','Type of body',d.body_type);
   f25row('4',"Maker's name",d.make);
-  f25row('5','Month and year of manufacture',d.model);
+  f25row('5','Month and year of manufacture',d.mfg_date);
   f25row('6','Number of cylinders',d.cylinders);
   f25row('7','Cubic capacity / horse power',d.cubic_cap);
   f25row('8',"Maker's classification",d.maker_class);
@@ -1159,7 +1172,7 @@ function addForm20(doc,d){
   T(22,y,'(d) in-use E-rickshaw / E-cart          ( strike out whichever is inapplicable )',9.5); y+=10;
   y=PAIR(y,'14.  Type of body :  ','','15.  Type of vehicle :  ','',10.5);
   y=ROW(y,'16.  Maker\'s name :  ',d.make,10.5);
-  y=ROW(y,'17.  Month and year of manufacture :  ',d.model,10.5);
+  y=ROW(y,'17.  Month and year of manufacture :  ',d.mfg_date,10.5);
   y=PAIR(y,'18.  Number of cylinders :  ','','19.  Horse power :  ','',10.5);
   y=PAIR(y,'20.  Cubic capacity :  ','','21.  Wheel base :  ','',10.5);
   y=ROW(y,'22.  Chassis No. ( affix pencil print ) :  ',d.ch_no,10.5);
@@ -1292,7 +1305,7 @@ function addForm21(doc,d){
   y=lrowPair(doc,y,'1.  Class of vehicle:  ',d.veh_type,'2.  Maker\'s name:  ',d.make);
   y=lrowPair(doc,y,'3.  Chassis No.:  ',d.ch_no,'4.  Engine / Motor No.:  ',d.eng_no);
   y=lrowPair(doc,y,'5.  Horse power / cubic capacity:  ','','6.  Fuel used:  ','');
-  y=lrowPair(doc,y,'7.  Number of cylinders:  ','','8.  Month & year of manufacture:  ',d.model);
+  y=lrowPair(doc,y,'7.  Number of cylinders:  ','','8.  Month & year of manufacture:  ',d.mfg_date);
   y=lrowPair(doc,y,'9.  Seating capacity ( incl. driver ):  ','','10. Unladen weight:  ','');
   y=lrowPair(doc,y,'9A. Standing capacity:  ','','9B. Sleeper capacity:  ','');
   normal(doc,15,y,'11. Maximum axle weight and number & description of tyres ( transport vehicle ):'); y+=7;
@@ -1515,6 +1528,6 @@ const G=k=>(doc,d)=>addGeneric(doc,d,DEFS[k]);
    exact production code instead of a hand-copied reimplementation. This
    block is a no-op in the browser (typeof module is undefined there). */
 if(typeof module!=='undefined' && module.exports){
-  module.exports={ addrJoin };
+  module.exports={ addrJoin, ordinalSuffix, fmtDate };
 }
 

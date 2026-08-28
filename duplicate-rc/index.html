@@ -84,11 +84,15 @@
       <span class="brand-txt">RTO Forms India<small>Motor Vehicle Act Forms</small></span>
     </a>
     <nav class="hdr-nav">
-      <a href="/#forms">All Forms</a>
-      <a href="/#calc">Tax Calculator</a>
-      <a href="#how">How it works</a>
-      <a href="#faq">FAQ</a>
-      <a href="#tool" class="live-link">Fill Forms →</a>
+      <a href="/#forms" data-i18n="nav.allForms">All Forms</a>
+      <a href="/#calc" data-i18n="nav.calc">Tax Calculator</a>
+      <a href="#how" data-i18n="nav.how">How it works</a>
+      <a href="#faq" data-i18n="nav.faq">FAQ</a>
+      <a href="#tool" class="live-link" data-i18n="nav.fill">Fill Forms →</a>
+      <div class="lang-toggle" id="langToggle">
+        <button type="button" class="lang-opt" data-lang="en" onclick="setLang('en')" data-i18n="lang.en">EN</button>
+        <button type="button" class="lang-opt" data-lang="hi" onclick="setLang('hi')" data-i18n="lang.hi">Hinglish</button>
+      </div>
     </nav>
   </div>
 </header>
@@ -98,11 +102,11 @@
   <div class="task-head-in">
     <div class="task-head-text">
       <h1>Duplicate RC</h1>
-      <p>Form 26 — ek print-ready PDF mein</p>
+      <p data-i18n="task.duplicaterc.sub">Form — a print-ready PDF, filled online</p>
     </div>
     <div class="task-head-actions">
-      <button type="button" class="btn-add-forms" onclick="toggleAddFormsPanel()">+ Add forms</button>
-      <button type="button" class="icon-btn-ghost" onclick="openSettingsModal()" aria-label="Settings" title="Settings">⚙</button>
+      <button type="button" class="btn-add-forms" onclick="toggleAddFormsPanel()" data-i18n="task.addForms">+ Add forms</button>
+      <button type="button" class="icon-btn-ghost" onclick="openSettingsModal()" aria-label="Settings" data-i18n-title="task.settings" data-i18n-aria="task.settings" title="Settings">⚙</button>
     </div>
   </div>
 </section>
@@ -114,58 +118,73 @@
 
       <div id="restoreNotice"></div>
 
-      <button type="button" class="add-forms-line-mobile" onclick="toggleAddFormsPanel()">+ Aur forms chahiye?</button>
+      <button type="button" class="add-forms-line-mobile" onclick="toggleAddFormsPanel()" data-i18n="task.addFormsMobile">+ Need more forms?</button>
 
       <!-- AI box: cta → picker → collapsed summary, one state visible at a time -->
       <div class="ai-box" id="aiBox">
         <div class="ai-box-cta" id="aiBoxCta">
           <span class="ai-box-cta-icon">⚡</span>
           <div class="ai-box-cta-text">
-            <h4>AI se bhar do</h4>
-            <p>RC ki photo daalo — fields khud bhar jaayenge, typing nahi karni padegi</p>
+            <h4 data-i18n="ai.title">Fill with AI</h4>
+            <p data-i18n="ai.subtitle">Upload your RC photo — fields will fill automatically, no typing needed</p>
           </div>
-          <button type="button" class="btn-stamp" onclick="showAiBoxPicker()">Shuru karo</button>
+          <button type="button" class="btn-stamp" onclick="showAiBoxPicker()" data-i18n="ai.start">Get started</button>
         </div>
 
         <div class="ai-box-picker" id="aiBoxPicker" style="display:none">
-          <div class="ai-box-picker-head"><h4>RC, Aadhaar ya PAN ki photo daalo</h4></div>
+          <div class="ai-box-picker-head"><h4 data-i18n="ai.pickerHead">Add a photo of your RC, Aadhaar or PAN</h4></div>
 
           <label class="consent-chk" for="uploadConsentChk">
             <input type="checkbox" id="uploadConsentChk" onchange="onConsentChange()">
-            <span>Main confirm karta/karti hoon ki main is document (Aadhaar/PAN/RC) ka authorized user hoon. Main samajhta/samajhti hoon ki iski photo, extraction ke liye Google Gemini API ko bheji jaati hai aur hamare server par store nahi hoti — <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a> padh li hai.</span>
+            <span data-i18n="ai.consent">I confirm I am the authorized holder of this document.</span>
           </label>
 
-          <p class="fld-hint" id="docSlotEmptyNote" style="display:none">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
+          <p class="fld-hint" id="docSlotEmptyNote" style="display:none" data-i18n="ai.emptyNote">Select forms above — only the documents relevant to them will show here.</p>
 
           <div class="upload-grid" id="docSlotGrid" onclick="onDocSlotGridClick(event)">
             <div class="upload-slot locked" id="docSlot-rc">
-              <div class="upload-slot-top"><span class="upload-slot-name">RC<span class="upload-slot-state" id="state-rc">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-rc" style="display:none" onclick="removeDoc('rc')">✕ Remove</button></div>
-              <p class="doc-role-note">RC se seller ki details bharenge</p>
-              <p class="consent-hint" id="consentHint-rc">Upload karne ke liye upar consent dein ↑</p>
-              <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" disabled onchange="handleFileSelect('rc', this.files[0])">
+              <div class="upload-slot-top"><span class="upload-slot-name">RC<span class="upload-slot-state" id="state-rc" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-rc" style="display:none" onclick="removeDoc('rc')" data-i18n="ai.remove">✕ Remove</button></div>
+              <p class="doc-role-note" data-i18n="ai.rcNote">RC fills in the seller's details</p>
+              <p class="consent-hint" id="consentHint-rc" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
+              <div class="doc-input-row">
+                <label class="btn-camera" for="file-rc-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                <input type="file" accept="image/*" capture="environment" id="file-rc-camera" disabled onchange="handleFileSelect('rc', this.files[0])">
+                <label class="btn-choose" for="file-rc-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+                <input type="file" accept="image/*,.pdf,application/pdf" id="file-rc-file" disabled onchange="handleFileSelect('rc', this.files[0])">
+              </div>
               <div class="doc-preview-wrap" id="preview-rc"></div>
               <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
               <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
             </div>
 
             <div class="upload-slot locked" id="docSlot-aadhaar">
-              <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar<span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar" style="display:none" onclick="removeDoc('aadhaar')">✕ Remove</button></div>
+              <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar<span class="upload-slot-state" id="state-aadhaar" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar" style="display:none" onclick="removeDoc('aadhaar')" data-i18n="ai.remove">✕ Remove</button></div>
               <div class="doc-role-row" id="docRole-aadhaar" style="display:none">
-                <span class="doc-role-lbl">Kiska hai?</span>
-                <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> Seller</label>
-                <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> Buyer</label>
+                <span class="doc-role-lbl" data-i18n="ai.whoseDoc">Whose is this?</span>
+                <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
+                <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
               </div>
-              <p class="consent-hint" id="consentHint-aadhaar">Upload karne ke liye upar consent dein ↑</p>
+              <p class="consent-hint" id="consentHint-aadhaar" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
               <div class="aadhaar-two-col">
                 <div>
-                  <span class="fld-hint">Front side</span>
-                  <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-front" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                  <span class="fld-hint" data-i18n="ai.frontSide">Front side</span>
+                  <div class="doc-input-row">
+                    <label class="btn-camera" for="file-aadhaar-front-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                    <input type="file" accept="image/*" capture="environment" id="file-aadhaar-front-camera" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                    <label class="btn-choose" for="file-aadhaar-front-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+                    <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-front-file" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                  </div>
                   <div class="doc-preview-wrap" id="preview-aadhaar_front"></div>
                   <div class="pdf-page-picker" id="pages-aadhaar_front" style="display:none"></div>
                 </div>
                 <div>
-                  <span class="fld-hint">Back side (optional)</span>
-                  <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-back" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                  <span class="fld-hint" data-i18n="ai.backSide">Back side (optional)</span>
+                  <div class="doc-input-row">
+                    <label class="btn-camera" for="file-aadhaar-back-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                    <input type="file" accept="image/*" capture="environment" id="file-aadhaar-back-camera" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                    <label class="btn-choose" for="file-aadhaar-back-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+                    <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-back-file" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                  </div>
                   <div class="doc-preview-wrap" id="preview-aadhaar_back"></div>
                   <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
                 </div>
@@ -174,14 +193,19 @@
             </div>
 
             <div class="upload-slot locked" id="docSlot-pan">
-              <div class="upload-slot-top"><span class="upload-slot-name">PAN<span class="upload-slot-state" id="state-pan">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan" style="display:none" onclick="removeDoc('pan')">✕ Remove</button></div>
+              <div class="upload-slot-top"><span class="upload-slot-name">PAN<span class="upload-slot-state" id="state-pan" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan" style="display:none" onclick="removeDoc('pan')" data-i18n="ai.remove">✕ Remove</button></div>
               <div class="doc-role-row" id="docRole-pan" style="display:none">
-                <span class="doc-role-lbl">Kiska hai?</span>
-                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> Seller</label>
-                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> Buyer</label>
+                <span class="doc-role-lbl" data-i18n="ai.whoseDoc">Whose is this?</span>
+                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
+                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
               </div>
-              <p class="consent-hint" id="consentHint-pan">Upload karne ke liye upar consent dein ↑</p>
-              <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-pan" disabled onchange="handleFileSelect('pan', this.files[0])">
+              <p class="consent-hint" id="consentHint-pan" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
+              <div class="doc-input-row">
+                <label class="btn-camera" for="file-pan-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                <input type="file" accept="image/*" capture="environment" id="file-pan-camera" disabled onchange="handleFileSelect('pan', this.files[0])">
+                <label class="btn-choose" for="file-pan-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+                <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-file" disabled onchange="handleFileSelect('pan', this.files[0])">
+              </div>
               <div class="doc-preview-wrap" id="preview-pan"></div>
               <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
               <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="retryDoc('pan')">Retry PAN (₹5)</button>
@@ -192,34 +216,39 @@
 
           <div class="checkout-box" id="checkoutBox" style="display:none">
             <div class="checkout-rows" id="checkoutRows"></div>
-            <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()">Pay &amp; Extract</button>
-            <p class="checkout-note">₹5 per document — sirf successful extraction par katta hai, fail hone par kuch nahi katta.</p>
+            <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()" data-i18n="ai.payExtract">Pay &amp; Extract</button>
+            <p class="checkout-note" data-i18n="ai.checkoutNote">₹5 per document — only charged on a successful extraction, nothing charged if it fails.</p>
             <div class="status" id="checkoutResult"></div>
           </div>
 
           <div class="pro-credits" style="margin-top:10px">
             <span class="pro-credits-badge" id="proCreditsBadge">₹0.00</span>
-            <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()">+ Add Money</button>
+            <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()" data-i18n="ai.addMoney">+ Add Money</button>
           </div>
           <p class="pro-context" id="proContext"></p>
-          <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;">Purana wallet is device pe wapas chahiye?</a></p>
+          <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;" data-i18n="ai.recoveryToggle">Need your old wallet back on this device?</a></p>
           <div class="pro-wallet-row" id="recoveryForm" style="display:none">
             <div class="modal-code-in">
-              <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono">
-              <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()">Recovery link bhejo</button>
+              <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono" data-i18n-placeholder="ai.recoveryPlaceholder">
+              <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()" data-i18n="ai.recoverySend">Send recovery link</button>
             </div>
             <div class="status" id="walletLinkStatus"></div>
-            <p class="fld-hint">Jis number se payment kiya tha wo daalo — SMS mein ek link aayega, usi phone pe click karo (30 min valid, ek hi baar use hota hai).</p>
+            <p class="fld-hint" data-i18n="ai.recoveryHint">Enter the number you paid with — an SMS link will arrive, click it on that same phone (valid 30 min, single use).</p>
           </div>
 
           <details class="extra-photo-block">
-            <summary>+ Face photo bhi attach karni hai PDF mein? (optional)</summary>
+            <summary data-i18n="ai.photoToggle">+ Attach a face photo to the PDF too? (optional)</summary>
             <div class="upload-slot" style="margin-top:10px">
-              <div class="upload-slot-top"><span class="upload-slot-name">Face Photo<span class="upload-slot-state" id="state-photo">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-photo" style="display:none" onclick="removeDoc('photo')">✕ Remove</button></div>
-              <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
+              <div class="upload-slot-top"><span class="upload-slot-name" data-i18n="ai.facePhoto">Face Photo</span><span class="upload-slot-state" id="state-photo" data-i18n="ai.notUploaded">Not uploaded</span><button type="button" class="doc-remove-btn" id="remove-photo" style="display:none" onclick="removeDoc('photo')" data-i18n="ai.remove">✕ Remove</button></div>
+              <div class="doc-input-row">
+                <label class="btn-camera" for="file-photo-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                <input type="file" accept="image/*" capture="user" id="file-photo-camera" onchange="handlePhotoUpload(this.files[0])">
+                <label class="btn-choose" for="file-photo-file" data-i18n="ai.chooseFile">📁 Choose file</label>
+                <input type="file" accept="image/*" id="file-photo-file" onchange="handlePhotoUpload(this.files[0])">
+              </div>
               <div class="doc-preview-wrap" id="preview-photo"></div>
             </div>
-            <label class="pro-attach-chk" style="margin-top:10px"><input type="checkbox" id="attachDocsChk"> Attach uploaded documents &amp; photo as extra pages in the final PDF</label>
+            <label class="pro-attach-chk" style="margin-top:10px"><input type="checkbox" id="attachDocsChk"> <span data-i18n="ai.attachChk">Attach uploaded documents &amp; photo as extra pages in the final PDF</span></label>
           </details>
 
           <div class="status" id="proStatus" role="status"></div>
@@ -228,28 +257,28 @@
 
         <div class="ai-box-summary" id="aiBoxSummary" style="display:none" onclick="showAiBoxPicker()">
           <span id="aiBoxSummaryText"></span>
-          <span class="ai-box-summary-more">dekho / aur jodo →</span>
+          <span class="ai-box-summary-more" data-i18n="ai.summaryMore">view / add more →</span>
         </div>
 
-        <p class="ai-box-free-line" id="aiBoxFreeLine">— ya neeche khud bhar lo, free —</p>
+        <p class="ai-box-free-line" id="aiBoxFreeLine" data-i18n="ai.freeLine">— or fill it in yourself below, free —</p>
       </div>
 
       <!-- Add Forms — desktop dropdown / mobile bottom sheet -->
       <div class="add-forms-panel" id="addFormsPanel" style="display:none">
         <div class="add-forms-panel-head">
-          <h4>Add forms</h4>
+          <h4 data-i18n="addforms.title">Add forms</h4>
           <button type="button" class="modal-close" onclick="toggleAddFormsPanel()">&times;</button>
         </div>
         <div class="fset">
-          <h4>Doing something else instead?</h4>
+          <h4 data-i18n="addforms.switchTitle">Doing something else instead?</h4>
           <div class="bundle-wrap" id="bundleWrap"></div>
         </div>
         <div class="fset" id="addMoreFset" style="display:none">
-          <h4>Suggested — often needed together</h4>
+          <h4 data-i18n="addforms.suggestTitle">Suggested — often needed together</h4>
           <div class="suggest-list" id="suggestList"></div>
         </div>
         <div class="fset" id="allFormsFset">
-          <h4>All forms</h4>
+          <h4 data-i18n="addforms.allTitle">All forms</h4>
           <div class="type-tabs" id="typeTabs"></div>
           <div class="picks" id="picksWrap"></div>
         </div>
@@ -259,10 +288,10 @@
       <div id="dynFields"></div>
 
       <div class="bottom-actions">
-        <button type="button" class="btn-preview" id="previewBtn" onclick="generatePDF(false,'preview')">Preview</button>
+        <button type="button" class="btn-preview" id="previewBtn" onclick="generatePDF(false,'preview')" data-i18n="bottom.preview">Preview</button>
         <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate PDF — Download</button>
       </div>
-      <p class="blank-forms-link"><button type="button" class="link-btn" id="blankBtn" onclick="generatePDF(true)">Blank form chahiye? Empty PDF download karo</button> · <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote">select forms above</span></span></p>
+      <p class="blank-forms-link"><button type="button" class="link-btn" id="blankBtn" onclick="generatePDF(true)" data-i18n="bottom.blankLink">Need a blank form? Download the empty PDF</button> · <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote" data-i18n="catalog.selectAbove">select forms above</span></span></p>
       <div class="status" id="statusMsg" role="status"></div>
 
     </div>
@@ -368,6 +397,7 @@
      Everything else on this page is the SAME shared code the homepage
      uses — no logic is duplicated here, only this one line differs. -->
 <script>window.TASK='duplicate-rc';</script>
+<script src="/i18n.js"></script>
 <script src="/field-mapping.js"></script>
 <script src="/pdf-generate.js"></script>
 <script src="/forms-data.js"></script>
@@ -376,19 +406,19 @@
 <div class="modal-overlay" id="proBuyModal" style="display:none">
   <div class="modal-box">
     <div class="modal-head">
-      <h3>Add Money to Wallet</h3>
+      <h3 data-i18n="modal.buyTitle">Add Money to Wallet</h3>
       <button type="button" class="modal-close" onclick="closeBuyModal()">&times;</button>
     </div>
-    <p class="modal-sub">UPI / card se turant add ho jayega — koi wait nahi. ₹5 per document extraction katega.</p>
+    <p class="modal-sub" data-i18n="modal.buySub">Instant via UPI / card — no waiting. ₹5 is charged per document extraction.</p>
     <div class="pack-grid">
-      <button type="button" class="pack-card" onclick="startPayment(50)"><span class="pack-n">₹50</span><span class="pack-l">10 extractions</span></button>
-      <button type="button" class="pack-card" onclick="startPayment(100)"><span class="pack-n">₹100</span><span class="pack-l">20 extractions</span></button>
-      <button type="button" class="pack-card" onclick="startPayment(200)"><span class="pack-n">₹200</span><span class="pack-l">40 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(50)"><span class="pack-n">₹50</span><span class="pack-l" data-i18n="modal.extractions10">10 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(100)"><span class="pack-n">₹100</span><span class="pack-l" data-i18n="modal.extractions20">20 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(200)"><span class="pack-n">₹200</span><span class="pack-l" data-i18n="modal.extractions40">40 extractions</span></button>
     </div>
-    <label class="modal-code-lbl">Ya custom amount</label>
+    <label class="modal-code-lbl" data-i18n="modal.orCustom">Or a custom amount</label>
     <div class="modal-code-in">
-      <input type="number" id="customAmountInput" placeholder="e.g. 150" min="1" class="mono">
-      <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))">Pay</button>
+      <input type="number" id="customAmountInput" min="1" class="mono" data-i18n-placeholder="modal.amountPlaceholder" placeholder="e.g. 150">
+      <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))" data-i18n="modal.pay">Pay</button>
     </div>
     <div class="status" id="proCodeStatus"></div>
   </div>
@@ -397,39 +427,39 @@
 <div class="modal-overlay" id="settingsModal" style="display:none">
   <div class="modal-box">
     <div class="modal-head">
-      <h3>Settings</h3>
+      <h3 data-i18n="modal.settingsTitle">Settings</h3>
       <button type="button" class="modal-close" onclick="closeSettingsModal()">&times;</button>
     </div>
-    <p class="modal-sub">Ye preferences is browser mein save ho jaati hain — agli baar site khologe to automatically apply hongi (abhi ki selection change nahi hogi).</p>
+    <p class="modal-sub" data-i18n="modal.settingsSub">These preferences are saved in this browser.</p>
 
     <div class="settings-section">
-      <h4>Site kholne par default kya selected ho?</h4>
+      <h4 data-i18n="modal.defaultTitle">What should be selected by default when the site opens?</h4>
       <div class="settings-radio-list" id="settingsDefaultBundle"></div>
     </div>
 
     <div class="settings-section">
-      <h4>Ye forms hamesha extra include karo</h4>
-      <p class="pick-note" style="margin-top:-4px">Upar wale default ke saath-saath, ye bhi hamesha check rahenge — jaise Money Receipt ya Delivery Note.</p>
+      <h4 data-i18n="modal.alwaysTitle">Always include these forms</h4>
+      <p class="pick-note" style="margin-top:-4px" data-i18n="modal.alwaysSub">Alongside whichever default you pick above, these stay checked too.</p>
       <div id="settingsAlwaysInclude"></div>
     </div>
 
     <div class="settings-section">
-      <h4>PDF font style</h4>
+      <h4 data-i18n="modal.fontTitle">PDF font style</h4>
       <div class="settings-radio-list">
-        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontHelvetica" value="helvetica" checked onchange="setPdfFont(this.value)"> Helvetica <span style="color:var(--txt-3);font-size:11.5px">(default)</span></label>
-        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontTimes" value="times" onchange="setPdfFont(this.value)"> Times New Roman</label>
-        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontCourier" value="courier" onchange="setPdfFont(this.value)"> Courier</label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontHelvetica" value="helvetica" checked onchange="setPdfFont(this.value)"> <span data-i18n="modal.fontHelvetica">Helvetica</span> <span style="color:var(--txt-3);font-size:11.5px" data-i18n="modal.fontDefault">(default)</span></label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontTimes" value="times" onchange="setPdfFont(this.value)"> <span data-i18n="modal.fontTimes">Times New Roman</span></label>
+        <label class="pro-radio"><input type="radio" name="pdfFont" id="pdfFontCourier" value="courier" onchange="setPdfFont(this.value)"> <span data-i18n="modal.fontCourier">Courier</span></label>
       </div>
     </div>
 
-    <button type="button" class="settings-reset" onclick="resetUserPrefs()">Reset all settings</button>
+    <button type="button" class="settings-reset" onclick="resetUserPrefs()" data-i18n="modal.reset">Reset all settings</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="pdfPreviewModal" style="display:none">
   <div class="pdf-preview-box">
     <div class="pdf-preview-head">
-      <h3>Preview — nothing downloaded yet</h3>
+      <h3 data-i18n="preview.title">Preview — nothing downloaded yet</h3>
       <button type="button" class="modal-close" onclick="closePdfPreview()">&times;</button>
     </div>
     <iframe class="pdf-preview-frame" id="pdfPreviewFrame" title="PDF preview"></iframe>
