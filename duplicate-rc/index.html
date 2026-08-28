@@ -93,182 +93,176 @@
   </div>
 </header>
 
-<!-- ════════ HERO ════════ -->
-<section class="hero" id="top">
-  <div class="hero-in">
-    <div class="hero-eyebrow">// Duplicate RC</div>
-    <h1>Duplicate RC form.<br>Filled online, <span class="accent">print-ready</span> in minutes.</h1>
-    <p class="hero-sub">Form 26 — apply for a duplicate Registration Certificate if yours is lost, torn or mutilated. One set of details, one print-ready A4 PDF in the official CMVR format. No login, forms free.</p>
-    <div class="hero-cta">
-      <a href="#tool" class="btn-stamp">Start filling form</a>
-      <a href="/" class="btn-ghost">Browse all 31 forms</a>
+<!-- ════════ TASK HEAD (compact — replaces the big hero on this task page; hero itself stays on / only) ════════ -->
+<section class="task-head" id="top">
+  <div class="task-head-in">
+    <div class="task-head-text">
+      <h1>Duplicate RC</h1>
+      <p>Form 26 — ek print-ready PDF mein</p>
     </div>
-    <div class="hero-stats">
-      <div class="hstat"><span class="n">1</span><span class="l">Form in this package</span></div>
-      <div class="hstat"><span class="n">~2 min</span><span class="l">To fill</span></div>
-      <div class="hstat"><span class="n">₹0</span><span class="l">Completely free</span></div>
-      <div class="hstat"><span class="n">0</span><span class="l">Login required</span></div>
+    <div class="task-head-actions">
+      <button type="button" class="btn-add-forms" onclick="toggleAddFormsPanel()">+ Add forms</button>
+      <button type="button" class="icon-btn-ghost" onclick="openSettingsModal()" aria-label="Settings" title="Settings">⚙</button>
     </div>
   </div>
 </section>
 
-<!-- ════════ TOOL: RC RENEWAL ════════ -->
-<section class="sec" id="tool">
-  <div class="sec-eyebrow">Live tool</div>
-  <h2 class="sec-title">Fill your duplicate RC form</h2>
-  <p class="sec-sub">Form 26 is already selected below — just fill in the details. Need something else too? Add more forms or open the full list, no extra charge either way.</p>
-
+<!-- ════════ TOOL ════════ -->
+<section class="sec sec-wide task-tool" id="tool">
   <div class="tool-wrap">
-    <div class="tool-head">
-      <div class="tool-head-l">
-        <span class="tool-badge">LIVE</span>
-        <div>
-          <h3>Duplicate RC — Form 26</h3>
-          <p>Apply for a duplicate Registration Certificate — one print-ready PDF</p>
-        </div>
-      </div>
-      <div class="tool-forms">
-        <span class="tf-chip">1 FORM PRE-SELECTED</span>
-        <span class="tf-chip">ONE PDF OUTPUT</span>
-        <button type="button" class="tf-chip" onclick="openSettingsModal()">⚙ Settings</button>
-      </div>
-    </div>
-
     <div class="tool-body">
 
       <div id="restoreNotice"></div>
 
-      <div class="fset">
-        <div class="fset-label"><span class="fset-num">0</span><h4>Doing something else instead?</h4></div>
-        <div class="bundle-wrap" id="bundleWrap"></div>
-        <p class="pick-note">Ek aur task chuno to related forms badal jaayenge. Ya neeche "Saare 31 forms" khol ke manually koi bhi combination choose karo.</p>
-      </div>
+      <button type="button" class="add-forms-line-mobile" onclick="toggleAddFormsPanel()">+ Aur forms chahiye?</button>
 
-      <div class="fset" id="fullFormPicker">
-        <div class="fset-label"><span class="fset-num">1</span><h4>Forms to include in the PDF</h4></div>
-        <div class="type-tabs" id="typeTabs"></div>
-        <div class="picks" id="picksWrap"></div>
-        <p class="pick-note">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms (across categories) and every needed field is added once, shared across all of them.</p>
-      </div>
-      <button type="button" class="picker-toggle-line" id="pickerToggleLine" onclick="toggleFullPicker()" style="display:none">Saare 31 forms dekho ↓</button>
-
-      <div class="fset" id="addMoreFset" style="display:none">
-        <div class="fset-label"><span class="fset-num">+</span><h4>Add more forms — often needed together</h4></div>
-        <div class="suggest-list" id="suggestList"></div>
-        <p class="pick-note">Same details se fill hote hain — add karne ka koi extra charge nahi.</p>
-      </div>
-
-      <div class="fset pro-panel" id="proPanel">
-        <div class="fset-label">
-          <span class="fset-num pro-num">AI</span>
-          <h4>Auto-fill from documents <span class="pro-tag">PRO</span></h4>
+      <!-- AI box: cta → picker → collapsed summary, one state visible at a time -->
+      <div class="ai-box" id="aiBox">
+        <div class="ai-box-cta" id="aiBoxCta">
+          <span class="ai-box-cta-icon">⚡</span>
+          <div class="ai-box-cta-text">
+            <h4>AI se bhar do</h4>
+            <p>RC ki photo daalo — fields khud bhar jaayenge, typing nahi karni padegi</p>
+          </div>
+          <button type="button" class="btn-stamp" onclick="showAiBoxPicker()">Shuru karo</button>
         </div>
-        <p class="pick-note">Aadhaar / PAN / RC ki clear photo upload karo — naam, address, reg. no, chassis/engine no. jaisi details apne aap fields mein fill ho jayengi. Har extraction ₹5 leta hai.</p>
-        <p class="pro-context" id="proContext"></p>
 
-        <div class="pro-toprow" style="justify-content:flex-end">
-          <div class="pro-credits">
+        <div class="ai-box-picker" id="aiBoxPicker" style="display:none">
+          <div class="ai-box-picker-head"><h4>Kaunse document aapke paas hain?</h4></div>
+
+          <label class="consent-chk" for="uploadConsentChk">
+            <input type="checkbox" id="uploadConsentChk" onchange="onConsentChange()">
+            <span>Main confirm karta/karti hoon ki main is document (Aadhaar/PAN/RC) ka authorized user hoon. Main samajhta/samajhti hoon ki iski photo, extraction ke liye Google Gemini API ko bheji jaati hai aur hamare server par store nahi hoti — <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a> padh li hai.</span>
+          </label>
+
+          <p class="fld-hint" id="docSlotEmptyNote" style="display:none">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
+
+          <div class="upload-grid" id="docSlotGrid">
+            <div class="upload-slot" id="docSlot-rc">
+              <div class="upload-slot-top"><span class="upload-slot-name">RC</span><span class="upload-slot-state" id="state-rc">Not uploaded</span></div>
+              <p class="doc-role-note">RC se seller ki details bharenge</p>
+              <p class="consent-hint" id="consentHint-rc">Upload karne ke liye upar consent dein ↑</p>
+              <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" disabled onchange="handleFileSelect('rc', this.files[0])">
+              <div class="doc-preview-wrap" id="preview-rc"></div>
+              <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
+              <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
+            </div>
+
+            <div class="upload-slot" id="docSlot-aadhaar">
+              <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar</span><span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></div>
+              <div class="doc-role-row" id="docRole-aadhaar" style="display:none">
+                <span class="doc-role-lbl">Kiska hai?</span>
+                <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> Seller</label>
+                <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> Buyer</label>
+              </div>
+              <p class="consent-hint" id="consentHint-aadhaar">Upload karne ke liye upar consent dein ↑</p>
+              <div class="aadhaar-two-col">
+                <div>
+                  <span class="fld-hint">Front side</span>
+                  <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-front" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
+                  <div class="doc-preview-wrap" id="preview-aadhaar_front"></div>
+                  <div class="pdf-page-picker" id="pages-aadhaar_front" style="display:none"></div>
+                </div>
+                <div>
+                  <span class="fld-hint">Back side (optional)</span>
+                  <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-back" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
+                  <div class="doc-preview-wrap" id="preview-aadhaar_back"></div>
+                  <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
+                </div>
+              </div>
+              <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="retryDoc('aadhaar')">Retry Aadhaar (₹5)</button>
+            </div>
+
+            <div class="upload-slot" id="docSlot-pan">
+              <div class="upload-slot-top"><span class="upload-slot-name">PAN</span><span class="upload-slot-state" id="state-pan">Not uploaded</span></div>
+              <div class="doc-role-row" id="docRole-pan" style="display:none">
+                <span class="doc-role-lbl">Kiska hai?</span>
+                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> Seller</label>
+                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> Buyer</label>
+              </div>
+              <p class="consent-hint" id="consentHint-pan">Upload karne ke liye upar consent dein ↑</p>
+              <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-pan" disabled onchange="handleFileSelect('pan', this.files[0])">
+              <div class="doc-preview-wrap" id="preview-pan"></div>
+              <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
+              <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="retryDoc('pan')">Retry PAN (₹5)</button>
+            </div>
+          </div>
+
+          <div class="ai-box-balance-note" id="aiBoxBalanceNote" style="display:none"></div>
+
+          <div class="checkout-box" id="checkoutBox" style="display:none">
+            <div class="checkout-rows" id="checkoutRows"></div>
+            <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()">Pay &amp; Extract</button>
+            <p class="checkout-note">₹5 per document — sirf successful extraction par katta hai, fail hone par kuch nahi katta.</p>
+            <div class="status" id="checkoutResult"></div>
+          </div>
+
+          <div class="pro-credits" style="margin-top:10px">
             <span class="pro-credits-badge" id="proCreditsBadge">₹0.00</span>
             <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()">+ Add Money</button>
           </div>
-        </div>
-        <p class="fld-hint">Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN par kiska document hai wo waheen select karo.</p>
-
-        <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;">Purana wallet is device pe wapas chahiye?</a></p>
-        <div class="pro-wallet-row" id="recoveryForm" style="display:none">
-          <div class="modal-code-in">
-            <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono">
-            <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()">Recovery link bhejo</button>
-          </div>
-          <div class="status" id="walletLinkStatus"></div>
-          <p class="fld-hint">Jis number se payment kiya tha wo daalo — SMS mein ek link aayega, usi phone pe click karo (30 min valid, ek hi baar use hota hai).</p>
-        </div>
-
-        <p class="fld-hint" id="docSlotEmptyNote" style="display:none">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
-
-        <label class="consent-chk" for="uploadConsentChk">
-          <input type="checkbox" id="uploadConsentChk" onchange="onConsentChange()">
-          <span>Main confirm karta/karti hoon ki main is document (Aadhaar/PAN/RC) ka authorized user hoon. Main samajhta/samajhti hoon ki iski photo, extraction ke liye Google Gemini API ko bheji jaati hai aur hamare server par store nahi hoti — <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a> padh li hai.</span>
-        </label>
-
-        <div class="upload-grid" id="docSlotGrid">
-          <div class="upload-slot upload-slot-wide" id="docSlot-aadhaar">
-            <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card</span><span class="upload-slot-state" id="state-aadhaar">Not uploaded</span></div>
-            <div class="doc-role-row" id="docRole-aadhaar" style="display:none">
-              <span class="doc-role-lbl">Kiska hai?</span>
-              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> Seller</label>
-              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> Buyer</label>
+          <p class="pro-context" id="proContext"></p>
+          <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;">Purana wallet is device pe wapas chahiye?</a></p>
+          <div class="pro-wallet-row" id="recoveryForm" style="display:none">
+            <div class="modal-code-in">
+              <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono">
+              <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()">Recovery link bhejo</button>
             </div>
-            <p class="consent-hint" id="consentHint-aadhaar">Upload karne ke liye upar consent dein ↑</p>
-            <div class="aadhaar-two-col">
-              <div>
-                <span class="fld-hint">Front side</span>
-                <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-front" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
-                <div class="doc-preview-wrap" id="preview-aadhaar_front"></div>
-                <div class="pdf-page-picker" id="pages-aadhaar_front" style="display:none"></div>
-              </div>
-              <div>
-                <span class="fld-hint">Back side (optional — for address)</span>
-                <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-aadhaar-back" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
-                <div class="doc-preview-wrap" id="preview-aadhaar_back"></div>
-                <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
-              </div>
+            <div class="status" id="walletLinkStatus"></div>
+            <p class="fld-hint">Jis number se payment kiya tha wo daalo — SMS mein ek link aayega, usi phone pe click karo (30 min valid, ek hi baar use hota hai).</p>
+          </div>
+
+          <details class="extra-photo-block">
+            <summary>+ Face photo bhi attach karni hai PDF mein? (optional)</summary>
+            <div class="upload-slot" style="margin-top:10px">
+              <div class="upload-slot-top"><span class="upload-slot-name">Face Photo</span><span class="upload-slot-state" id="state-photo">Not uploaded</span></div>
+              <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
+              <div class="doc-preview-wrap" id="preview-photo"></div>
             </div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="retryDoc('aadhaar')">Retry Aadhaar (₹5)</button>
-          </div>
+            <label class="pro-attach-chk" style="margin-top:10px"><input type="checkbox" id="attachDocsChk"> Attach uploaded documents &amp; photo as extra pages in the final PDF</label>
+          </details>
 
-          <div class="upload-slot" id="docSlot-pan">
-            <div class="upload-slot-top"><span class="upload-slot-name">PAN Card</span><span class="upload-slot-state" id="state-pan">Not uploaded</span></div>
-            <div class="doc-role-row" id="docRole-pan" style="display:none">
-              <span class="doc-role-lbl">Kiska hai?</span>
-              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> Seller</label>
-              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> Buyer</label>
-            </div>
-            <p class="consent-hint" id="consentHint-pan">Upload karne ke liye upar consent dein ↑</p>
-            <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-pan" disabled onchange="handleFileSelect('pan', this.files[0])">
-            <div class="doc-preview-wrap" id="preview-pan"></div>
-            <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="retryDoc('pan')">Retry PAN (₹5)</button>
-          </div>
-
-          <div class="upload-slot" id="docSlot-rc">
-            <div class="upload-slot-top"><span class="upload-slot-name">RC (Registration Certificate)</span><span class="upload-slot-state" id="state-rc">Not uploaded</span></div>
-            <p class="doc-role-note">RC se seller ki details bharenge</p>
-            <p class="consent-hint" id="consentHint-rc">Upload karne ke liye upar consent dein ↑</p>
-            <input type="file" accept="image/*,.pdf,application/pdf" capture="environment" id="file-rc" disabled onchange="handleFileSelect('rc', this.files[0])">
-            <div class="doc-preview-wrap" id="preview-rc"></div>
-            <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
-          </div>
-
-          <div class="upload-slot">
-            <div class="upload-slot-top"><span class="upload-slot-name">Face Photo (for attachment)</span><span class="upload-slot-state" id="state-photo">Not uploaded</span></div>
-            <input type="file" accept="image/*" capture="user" id="file-photo" onchange="handlePhotoUpload(this.files[0])">
-            <div class="doc-preview-wrap" id="preview-photo"></div>
-          </div>
+          <div class="status" id="proStatus" role="status"></div>
+          <div id="proResults"></div>
         </div>
 
-        <div class="checkout-box" id="checkoutBox" style="display:none">
-          <div class="checkout-rows" id="checkoutRows"></div>
-          <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()">Pay &amp; Extract</button>
-          <p class="checkout-note">₹5 per document — sirf successful extraction par katta hai, fail hone par kuch nahi katta.</p>
-          <div class="status" id="checkoutResult"></div>
+        <div class="ai-box-summary" id="aiBoxSummary" style="display:none" onclick="showAiBoxPicker()">
+          <span id="aiBoxSummaryText"></span>
+          <span class="ai-box-summary-more">dekho / aur jodo →</span>
         </div>
 
-        <label class="pro-attach-chk"><input type="checkbox" id="attachDocsChk"> Attach uploaded documents & photo as extra pages in the final PDF</label>
-
-
-        <div class="status" id="proStatus" role="status"></div>
-        <div id="proResults"></div>
+        <p class="ai-box-free-line" id="aiBoxFreeLine">— ya neeche khud bhar lo, free —</p>
       </div>
+
+      <!-- Add Forms — desktop dropdown / mobile bottom sheet -->
+      <div class="add-forms-panel" id="addFormsPanel" style="display:none">
+        <div class="add-forms-panel-head">
+          <h4>Add forms</h4>
+          <button type="button" class="modal-close" onclick="toggleAddFormsPanel()">&times;</button>
+        </div>
+        <div class="fset">
+          <h4>Doing something else instead?</h4>
+          <div class="bundle-wrap" id="bundleWrap"></div>
+        </div>
+        <div class="fset" id="addMoreFset" style="display:none">
+          <h4>Suggested — often needed together</h4>
+          <div class="suggest-list" id="suggestList"></div>
+        </div>
+        <div class="fset" id="allFormsFset">
+          <h4>All forms</h4>
+          <div class="type-tabs" id="typeTabs"></div>
+          <div class="picks" id="picksWrap"></div>
+        </div>
+      </div>
+      <div class="add-forms-backdrop" id="addFormsBackdrop" style="display:none" onclick="toggleAddFormsPanel()"></div>
 
       <div id="dynFields"></div>
 
-      <div class="gen-row">
-        <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate selected forms — Download PDF</button>
-        <button class="btn-blank" id="blankBtn" onclick="generatePDF(true)">Download blank forms</button>
-        <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote">select forms above</span></span>
+      <div class="bottom-actions">
+        <button type="button" class="btn-preview" id="previewBtn" onclick="generatePDF(false,'preview')">Preview</button>
+        <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate PDF — Download</button>
       </div>
+      <p class="blank-forms-link"><button type="button" class="link-btn" id="blankBtn" onclick="generatePDF(true)">Blank form chahiye? Empty PDF download karo</button> · <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote">select forms above</span></span></p>
       <div class="status" id="statusMsg" role="status"></div>
 
     </div>
@@ -429,6 +423,16 @@
     </div>
 
     <button type="button" class="settings-reset" onclick="resetUserPrefs()">Reset all settings</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pdfPreviewModal" style="display:none">
+  <div class="pdf-preview-box">
+    <div class="pdf-preview-head">
+      <h3>Preview — nothing downloaded yet</h3>
+      <button type="button" class="modal-close" onclick="closePdfPreview()">&times;</button>
+    </div>
+    <iframe class="pdf-preview-frame" id="pdfPreviewFrame" title="PDF preview"></iframe>
   </div>
 </div>
 

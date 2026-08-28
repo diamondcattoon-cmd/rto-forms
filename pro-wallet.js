@@ -296,6 +296,12 @@ function onDocReady(key){
   const stateEl=document.getElementById('state-'+docType);
   stateEl.textContent='Preview ready';
   stateEl.className='upload-slot-state';
+  /* Purely additive visual cue ("this card is ready") — harmless on the
+     root page too (no CSS targets .ready outside the task-page v2 layout,
+     see .ai-box-picker .upload-slot.ready in style.css), but added
+     unconditionally here since it's the same slot element either way. */
+  const slotEl=document.getElementById('docSlot-'+docType);
+  if(slotEl) slotEl.classList.add('ready');
   updateCheckoutBox();
 }
 
@@ -370,6 +376,61 @@ function updateCheckoutBox(lastRun){
   } else {
     resultEl.textContent=''; resultEl.className='status';
   }
+
+  updateAiBoxBalanceNote();
+}
+
+/* ── AI box (task-page v2 layout only) ──
+   #aiBox and its three state children (#aiBoxCta/#aiBoxPicker/#aiBoxSummary)
+   only exist on a rewritten task page — every function below starts with a
+   missing-element guard, so on the root page or a not-yet-rewritten task
+   page this whole block is inert dead code, never called from anywhere. */
+function setAiBoxState(state){
+  const cta=document.getElementById('aiBoxCta');
+  const picker=document.getElementById('aiBoxPicker');
+  const summary=document.getElementById('aiBoxSummary');
+  const freeLine=document.getElementById('aiBoxFreeLine');
+  if(!cta || !picker || !summary) return;
+  cta.style.display = state==='cta' ? '' : 'none';
+  picker.style.display = state==='picker' ? '' : 'none';
+  summary.style.display = state==='summary' ? '' : 'none';
+  if(freeLine) freeLine.style.display = state==='summary' ? 'none' : '';
+}
+function showAiBoxPicker(){ setAiBoxState('picker'); }
+
+/* Shows current wallet balance + a top-up shortcut inline in the picker box
+   the moment it's clear the balance won't cover every ready-to-extract
+   document — instead of only finding out after clicking "Pay & Extract"
+   and hitting runExtraction()'s balance guard. Opens the SAME "Add Money"
+   modal that guard already uses (openBuyModal()) — Razorpay itself never
+   opens until a package is picked inside that modal, so this doesn't skip
+   the "our modal first, Razorpay second" gate that already exists. */
+function updateAiBoxBalanceNote(){
+  const el=document.getElementById('aiBoxBalanceNote');
+  if(!el) return;
+  const n=computeReadyDocs().length;
+  if(!n){ el.style.display='none'; return; }
+  const totalPaise=n*500;
+  if(PRO.balancePaise>=totalPaise){ el.style.display='none'; return; }
+  el.style.display='flex';
+  el.innerHTML='<span>Aapke paas ₹'+(PRO.balancePaise/100).toFixed(0)+' hai</span><button type="button" class="btn-blank" onclick="openBuyModal()">+ ₹50 add karo</button>';
+}
+
+/* Collapses the AI box to its one-line summary — only on a batch that
+   finished cleanly (nothing failed, balance didn't run out) — a partial
+   result stays in the picker view so the Retry button and per-document
+   status are still visible instead of being hidden behind a "done" line
+   that isn't quite true yet. Clicking the summary re-opens the picker
+   (see the onclick on #aiBoxSummary in the task page's HTML). */
+function collapseAiBoxToSummary(){
+  const el=document.getElementById('aiBoxSummaryText');
+  if(!el) return;
+  const n=EXTRACTED_SET.size;
+  if(!n) return;
+  const need=new Set(typeof PICKS!=='undefined' ? PICKS.filter(p=>CHECKED[p.id]).flatMap(p=>p.fields||[]) : []);
+  const filled=[...need].filter(f=>FIELD_SOURCE[f] && EXTRACTED_SET.has(FIELD_SOURCE[f])).length;
+  el.textContent=n+' document'+(n>1?'s':'')+' se '+filled+' field'+(filled===1?'':'s')+' bhare ✓';
+  setAiBoxState('summary');
 }
 
 /* The "Pay & Extract" button: runs every ready document through
@@ -393,6 +454,7 @@ async function startCombinedExtraction(){
   }
   payBtn.disabled=false;
   updateCheckoutBox({succeeded, failed, stoppedOnBalance});
+  if(succeeded>0 && !failed && !stoppedOnBalance) collapseAiBoxToSummary();
 }
 
 /* Per-document Retry button (shown only after that specific document

@@ -19,6 +19,7 @@
   --amber:#BA7517;      /* AI auto-filled, NOT yet reviewed — "please check this" */
   --amber-soft:#FFF4E0;
   --line:#D8D2C4;       /* form rule lines */
+  --line-soft:#EAE5D9;  /* very light card border — catalog grid */
   --txt:#1C2434;
   --txt-2:#5B6478;
   --txt-3:#9AA1B2;
@@ -26,7 +27,11 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--txt);line-height:1.6;font-size:15px}
+/* Page background is near-white — var(--paper)'s warm cream stays reserved
+   for smaller surfaces (inputs, unselected pills, the tool-head strip)
+   where it signals "editable" against white cards, not as the page's own
+   backdrop, which would compete with those cards instead of setting them off. */
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--txt);line-height:1.6;font-size:15px}
 .mono{font-family:'IBM Plex Mono',monospace}
 
 /* ─── dotted-line motif (from real RTO forms) ─── */
@@ -34,7 +39,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 
 /* ─── HEADER ─── */
 .hdr{background:var(--ink);position:sticky;top:0;z-index:200;box-shadow:0 1px 0 rgba(255,255,255,.08)}
-.hdr-in{max-width:1080px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.hdr-in{max-width:1600px;margin:0 auto;padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:11px;text-decoration:none}
 .brand-mark{width:38px;height:38px;background:var(--stamp);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;color:#fff;letter-spacing:-.5px;transform:rotate(-3deg)}
 .brand-txt{color:#fff;font-weight:600;font-size:16px;letter-spacing:.2px}
@@ -65,13 +70,22 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 @media(max-width:620px){.hstat{padding:14px 20px 18px 0}.hstat+.hstat{padding-left:20px}.hstat .n{font-size:20px}}
 
 /* ─── SECTION SHELL ─── */
-.sec{max-width:1080px;margin:0 auto;padding:60px 20px}
+.sec{max-width:1080px;margin:0 auto;padding:96px 20px}
+@media(max-width:680px){.sec{padding:56px 20px}}
+/* Wide variant — for interactive/working sections (the fill tool,
+   forms catalog) so they use the screen the way iLovePDF does, instead of
+   sitting in the same 1080px reading column as prose sections (hero, FAQ,
+   legal pages), which stay narrow for readability. Combine as
+   class="sec sec-wide" — must be declared after .sec so its max-width/
+   padding win at equal specificity. */
+.sec-wide{max-width:1600px;padding-left:32px;padding-right:32px}
+@media(max-width:680px){.sec-wide{padding-left:20px;padding-right:20px}}
 .sec-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--stamp);margin-bottom:10px}
 .sec-title{font-size:clamp(22px,3.4vw,30px);font-weight:700;letter-spacing:-.5px;line-height:1.2}
-.sec-sub{color:var(--txt-2);margin-top:8px;max-width:600px;font-size:15px}
+.sec-sub{color:var(--txt-2);margin-top:12px;max-width:600px;font-size:15px}
 
 /* ─── TOOL CARD (vehicle transfer) ─── */
-.tool-wrap{background:var(--white);border:1px solid var(--line);border-radius:14px;margin-top:30px;overflow:hidden;box-shadow:0 2px 16px rgba(20,40,80,.05)}
+.tool-wrap{background:var(--white);border:1px solid var(--line);border-radius:14px;margin-top:40px;overflow:hidden;box-shadow:0 2px 16px rgba(20,40,80,.05)}
 .tool-head{background:var(--paper-2);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .tool-head-l{display:flex;align-items:center;gap:14px}
 .tool-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:1px;background:var(--approve);color:#fff;padding:4px 10px;border-radius:4px;transform:rotate(-2deg)}
@@ -132,7 +146,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .restore-notice .rn-dismiss:hover{background:rgba(26,122,74,.12)}
 
 /* ─── FORMS CATALOG ─── */
-.search-row{margin:26px 0 0}
+.search-row{margin:32px 0 0}
 .form-search{width:100%;max-width:520px;padding:12px 16px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--white);transition:border-color .15s}
 .form-search:focus{outline:none;border-color:var(--ink)}
 .form-search::placeholder{color:var(--txt-3)}
@@ -140,27 +154,22 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .cat-tab{font-family:inherit;font-size:13px;font-weight:500;padding:8px 18px;border-radius:24px;border:1.5px solid var(--line);background:var(--white);color:var(--txt-2);cursor:pointer;transition:all .15s}
 .cat-tab:hover{border-color:var(--ink);color:var(--ink)}
 .cat-tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
-.forms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-@media(max-width:520px){.forms-grid{grid-template-columns:1fr 1fr;gap:10px}}
+.forms-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
 
-/* file-folder style form cards */
-.fcard{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:0;cursor:pointer;transition:all .18s;position:relative;overflow:visible;display:flex;flex-direction:column}
-.fcard:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(20,40,80,.1);border-color:var(--ink)}
-.fcard-tab{position:absolute;top:-9px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.8px;background:var(--ink);color:#fff;padding:3px 11px;border-radius:4px}
-.fcard.is-live .fcard-tab{background:var(--approve)}
-.fcard-body{padding:24px 16px 14px}
-.fcard-name{font-size:13.5px;font-weight:600;line-height:1.4;min-height:38px}
-.fcard-desc{font-size:11.5px;color:var(--txt-2);margin-top:4px;line-height:1.45}
-.fcard-foot{padding:10px 16px;border-top:1px dotted var(--line);display:flex;align-items:center;justify-content:space-between;margin-top:auto}
-.fcard-status{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase}
-.fcard.is-live .fcard-status{color:var(--approve)}
-.fcard:not(.is-live) .fcard-status{color:var(--txt-3)}
-.fcard-links{display:flex;gap:8px;align-items:center}
-.pdf-link{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.4px;color:var(--stamp);text-decoration:none;border-bottom:1px dotted var(--stamp);padding-bottom:1px;transition:all .15s}
-.pdf-link:hover{color:var(--ink);border-bottom-color:var(--ink)}
+/* iLovePDF-style tool card: icon, bold title, short grey description —
+   nothing else. The live/PDF-only distinction (previously a text status
+   row) is now carried by the icon's opacity so the card face stays to
+   just those three elements; click behaviour is unchanged either way
+   (fillNow vs openOfficial — see ui.js renderForms). */
+.fcard{background:var(--white);border:1px solid var(--line-soft);border-radius:12px;padding:24px;cursor:pointer;transition:border-color .15s;display:flex;flex-direction:column;gap:10px}
+.fcard:hover{border-color:var(--line)}
+.fcard-icon{font-size:26px;line-height:1}
+.fcard:not(.is-live) .fcard-icon{opacity:.5}
+.fcard-name{font-size:14.5px;font-weight:700;color:var(--txt);line-height:1.35}
+.fcard-desc{font-size:12.5px;color:var(--txt-2);line-height:1.55}
 
 /* ─── HOW IT WORKS ─── */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:30px;border:1px solid var(--line);border-radius:12px;background:var(--white);overflow:hidden}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:36px;border:1px solid var(--line);border-radius:12px;background:var(--white);overflow:hidden}
 @media(max-width:680px){.steps{grid-template-columns:1fr}}
 .step{padding:28px 24px;position:relative}
 .step+.step{border-left:2px dotted var(--line)}
@@ -170,7 +179,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 .step p{font-size:13px;color:var(--txt-2);line-height:1.6}
 
 /* ─── FAQ ─── */
-.faq-list{margin-top:26px;display:flex;flex-direction:column;gap:10px;max-width:760px}
+.faq-list{margin-top:32px;display:flex;flex-direction:column;gap:12px;max-width:760px}
 .faq{background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .faq summary{padding:15px 18px;font-weight:600;font-size:14.5px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .faq summary::after{content:'+';font-family:'IBM Plex Mono',monospace;font-size:18px;color:var(--stamp);flex-shrink:0;transition:transform .2s}
@@ -181,7 +190,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
 
 /* ─── FOOTER ─── */
 .ftr{background:var(--ink);color:rgba(255,255,255,.6);margin-top:40px}
-.ftr-in{max-width:1080px;margin:0 auto;padding:36px 20px 28px}
+.ftr-in{max-width:1600px;margin:0 auto;padding:36px 32px 28px}
 .ftr-top{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:24px;border-bottom:2px dotted rgba(255,255,255,.15)}
 .ftr-brand{font-weight:600;color:#fff;font-size:15px}
 .ftr-brand small{display:block;font-weight:400;font-size:12px;color:rgba(255,255,255,.45);margin-top:4px;max-width:300px;line-height:1.6}
@@ -409,5 +418,97 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
    31-form catalog, while staying one click away, never a dead end. */
 .picker-toggle-line{display:block;width:100%;text-align:left;font-family:inherit;font-size:13px;font-weight:600;color:var(--stamp);background:none;border:none;border-top:1px dashed var(--line);padding:12px 0 0;margin:-10px 0 20px;cursor:pointer}
 .picker-toggle-line:hover{color:var(--ink)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TASK-PAGE TOOL LAYOUT v2 — compact head, AI-first box, wide field grid.
+   Everything below is scoped to elements that ONLY exist on a rewritten
+   task page (.task-head, .task-tool, #aiBox, #addFormsPanel, etc.) — the
+   root index.html and any not-yet-rewritten task page never render these
+   ids/classes, so none of this can change how they look. Where a rule
+   touches a class shared with the old layout (.grid2), it's nested under
+   .task-tool so the old, unscoped .grid2 rule still wins everywhere else. ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── compact 2-line task head (replaces .hero on a rewritten task page) ─── */
+.task-head{background:var(--ink);padding:34px 20px}
+.task-head-in{max-width:1600px;margin:0 auto;padding:0 32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.task-head-text h1{color:#fff;font-size:26px;font-weight:700;letter-spacing:-.3px}
+.task-head-text p{color:rgba(255,255,255,.65);font-size:14.5px;margin-top:4px}
+.task-head-actions{display:flex;align-items:center;gap:8px}
+.btn-add-forms{font-family:inherit;font-weight:600;font-size:13.5px;color:#fff;background:var(--stamp);border:none;border-radius:8px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn-add-forms:hover{background:#c03f1a}
+.icon-btn-ghost{font-family:inherit;font-size:15px;color:rgba(255,255,255,.8);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;width:38px;height:38px;cursor:pointer;flex-shrink:0}
+.icon-btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.add-forms-line-mobile{display:none}
+@media(max-width:680px){
+  .task-head-text h1{font-size:22px}
+  .btn-add-forms{display:none}
+}
+
+/* ─── wide field grid (3 → 2 → 1 columns), scoped to a rewritten task page's #tool ─── */
+.task-tool .tool-wrap{margin-top:0}
+.task-tool .grid2{grid-template-columns:1fr}
+@media(min-width:1100px){.task-tool .grid2{grid-template-columns:1fr 1fr}}
+@media(min-width:1400px){.task-tool .grid2{grid-template-columns:1fr 1fr 1fr}}
+
+/* ─── AI box: three states (cta / picker / summary), one visible at a time ─── */
+.ai-box{border:1.5px solid var(--stamp);border-radius:14px;background:linear-gradient(180deg,var(--stamp-soft) 0%,var(--white) 160px);padding:22px 24px;margin-bottom:8px}
+.ai-box-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ai-box-cta-icon{font-size:28px;flex-shrink:0}
+.ai-box-cta-text{flex:1;min-width:220px}
+.ai-box-cta-text h4{font-size:16.5px;font-weight:700;color:var(--ink)}
+.ai-box-cta-text p{font-size:13px;color:var(--txt-2);margin-top:3px}
+.ai-box-free-line{text-align:center;font-size:12px;color:var(--txt-3);margin-top:14px}
+@media(max-width:560px){
+  .ai-box-cta{flex-direction:column;align-items:stretch;text-align:center}
+  .ai-box-cta .btn-stamp{justify-content:center}
+}
+
+.ai-box-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:4px 2px}
+.ai-box-summary span:first-child{font-size:14px;font-weight:600;color:var(--approve)}
+.ai-box-summary-more{font-size:12.5px;color:var(--stamp);white-space:nowrap}
+
+.ai-box-picker-head{margin-bottom:14px}
+.ai-box-picker-head h4{font-size:15.5px;font-weight:700;color:var(--ink)}
+.ai-box-picker .consent-chk{background:var(--paper)}
+.ai-box-picker .upload-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.ai-box-picker .upload-slot-wide{grid-column:auto}
+.ai-box-picker .upload-slot-name{font-size:15px;font-weight:700}
+.ai-box-picker .upload-slot{border-width:1.5px;transition:border-color .15s}
+.ai-box-picker .upload-slot.ready{border-color:var(--approve);background:var(--approve-soft)}
+.ai-box-balance-note{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--white);border:1px solid var(--stamp);border-radius:8px;padding:9px 12px;margin:10px 0;font-size:13px;color:var(--txt)}
+.ai-box-balance-note button{flex-shrink:0;padding:8px 14px;font-size:12.5px}
+.ai-box-picker .checkout-box{border-color:var(--line)}
+.extra-photo-block{margin-top:14px;font-size:12.5px;color:var(--txt-2)}
+.extra-photo-block summary{cursor:pointer;font-weight:600;color:var(--txt-2)}
+.extra-photo-block[open] summary{margin-bottom:10px}
+
+/* ─── Add Forms — desktop dropdown, mobile bottom sheet ─── */
+.add-forms-backdrop{position:fixed;inset:0;background:rgba(20,40,80,.35);z-index:399}
+.add-forms-panel{position:fixed;top:78px;right:max(32px,calc(50vw - 768px));width:400px;max-width:calc(100vw - 40px);max-height:calc(100vh - 100px);overflow-y:auto;background:#fff;border-radius:14px;box-shadow:0 16px 48px rgba(20,40,80,.25);z-index:400;padding:18px 20px 22px}
+.add-forms-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.add-forms-panel-head h4{font-size:15.5px;font-weight:700}
+.add-forms-panel .fset{margin-bottom:20px}
+.add-forms-panel .fset:last-child{margin-bottom:4px}
+.add-forms-panel .fset>h4{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--txt-2);margin-bottom:10px}
+@media(max-width:680px){
+  .add-forms-line-mobile{display:block;width:100%;text-align:left;font-family:inherit;font-weight:600;font-size:13.5px;color:var(--stamp);background:var(--stamp-soft);border:1px dashed var(--stamp);border-radius:8px;padding:11px 14px;cursor:pointer;margin-bottom:16px}
+  .add-forms-panel{top:auto;bottom:0;left:0;right:0;width:auto;max-width:none;max-height:85vh;border-radius:16px 16px 0 0;padding:16px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+}
+body.no-scroll{overflow:hidden}
+
+/* ─── bottom actions: Preview + Generate ─── */
+.bottom-actions{display:flex;gap:12px;flex-wrap:wrap;padding-top:8px;border-top:2px dotted var(--line);margin-top:6px;padding-top:22px}
+.bottom-actions .btn-generate{flex:1 1 auto;justify-content:center}
+.btn-preview{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--white);color:var(--ink);font-weight:600;font-size:15px;padding:15px 26px;border-radius:9px;border:1.5px solid var(--ink);cursor:pointer;font-family:inherit;transition:all .15s;flex:1 1 auto}
+.btn-preview:hover{background:var(--paper)}
+.blank-forms-link{margin-top:12px;text-align:center}
+.link-btn{font-family:inherit;font-size:12.5px;color:var(--txt-2);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0}
+.link-btn:hover{color:var(--stamp)}
+
+/* ─── PDF preview modal ─── */
+.pdf-preview-box{background:#fff;border-radius:14px;max-width:900px;width:100%;height:88vh;padding:0;display:flex;flex-direction:column;overflow:hidden}
+.pdf-preview-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);flex-shrink:0}
+.pdf-preview-head h3{font-size:15.5px;font-weight:700}
+.pdf-preview-frame{flex:1;border:none;width:100%}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

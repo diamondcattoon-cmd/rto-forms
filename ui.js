@@ -26,8 +26,6 @@ function renderForms(){
      applyTaskDefaults, etc.). */
   if(!grid) return;
   const q=(document.getElementById('formSearch')?.value||'').toLowerCase().trim();
-  const base=USE_LOCAL?'/forms/':'https://parivahan.gov.in/sites/default/files/DownloadForm/cmvr/';
-  const dir='https://parivahan.gov.in/en/forms-all';
   const list=FORMS.filter(f=>{
     const catOk = curCat==='all'||f.cat===curCat;
     const qOk = !q || f.num.toLowerCase().includes(q) || f.name.toLowerCase().includes(q) || f.desc.toLowerCase().includes(q);
@@ -38,24 +36,16 @@ function renderForms(){
     return;
   }
   grid.innerHTML=list.map((f,idx)=>{
-    const links=(f.pdfs&&f.pdfs.length)
-      ? f.pdfs.map(p=>`<a class="pdf-link" href="${base+p}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Official blank PDF">${p.replace('FORM-','').replace(/\.pdf/i,'')} PDF \u2193</a>`).join('')
-      : `<a class="pdf-link" href="${dir}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Official site \u2197</a>`;
     const i=FORMS.indexOf(f);
-    let click, status, liveCls;
-    if(f.fill){ click=`fillNow(${i})`; status='\u25CF Fill online'; liveCls='is-live'; }
-    else { click=`openOfficial(${i})`; status='Official format \u2014 PDF'; liveCls=''; }
+    let click, liveCls;
+    if(f.fill){ click=`fillNow(${i})`; liveCls='is-live'; }
+    else { click=`openOfficial(${i})`; liveCls=''; }
+    const icon=CAT_ICON[f.cat]||'\uD83D\uDCC4';
     return `
     <div class="fcard ${liveCls}" onclick="${click}">
-      <span class="fcard-tab">FORM ${f.num}</span>
-      <div class="fcard-body">
-        <div class="fcard-name">${f.name}</div>
-        <div class="fcard-desc">${f.desc}</div>
-      </div>
-      <div class="fcard-foot">
-        <span class="fcard-status">${status}</span>
-        <span class="fcard-links">${links}</span>
-      </div>
+      <span class="fcard-icon">${icon}</span>
+      <div class="fcard-name">Form ${f.num} \u2014 ${f.name}</div>
+      <div class="fcard-desc">${f.desc}</div>
     </div>`;
   }).join('');
 }
@@ -205,6 +195,23 @@ function toggleFullPicker(){
   const show=block.style.display==='none';
   block.style.display=show?'':'none';
   toggleLine.textContent=show?'Forms list chhupao ↑':'Saare 31 forms dekho ↓';
+}
+
+/* ── "+ Add forms" panel (task-page v2 layout only — #addFormsPanel doesn't
+   exist on the root page or a not-yet-rewritten task page, so this is a
+   no-op there) — same panel content (task switcher, suggestions, full
+   picker) shown as a desktop dropdown or a mobile bottom sheet purely via
+   CSS (see .add-forms-panel in style.css); this just toggles visibility
+   and a backdrop to close on outside-click, plus a body scroll-lock so the
+   mobile bottom sheet doesn't fight the page behind it while open. */
+function toggleAddFormsPanel(){
+  const panel=document.getElementById('addFormsPanel');
+  const backdrop=document.getElementById('addFormsBackdrop');
+  if(!panel) return;
+  const show=panel.style.display==='none'||!panel.style.display;
+  panel.style.display=show?'block':'none';
+  if(backdrop) backdrop.style.display=show?'block':'none';
+  document.body.classList.toggle('no-scroll', show);
 }
 
 /* Build the picks list grouped by active type, with type sub-tabs */
@@ -790,7 +797,7 @@ function calcEstimate(){
 }
 
 
-function generatePDF(blank){
+function generatePDF(blank, mode){
   const st=document.getElementById('statusMsg');
   const btn=document.getElementById('genBtn');
   const bbtn=document.getElementById('blankBtn');
@@ -910,6 +917,18 @@ function generatePDF(blank){
       const fname = blank
         ? 'RTO_Blank_Forms_'+formNums+'.pdf'
         : 'Form_'+formNums+'_'+(d.reg_no||d.s_name||'set').replace(/\s+/g,'_')+'.pdf';
+      /* mode==='preview' shows the PDF in an in-page modal (see
+         showPdfPreview() below, task-page v2 layout only) instead of
+         triggering a download — same built PDF either way, only the last
+         step differs, so preview can never drift out of sync with what
+         Generate actually produces. */
+      if(mode==='preview'){
+        showPdfPreview(doc.output('bloburl'), fname);
+        st.textContent='Preview ready — nothing downloaded yet.';
+        st.className='status ok';
+        btn.disabled=false; if(bbtn) bbtn.disabled=false;
+        return;
+      }
       doc.save(fname);
       st.textContent = blank
         ? 'Blank forms downloaded \u2014 '+chosen.length+' empty form(s) ready to print and fill by hand.'
@@ -921,4 +940,27 @@ function generatePDF(blank){
     }
     btn.disabled=false; if(bbtn) bbtn.disabled=false;
   },80);
+}
+
+/* Shows a generated PDF (as a blob: URL, see generatePDF's mode==='preview'
+   branch) inside an in-page modal instead of downloading it — task-page v2
+   layout only (#pdfPreviewModal doesn't exist on the root page or a
+   not-yet-rewritten task page, so this never gets called there). The blob
+   URL is revoked on close so repeated previews don't leak memory. */
+let _pdfPreviewUrl=null;
+function showPdfPreview(blobUrl, filename){
+  const modal=document.getElementById('pdfPreviewModal');
+  const frame=document.getElementById('pdfPreviewFrame');
+  if(!modal || !frame) return;
+  if(_pdfPreviewUrl) URL.revokeObjectURL(_pdfPreviewUrl);
+  _pdfPreviewUrl=blobUrl;
+  frame.src=blobUrl;
+  modal.style.display='flex';
+}
+function closePdfPreview(){
+  const modal=document.getElementById('pdfPreviewModal');
+  const frame=document.getElementById('pdfPreviewFrame');
+  if(modal) modal.style.display='none';
+  if(frame) frame.src='about:blank';
+  if(_pdfPreviewUrl){ URL.revokeObjectURL(_pdfPreviewUrl); _pdfPreviewUrl=null; }
 }
