@@ -9,6 +9,18 @@
 
 const CAT_ICON={licence:'🪪',registration:'📋',transfer:'🔄',permit:'🛣️',misc:'📄'};
 
+/* Which inline-SVG icon (landing.js's ICONS lookup) each form's card shows
+   — keyed by FORMS[i].num. Purely presentational; not used by the PDF
+   pipeline or the fill-tool at all. A num with no entry here falls back to
+   'file' (landing.js). */
+const FORM_ICON={
+  '1':'file','1A':'file','2':'card','3':'card','4A':'route','5':'file','6':'card','7':'card','8':'file','9':'renew','LLD':'copy',
+  '14':'file','15':'file','16':'file','17':'file','51':'file','54':'file',
+  '20':'file','21':'file','22':'wheel','23':'card','24':'file','25':'renew','26':'copy','27':'route','27A':'route','33':'pin',
+  '28':'file','29 + 30':'transfer','31':'doc','32':'transfer','34':'bank','35':'bank','36':'bank','DN':'file','MR':'file',
+  '38':'wheel','45':'route','46':'route','47':'file','48':'file',
+};
+
 const FORMS=[
  {num:'1',name:'Application-cum-Declaration of Physical Fitness',desc:'Learner\'s licence ke liye fitness self-declaration chahiye',cat:'licence',fill:'pk1',pdfs:['FORM-1.pdf']},
  {num:'1A',name:'Medical Certificate',desc:'Doctor se fitness certificate banwana hai licence ke liye',cat:'licence',fmt:true,pdfs:['FORM-1A.pdf']},
@@ -161,6 +173,20 @@ const AI_FILLED_FIELDS=new Set();
    in pro-wallet.js — since that's new, not-yet-reviewed data. */
 const VERIFIED_FIELDS=new Set();
 
+/* Field ids a successful (charged) extraction COULD have filled — this
+   docType/need combo is in scope, see docTypeOutputFields(), ui.js — but
+   didn't, because Gemini couldn't read that part of the document (a
+   blurry chassis number, a torn corner, etc.). Extraction still succeeds
+   and still gets charged (the doc-level read worked; this is a per-field
+   gap, not a failure — see decidePackageCharge(), worker/src/index.js,
+   which never even looks at field-level completeness). Populated in
+   startPackageExtraction() (pro-wallet.js) after a successful package;
+   fieldHTML() (ui.js) renders a distinct highlight for it, and it's
+   cleared the instant the field is filled — by the user typing
+   (handleInput()) or by a later extraction actually supplying it
+   (applyExtractionResult()). */
+const AI_MISSED_FIELDS=new Set();
+
 /* Which document type currently "owns" a given field's applied value —
    used by mergeExtractedFields() (field-mapping.js, called from
    applyExtractionResult() in pro-wallet.js) to arbitrate when two different
@@ -298,29 +324,40 @@ const DOC_TYPES=[
   /* future: {id:'application', label:'Applications'} */
 ];
 
-/* ── TASK BUNDLES — one click selects a set of related documents ── */
+/* ── TASK BUNDLES — one click selects a set of related documents ──
+   `desc` (Hinglish, matches FORMS[i].desc's convention — see forms-data.js
+   top) is shown on the landing page's package cards (landing.js); `cls` is
+   the same category-tint class the form catalog cards use (style.css). */
 const BUNDLES=[
-  {id:'b_transfer', label:'Vehicle Transfer', icon:'🚗',
+  {id:'b_transfer', label:'Vehicle Transfer', icon:'🚗', cls:'i-trn',
+   desc:'Gaadi kisi aur ke naam karni hai',
    picks:['pk29','pk30','pkAS','pkAP'],
    suggest:['pk28','pk26','pkDN','pkMR']},
-  {id:'b_rcrenew', label:'RC Renewal', icon:'🔄',
+  {id:'b_rcrenew', label:'RC Renewal', icon:'🔄', cls:'i-reg',
+   desc:'RC expire ho rahi hai, renew karani hai',
    picks:['pk25'], suggest:['pk33']},
-  {id:'b_duprc', label:'Duplicate RC', icon:'📋',
+  {id:'b_duprc', label:'Duplicate RC', icon:'📋', cls:'i-reg',
+   desc:'RC kho gayi ya phat gayi — duplicate chahiye',
    picks:['pk26'], suggest:['pkAS']},
-  {id:'b_death', label:'Transfer on Death', icon:'📜',
+  {id:'b_death', label:'Transfer on Death', icon:'📜', cls:'i-trn',
+   desc:"Gaadi ke malik ka dehant ho gaya — nominee ke naam karni hai",
    picks:['pk31'], suggest:['pkAS','pk26']},
-  {id:'b_hp', label:'HP / Loan', icon:'🏦',
+  {id:'b_hp', label:'HP / Loan', icon:'🏦', cls:'i-trn',
+   desc:'Gaadi loan pe li hai — RC mein financier ka naam chadhana hai',
    picks:['pk34'], suggest:['pk35','pk33']},
   /* Deliberately separate from b_hp above — that one is for ADDING a
      hire-purchase/loan note to the RC (Form 34); this one is for the
      opposite, much more common task once a loan is paid off: REMOVING it
      (Form 35). Conflating the two under one bundle would mean whichever
      form is "primary" silently wrongs the other use case. */
-  {id:'b_hpremove', label:'Remove Hypothecation', icon:'🔓',
+  {id:'b_hpremove', label:'Remove Hypothecation', icon:'🔓', cls:'i-trn',
+   desc:'Loan chuka diya — RC se financier ka naam hatana hai',
    picks:['pk35'], suggest:['pk33']},
-  {id:'b_address', label:'Address Change', icon:'📍',
+  {id:'b_address', label:'Address Change', icon:'📍', cls:'i-reg',
+   desc:'RC mein naya address update karna hai',
    picks:['pk33'], suggest:['pk26']},
-  {id:'b_newreg', label:'New Registration', icon:'🆕',
+  {id:'b_newreg', label:'New Registration', icon:'🆕', cls:'i-reg',
+   desc:'Nayi gaadi register karani hai',
    picks:['pk20','pk21','pk22'], suggest:['pk28']},
 ];
 

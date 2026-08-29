@@ -56,11 +56,12 @@ reason, since Pages deploy is what's actually live in production.)
 Just HTML + a fixed sequence of `<script src>` tags, in this exact order
 (load-order matters — see each file's own header comment for why):
 ```
-field-mapping.js → pdf-generate.js → forms-data.js → ui.js → pro-wallet.js
+field-mapping.js → pdf-generate.js → forms-data.js → task-pricing.js → ui.js → [landing.js] → pro-wallet.js
 ```
-These are classic (non-module) scripts sharing one global scope — every
-top-level `const`/`function` in one file is a plain global visible to the
-files after it. All script `src` attributes are **absolute paths**
+`landing.js` only appears on `index.html` (see below) — task pages don't
+load it. These are classic (non-module) scripts sharing one global scope —
+every top-level `const`/`function` in one file is a plain global visible to
+the files after it. All script `src` attributes are **absolute paths**
 (`/pdf-generate.js`, not `pdf-generate.js`) — keep new asset references
 (`<script src>`, `<link href>`, fetch URLs) absolute too, so they resolve
 correctly regardless of which path served the current page.
@@ -80,10 +81,11 @@ correctly regardless of which path served the current page.
   in-progress field values, debounce-persisted to `localStorage` so an
   accidental refresh doesn't lose a paid extraction), and `PICKS`/
   `DOC_TYPES`/`BUNDLES`/`CHECKED` (the fillable-form registry — see below).
-- **`ui.js`** — rendering and event handlers: the forms-catalog grid
-  (`renderForms`/`fillNow`/`filterCat`), the fill-tool's dynamic sections
-  (`buildPicks`/`updateSections`/`handleInput`), the restore-notice banner,
-  the Jharkhand registration-cost calculator, and `generatePDF()` (which
+- **`ui.js`** — `fillNow`/`openOfficial` (what a landing-page catalog
+  card's click hands off to — see `landing.js`, index.html only), the
+  fill-tool's dynamic sections (`buildPicks`/`updateSections`/
+  `handleInput`), the restore-notice banner, the Jharkhand
+  registration-cost calculator, and `generatePDF()` (which
   looks up the checked `PICKS` entries and calls each one's `gen(doc, d)`).
   Also: `updateProContext()` (the PRO panel's "N fields hain, M abhi khali"
   line) and `updateDocSlotVisibility()` (only shows the Aadhaar/PAN/RC
@@ -92,18 +94,38 @@ correctly regardless of which path served the current page.
   a separately hand-maintained list). `fieldHTML()` marks fields currently
   in `AI_FILLED_FIELDS` (forms-data.js) with an amber highlight + "AI"
   badge; `handleInput()` drops that marking the instant the user edits one.
+- **`landing.js`** — index.html's landing section only (hero, search,
+  package cards, the 41-form catalog + category pills) — ported visually
+  from a design mockup (`design/design-landing-v3.html`) but renders
+  strictly from the real `FORMS`/`BUNDLES` (forms-data.js), never that
+  mockup's own hardcoded sample data. `FORM_ICON` (forms-data.js) maps a
+  form's `num` to one of this file's inline-SVG icons. Card clicks hand off
+  to `fillNow`/`openOfficial`/`applyBundle` (ui.js) — this file owns no
+  fill-tool state of its own. Doesn't touch `#tool`/`#calc`/`#how`/`#faq`,
+  which stay exactly as they were.
 - **`pro-wallet.js`** — the paid features: Aadhaar/PAN/RC photo upload →
   Gemini Vision extraction (via the Worker), and the wallet. There is no
   upfront "verify your mobile" step and no account-recovery path —
   `PRO.walletId` is a random token minted by the Worker on first payment
   (`startPayment()` → `/order`) and reused directly as the bearer credential
-  for `/balance`/`/extract` (sent as `token`). An earlier MSG91-based
-  recovery-link flow (`sendWalletLink`/`claimWalletLinkFromUrl`, mobile
-  number as a recovery contact) was removed — MSG91 was never actually
-  configured in production, so it was dead code. `PRO.walletId` persists in
-  `localStorage` (`rtoProState`); uploaded document images are kept in
-  memory only for the session (never persisted) and can optionally be
-  attached as extra pages to the generated PDF.
+  for `/balance`/`/extract-package` (sent as `token`). Extraction billing is
+  package-based (`startPackageExtraction()`, flat price per TASK — see
+  `task-pricing.js`/`getCurrentTaskId()` in ui.js), not per document. An
+  earlier MSG91-based recovery-link flow (`sendWalletLink`/
+  `claimWalletLinkFromUrl`, mobile number as a recovery contact) was
+  removed — MSG91 was never actually configured in production, so it was
+  dead code. `PRO.walletId` persists in `localStorage` (`rtoProState`);
+  uploaded document images are kept in memory only for the session (never
+  persisted) and can optionally be attached as extra pages to the generated
+  PDF. The wallet balance also renders into a small badge in the header on
+  every page (`#hdrWalletBadge`, updated by `renderProCredits()`), not just
+  inside this panel. "Take photo" buttons call `handleTakePhotoClick(key)`,
+  which sends touch devices to the native `capture=environment` file input
+  (unchanged) and everything else through a `getUserMedia`-based capture
+  modal (`openCameraModal()`/`captureCameraPhoto()`/`useCameraPhoto()`) —
+  the captured frame is wrapped into a real `File` and handed to the exact
+  same `handleFileSelect()`/`handlePhotoUpload()` a picked file uses, so
+  there's no separate compression/preview code path to keep in sync.
 
 **`PICKS`** (in `forms-data.js`) is the registry of fillable form packs. Each
 pick has an `id` (e.g. `pk29`, `pk20`), a `type` (which field-groups it

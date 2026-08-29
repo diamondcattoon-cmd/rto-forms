@@ -35,6 +35,7 @@ const I18N_STRINGS = {
     'word.hain': 'are',
 
     /* ── header ── */
+    'nav.packages': 'Packages',
     'nav.allForms': 'All Forms',
     'nav.calc': 'Tax Calculator',
     'nav.how': 'How it works',
@@ -43,20 +44,30 @@ const I18N_STRINGS = {
     'lang.en': 'EN',
     'lang.hi': 'Hinglish',
 
-    /* ── landing hero (root only) ── */
-    'hero.eyebrow': '// India’s RTO paperwork, simplified',
-    'hero.title1': 'Every RTO form.',
-    'hero.title2': 'Filled online, ',
-    'hero.titleAccent': 'print-ready',
-    'hero.title3': ' in minutes.',
-    'hero.sub': 'RTO Forms India is a free online filler for Motor Vehicles Act forms. Type the details once and download submission-ready A4 PDFs — or print blank forms to fill by hand. No login, no fees, and your data never leaves your browser.',
-    'hero.ctaStart': 'Start filling forms',
-    'hero.ctaBrowse': 'Browse all forms',
-    'hero.stat.forms': 'Forms, serial-wise',
-    'hero.stat.fillable': 'Fillable online now',
-    'hero.stat.free': 'Completely free',
-    'hero.stat.login': 'Login required',
-    'hero.stat.pdfs': 'Filled or blank PDFs',
+    /* ── landing (root only) — hero, packages, catalogue, trust strip ── */
+    'landing.hero.title': 'Every RTO form you need, in one place',
+    'landing.hero.sub': 'Fill official Motor Vehicles Act forms online and download a print-ready PDF. All are 100% FREE and easy to use — transfer, renewal, duplicate RC, hypothecation and more, with just a few clicks.',
+    'landing.searchPlaceholder': 'Search forms, affidavits, or a task…',
+    'landing.noResultsFor': 'No results for "{q}"',
+    'landing.noResultsHint': "Need this form? Tell us on WhatsApp and we'll add it.",
+    'landing.whatsappCta': 'Message on WhatsApp',
+    'landing.packagesTitle': 'Start with a package',
+    'landing.packagesSub': 'One set of details fills every form the job needs.',
+    'landing.allFormsTitle': 'All {n} forms',
+    'landing.allFormsSub': 'Fill online, or download the blank official format.',
+    'landing.allCount': 'All {n}',
+    'landing.formCount': '{n} form{s}',
+    'landing.fillOnline': 'Fill online',
+    'landing.downloadBlank': 'Download blank',
+    'landing.cat.registration': 'Registration',
+    'landing.cat.transfer': 'Transfer',
+    'landing.cat.licence': 'Licence',
+    'landing.cat.permit': 'Permit',
+    'landing.cat.misc': 'Other',
+    'landing.trust1': 'No login required',
+    'landing.trust2': 'Data stays in your browser',
+    'landing.trust3': '{n} forms covered',
+    'landing.trust4': 'Free to use',
 
     /* ── root landing tool section (old-style layout, root only) ── */
     'root.toolTitle': 'Fill RTO forms online',
@@ -86,7 +97,7 @@ const I18N_STRINGS = {
 
     /* ── AI box ── */
     'ai.title': 'Fill with AI',
-    'ai.subtitle': 'Upload your RC photo — fields will fill automatically, no typing needed',
+    'ai.subtitle': "Upload your RC and we'll fill the vehicle details for you.",
     'ai.start': 'Get started',
     'ai.freeLine': '— or fill it in yourself below, free —',
     'ai.pickerHead': 'Add a photo of your RC, Aadhaar or PAN',
@@ -106,6 +117,18 @@ const I18N_STRINGS = {
     'ai.remove': '✕ Remove',
     'ai.removeConfirm': 'Removing this will empty the fields it filled in. Any amount already charged is not refunded.',
     'ai.addMoney': '+ Add Money',
+    /* ── Desktop camera capture modal — always English, no Hinglish, per
+       spec. Same text in both language blocks. ── */
+    'camera.title': 'Take a photo',
+    'camera.capture': 'Capture',
+    'camera.retake': 'Retake',
+    'camera.usePhoto': 'Use this photo',
+    'camera.chooseFile': 'Choose file',
+    'camera.notAvailable': 'Camera not available in this browser.',
+    'camera.permissionDenied': 'Camera permission denied.',
+    'camera.notFound': 'No camera found on this device.',
+    'camera.genericError': 'Could not access the camera.',
+    'camera.useFileInstead': 'Use "Choose file" instead.',
     'ai.photoToggle': '+ Attach a face photo to the PDF too? (optional)',
     'ai.attachChk': 'Attach uploaded documents & photo as extra pages in the final PDF',
     'ai.facePhoto': 'Face Photo',
@@ -134,7 +157,7 @@ const I18N_STRINGS = {
 
     /* ── buy money modal ── */
     'modal.buyTitle': 'Add Money to Wallet',
-    'modal.buySub': 'Instant via UPI / card — no waiting. ₹5 is charged per document extraction.',
+    'modal.buySub': 'Instant via UPI / card — no waiting. AI auto-fill charges ₹3–₹5 depending on what you\'re filling, only on success.',
     'modal.orCustom': 'Or a custom amount',
     'modal.pay': 'Pay',
     'modal.extractions10': '10 extractions',
@@ -160,18 +183,15 @@ const I18N_STRINGS = {
     'restore.clear': 'Clear',
 
     /* ── forms catalog (root) ── */
-    'catalog.noMatch': 'No forms match your search. Try a form number (e.g. 26) or a word like "duplicate", "renewal", "NOC".',
     'catalog.selectAbove': 'select forms above',
-    'catalog.searchPlaceholder': 'Search by form number or purpose — e.g. 26, duplicate, NOC, renewal…',
 
     /* ── tax calculator (root) ── */
     'calc.placeholder': 'Enter the ex-showroom price — the estimate will appear here.',
 
     /* ── error / validation messages ── */
     'err.selectForm': 'Select at least one form to include.',
-    'err.ownerName': 'Owner / Seller name is required.',
+    'err.needOneName': "Enter at least one name — Seller or Buyer. If you don't have either yet, use \"Download blank forms\" below.",
     'err.regNo': 'Registration No. is required for the selected forms.',
-    'err.buyerName': 'Purchaser name is required for the selected transfer / sale forms.',
     'err.mobile': 'Mobile number is required — please enter it before generating the PDF.',
     'err.mobileDigits': 'Mobile number must be exactly 10 digits.',
     'err.buyerMobile': 'Purchaser mobile number is required — please enter it before generating the PDF.',
@@ -199,10 +219,21 @@ const I18N_STRINGS = {
     'status.paymentStarting': 'Starting payment...',
     'status.paymentConfirming': 'Confirming payment...',
     'status.amountAdded': '₹{n} added! Balance: ₹{bal}',
-    'status.paymentUnconfirmed': 'Payment went through but could not be confirmed: {msg}. Refresh and check your balance.',
-    'status.paymentFailed': 'Payment failed: {reason}{extra}. ',
-    'status.unknownReason': 'reason unknown',
     'status.retryBtn': 'Retry',
+    /* ── Payment / extraction status & error states — always English, no
+       Hinglish, real money is involved (see pro-wallet.js). Money status
+       first, reason after — never Razorpay's/HTTP's own raw error text. ── */
+    'pay.failed': 'Payment failed. You were not charged.',
+    'pay.tryAgain': 'Try again',
+    'pay.receivedNotConfirmed': 'Payment received but not confirmed yet.',
+    'pay.balanceWillUpdate': 'Your balance will update in a few minutes.',
+    'pay.refreshBalance': 'Refresh balance',
+    'pay.balanceRefreshed': 'Balance: ₹{bal}',
+    'pay.couldNotStart': 'Could not start payment. You were not charged.',
+    'err.connectionLost': 'Connection lost. You were not charged.',
+    'status.readingDoc': 'Reading your document...',
+    'status.onlyChargedIfSuccess': "You'll only be charged if this succeeds.",
+    'status.filledAndMissed': 'Filled {filled} field{fs}. {missed} could not be read.',
     'status.included': 'Included in your PDF',
     'status.noExtraFields': 'No extra fields needed',
     'status.sameDetails': 'Fills from the same details, no extra charge',
@@ -217,6 +248,7 @@ const I18N_STRINGS = {
     'word.hain': 'hain',
 
     /* ── header ── */
+    'nav.packages': 'Packages',
     'nav.allForms': 'All Forms',
     'nav.calc': 'Tax Calculator',
     'nav.how': 'How it works',
@@ -225,20 +257,30 @@ const I18N_STRINGS = {
     'lang.en': 'EN',
     'lang.hi': 'Hinglish',
 
-    /* ── landing hero (root only) ── */
-    'hero.eyebrow': '// India ka RTO paperwork, simplified',
-    'hero.title1': 'Har RTO form.',
-    'hero.title2': 'Online bhro, ',
-    'hero.titleAccent': 'print-ready',
-    'hero.title3': ' minutes mein.',
-    'hero.sub': 'RTO Forms India — Motor Vehicles Act forms bharne ka free online tool. Details ek baar type karo aur submission-ready A4 PDF download karo — ya blank forms print karke haath se bhar lo. No login, no fees, aur aapka data browser se bahar kabhi nahi jaata.',
-    'hero.ctaStart': 'Forms bharna shuru karo',
-    'hero.ctaBrowse': 'Saare forms dekho',
-    'hero.stat.forms': 'Forms, serial-wise',
-    'hero.stat.fillable': 'Abhi online fillable',
-    'hero.stat.free': 'Bilkul free',
-    'hero.stat.login': 'Login chahiye',
-    'hero.stat.pdfs': 'Bhara ya khaali PDF',
+    /* ── landing (root only) — hero, packages, catalogue, trust strip ── */
+    'landing.hero.title': 'Jo bhi RTO form chahiye, sab yahan hai',
+    'landing.hero.sub': 'Official Motor Vehicles Act forms online bharo aur print-ready PDF download karo. Sab 100% FREE aur easy hai — transfer, renewal, duplicate RC, hypothecation aur bhi bahut kuch, bas kuch clicks mein.',
+    'landing.searchPlaceholder': 'Forms, affidavits, ya koi kaam search karo…',
+    'landing.noResultsFor': '"{q}" ke liye kuch nahi mila',
+    'landing.noResultsHint': 'Ye form chahiye? WhatsApp pe batao, hum jod denge.',
+    'landing.whatsappCta': 'WhatsApp pe message karo',
+    'landing.packagesTitle': 'Ek package se shuru karo',
+    'landing.packagesSub': 'Details ek baar bharo, us kaam ke sab forms ban jaayenge.',
+    'landing.allFormsTitle': 'Sab {n} forms',
+    'landing.allFormsSub': 'Online bharo, ya blank official format download karo.',
+    'landing.allCount': 'Sab {n}',
+    'landing.formCount': '{n} form',
+    'landing.fillOnline': 'Fill online',
+    'landing.downloadBlank': 'Download blank',
+    'landing.cat.registration': 'Registration',
+    'landing.cat.transfer': 'Transfer',
+    'landing.cat.licence': 'Licence',
+    'landing.cat.permit': 'Permit',
+    'landing.cat.misc': 'Other',
+    'landing.trust1': 'Login nahi chahiye',
+    'landing.trust2': 'Data aapke browser mein hi rehta hai',
+    'landing.trust3': '{n} forms covered',
+    'landing.trust4': 'Bilkul free',
 
     /* ── root landing tool section (old-style layout, root only) ── */
     'root.toolTitle': 'RTO forms online bharo',
@@ -267,8 +309,9 @@ const I18N_STRINGS = {
     'task.addresschange.sub': 'Form 33 — ek print-ready PDF mein',
 
     /* ── AI box ── */
-    'ai.title': 'AI se bhar do',
-    'ai.subtitle': 'RC ki photo daalo — fields khud bhar jaayenge, typing nahi karni padegi',
+    /* title/subtitle always English, no Hinglish — same as en block. */
+    'ai.title': 'Fill with AI',
+    'ai.subtitle': "Upload your RC and we'll fill the vehicle details for you.",
     'ai.start': 'Shuru karo',
     'ai.freeLine': '— ya neeche khud bhar lo, free —',
     'ai.pickerHead': 'RC, Aadhaar ya PAN ki photo daalo',
@@ -288,6 +331,17 @@ const I18N_STRINGS = {
     'ai.remove': '✕ Hatao',
     'ai.removeConfirm': 'Isse hatane par bhare hue fields khali ho jaayenge. Paisa wapas nahi hoga.',
     'ai.addMoney': '+ Add Money',
+    /* Always English, no Hinglish, per spec — same text as the en block. */
+    'camera.title': 'Take a photo',
+    'camera.capture': 'Capture',
+    'camera.retake': 'Retake',
+    'camera.usePhoto': 'Use this photo',
+    'camera.chooseFile': 'Choose file',
+    'camera.notAvailable': 'Camera not available in this browser.',
+    'camera.permissionDenied': 'Camera permission denied.',
+    'camera.notFound': 'No camera found on this device.',
+    'camera.genericError': 'Could not access the camera.',
+    'camera.useFileInstead': 'Use "Choose file" instead.',
     'ai.photoToggle': '+ Face photo bhi attach karni hai PDF mein? (optional)',
     'ai.attachChk': 'Uploaded documents aur photo final PDF mein extra pages ki tarah attach karo',
     'ai.facePhoto': 'Face Photo',
@@ -315,7 +369,7 @@ const I18N_STRINGS = {
 
     /* ── buy money modal ── */
     'modal.buyTitle': 'Add Money to Wallet',
-    'modal.buySub': 'UPI / card se turant add ho jayega — koi wait nahi. ₹5 per document extraction katega.',
+    'modal.buySub': 'UPI / card se turant add ho jayega — koi wait nahi. AI auto-fill ₹3–₹5 leta hai (kya bhar rahe ho uske hisaab se), sirf success par.',
     'modal.orCustom': 'Ya custom amount',
     'modal.pay': 'Pay',
     'modal.extractions10': '10 extractions',
@@ -341,18 +395,15 @@ const I18N_STRINGS = {
     'restore.clear': 'Clear karo',
 
     /* ── forms catalog (root) ── */
-    'catalog.noMatch': 'Koi form match nahi hua. Form number try karo (jaise 26) ya koi word jaise "duplicate", "renewal", "NOC".',
     'catalog.selectAbove': 'upar se forms select karo',
-    'catalog.searchPlaceholder': 'Form number ya purpose se search karo — jaise 26, duplicate, NOC, renewal…',
 
     /* ── tax calculator (root) ── */
     'calc.placeholder': 'Ex-showroom price daalo — estimate yahan dikhega.',
 
     /* ── error / validation messages ── */
     'err.selectForm': 'Kam se kam ek form select karo.',
-    'err.ownerName': 'Owner / Seller ka naam zaroori hai.',
+    'err.needOneName': 'Seller ya Buyer mein se kam se kam ek naam daalo. Abhi dono nahi hain to neeche "Download blank forms" use karo.',
     'err.regNo': 'Selected forms ke liye Registration No. zaroori hai.',
-    'err.buyerName': 'Transfer/sale forms ke liye Purchaser ka naam zaroori hai.',
     'err.mobile': 'Mobile number zaroori hai — PDF banane se pehle daal do.',
     'err.mobileDigits': 'Mobile number pura 10 digit ka hona chahiye.',
     'err.buyerMobile': 'Purchaser ka mobile number zaroori hai — PDF banane se pehle daal do.',
@@ -377,13 +428,22 @@ const I18N_STRINGS = {
     'status.reviewAmber': '{n} field{s} {docs} se bhare — highlighted boxes check kar lo.',
     'status.packageSummary': 'Is package mein {n} field{s} hain, {empty} abhi khali {hai}.',
     'status.docsExtractedSummary': '{n} document{s} se {filled} field{fs} bhare ✓',
-    'status.paymentStarting': 'Payment shuru ho raha hai...',
-    'status.paymentConfirming': 'Payment confirm ho raha hai...',
-    'status.amountAdded': '₹{n} add ho gaye! Balance: ₹{bal}',
-    'status.paymentUnconfirmed': 'Payment hua par confirm nahi ho paya: {msg}. Refresh karke balance check karo.',
-    'status.paymentFailed': 'Payment fail ho gaya: {reason}{extra}. ',
-    'status.unknownReason': 'Wajah pata nahi chali',
+    'status.paymentStarting': 'Starting payment...',
+    'status.paymentConfirming': 'Confirming payment...',
+    'status.amountAdded': '₹{n} added! Balance: ₹{bal}',
     'status.retryBtn': 'Retry',
+    /* Always English, no Hinglish — same text as the en block. */
+    'pay.failed': 'Payment failed. You were not charged.',
+    'pay.tryAgain': 'Try again',
+    'pay.receivedNotConfirmed': 'Payment received but not confirmed yet.',
+    'pay.balanceWillUpdate': 'Your balance will update in a few minutes.',
+    'pay.refreshBalance': 'Refresh balance',
+    'pay.balanceRefreshed': 'Balance: ₹{bal}',
+    'pay.couldNotStart': 'Could not start payment. You were not charged.',
+    'err.connectionLost': 'Connection lost. You were not charged.',
+    'status.readingDoc': 'Reading your document...',
+    'status.onlyChargedIfSuccess': "You'll only be charged if this succeeds.",
+    'status.filledAndMissed': 'Filled {filled} field{fs}. {missed} could not be read.',
     'status.included': 'Aapke PDF mein shaamil hai',
     'status.noExtraFields': 'Koi extra field nahi chahiye',
     'status.sameDetails': 'Same details se ban jayega, extra charge nahi',

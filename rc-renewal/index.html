@@ -89,6 +89,7 @@
       <a href="#how" data-i18n="nav.how">How it works</a>
       <a href="#faq" data-i18n="nav.faq">FAQ</a>
       <a href="#tool" class="live-link" data-i18n="nav.fill">Fill Forms →</a>
+      <button type="button" class="hdr-wallet-badge" id="hdrWalletBadge" onclick="openBuyModal()" title="Wallet balance — click to add money">₹0.00</button>
       <div class="lang-toggle" id="langToggle">
         <button type="button" class="lang-opt" data-lang="en" onclick="setLang('en')" data-i18n="lang.en">EN</button>
         <button type="button" class="lang-opt" data-lang="hi" onclick="setLang('hi')" data-i18n="lang.hi">Hinglish</button>
@@ -147,7 +148,7 @@
               <p class="doc-role-note" data-i18n="ai.rcNote">RC fills in the seller's details</p>
               <p class="consent-hint" id="consentHint-rc" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
               <div class="doc-input-row">
-                <label class="btn-camera" for="file-rc-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                <button type="button" class="btn-camera" onclick="handleTakePhotoClick('rc')" data-i18n="ai.takePhoto">📷 Take photo</button>
                 <input type="file" accept="image/*" capture="environment" id="file-rc-camera" disabled onchange="handleFileSelect('rc', this.files[0])">
                 <label class="btn-choose" for="file-rc-file" data-i18n="ai.chooseFile">📁 Choose file</label>
                 <input type="file" accept="image/*,.pdf,application/pdf" id="file-rc-file" disabled onchange="handleFileSelect('rc', this.files[0])">
@@ -168,7 +169,7 @@
                 <div>
                   <span class="fld-hint" data-i18n="ai.frontSide">Front side</span>
                   <div class="doc-input-row">
-                    <label class="btn-camera" for="file-aadhaar-front-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                    <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_front')" data-i18n="ai.takePhoto">📷 Take photo</button>
                     <input type="file" accept="image/*" capture="environment" id="file-aadhaar-front-camera" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
                     <label class="btn-choose" for="file-aadhaar-front-file" data-i18n="ai.chooseFile">📁 Choose file</label>
                     <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-front-file" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
@@ -179,7 +180,7 @@
                 <div>
                   <span class="fld-hint" data-i18n="ai.backSide">Back side (optional)</span>
                   <div class="doc-input-row">
-                    <label class="btn-camera" for="file-aadhaar-back-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                    <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_back')" data-i18n="ai.takePhoto">📷 Take photo</button>
                     <input type="file" accept="image/*" capture="environment" id="file-aadhaar-back-camera" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
                     <label class="btn-choose" for="file-aadhaar-back-file" data-i18n="ai.chooseFile">📁 Choose file</label>
                     <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-back-file" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
@@ -199,7 +200,7 @@
               </div>
               <p class="consent-hint" id="consentHint-pan" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
               <div class="doc-input-row">
-                <label class="btn-camera" for="file-pan-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                <button type="button" class="btn-camera" onclick="handleTakePhotoClick('pan')" data-i18n="ai.takePhoto">📷 Take photo</button>
                 <input type="file" accept="image/*" capture="environment" id="file-pan-camera" disabled onchange="handleFileSelect('pan', this.files[0])">
                 <label class="btn-choose" for="file-pan-file" data-i18n="ai.chooseFile">📁 Choose file</label>
                 <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-file" disabled onchange="handleFileSelect('pan', this.files[0])">
@@ -224,7 +225,7 @@
             <div class="upload-slot" style="margin-top:10px">
               <div class="upload-slot-top"><span class="upload-slot-name" data-i18n="ai.facePhoto">Face Photo</span><span class="upload-slot-state" id="state-photo" data-i18n="ai.notUploaded">Not uploaded</span><button type="button" class="doc-remove-btn" id="remove-photo" style="display:none" onclick="removeDoc('photo')" data-i18n="ai.remove">✕ Remove</button></div>
               <div class="doc-input-row">
-                <label class="btn-camera" for="file-photo-camera" data-i18n="ai.takePhoto">📷 Take photo</label>
+                <button type="button" class="btn-camera" onclick="handleTakePhotoClick('photo')" data-i18n="ai.takePhoto">📷 Take photo</button>
                 <input type="file" accept="image/*" capture="user" id="file-photo-camera" onchange="handlePhotoUpload(this.files[0])">
                 <label class="btn-choose" for="file-photo-file" data-i18n="ai.chooseFile">📁 Choose file</label>
                 <input type="file" accept="image/*" id="file-photo-file" onchange="handlePhotoUpload(this.files[0])">
@@ -405,6 +406,29 @@
       <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))" data-i18n="modal.pay">Pay</button>
     </div>
     <div class="status" id="proCodeStatus"></div>
+  </div>
+</div>
+
+<!-- Desktop camera capture (getUserMedia) — mobile never sees this, see
+     isTouchPrimaryDevice()/handleTakePhotoClick() in pro-wallet.js -->
+<div class="modal-overlay" id="cameraModal" style="display:none">
+  <div class="modal-box camera-modal-box">
+    <div class="modal-head">
+      <h3 data-i18n="camera.title">Take a photo</h3>
+      <button type="button" class="modal-close" onclick="closeCameraModal()">&times;</button>
+    </div>
+    <div class="camera-viewport">
+      <video id="cameraVideo" autoplay playsinline muted></video>
+      <canvas id="cameraCanvas" style="display:none"></canvas>
+      <img id="cameraCapturedImg" style="display:none" alt="Captured photo">
+    </div>
+    <p class="status err" id="cameraError" style="display:none"></p>
+    <div class="camera-modal-actions">
+      <button type="button" class="btn-generate" id="cameraCaptureBtn" onclick="captureCameraPhoto()" data-i18n="camera.capture">Capture</button>
+      <button type="button" class="btn-blank" id="cameraRetakeBtn" style="display:none" onclick="retakeCameraPhoto()" data-i18n="camera.retake">Retake</button>
+      <button type="button" class="btn-generate" id="cameraUseBtn" style="display:none" onclick="useCameraPhoto()" data-i18n="camera.usePhoto">Use this photo</button>
+      <button type="button" class="btn-blank" id="cameraChooseFileFallback" style="display:none" onclick="useChooseFileFallback()" data-i18n="camera.chooseFile">Choose file</button>
+    </div>
   </div>
 </div>
 

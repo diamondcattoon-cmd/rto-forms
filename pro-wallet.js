@@ -69,9 +69,16 @@ function getEffectiveRole(docType){
   return DOC_ROLE[docType] || (rule && rule.defaultRole) || 'seller';
 }
 
+/* Updates every balance badge on the page — the AI panel's own
+   (#proCreditsBadge, only present once the panel is open) and the header
+   one (#hdrWalletBadge, present on every page, every state — shows ₹0.00
+   for a brand-new visitor with no wallet yet, same as anyone else). */
 function renderProCredits(){
+  const text='₹'+(PRO.balancePaise/100).toFixed(2);
   const el=document.getElementById('proCreditsBadge');
-  if(el) el.textContent='₹'+(PRO.balancePaise/100).toFixed(2);
+  if(el) el.textContent=text;
+  const hdrEl=document.getElementById('hdrWalletBadge');
+  if(hdrEl) hdrEl.textContent=text;
 }
 
 async function fetchWalletBalance(){
@@ -285,6 +292,136 @@ function onDocReady(key){
   updateCheckoutBox();
 }
 
+/* ── Desktop camera capture (getUserMedia) ──
+   Mobile keeps using the native <input capture=environment> (still wired
+   up unchanged in the HTML) — that's the better UX there and isn't
+   touched. This is ONLY for a laptop/desktop, where `capture` is ignored
+   and clicking that file input just opens a plain file picker with no
+   camera at all. Every "Take photo" button (rc/aadhaar_front/aadhaar_back/
+   pan/photo) now calls handleTakePhotoClick(key) instead of being a plain
+   <label for=...>, so it can pick the right path per device.
+
+   The captured frame is wrapped into a real `File` and passed to the
+   EXACT SAME handleFileSelect()/handlePhotoUpload() used for a picked
+   file — not a parallel code path — so it goes through the identical
+   compression/preview/state pipeline either way; there is nothing
+   camera-specific to keep in sync with those. */
+function isTouchPrimaryDevice(){
+  return !!(window.matchMedia && window.matchMedia('(pointer:coarse)').matches);
+}
+
+let CAMERA_TARGET_KEY=null;
+let CAMERA_STREAM=null;
+
+function handleTakePhotoClick(key){
+  if(isTouchPrimaryDevice()){
+    const nativeInput=document.getElementById('file-'+key.replace(/_/g,'-')+'-camera');
+    if(nativeInput) nativeInput.click();
+    return;
+  }
+  openCameraModal(key);
+}
+
+async function openCameraModal(key){
+  CAMERA_TARGET_KEY=key;
+  const modal=document.getElementById('cameraModal');
+  const video=document.getElementById('cameraVideo');
+  const capturedImg=document.getElementById('cameraCapturedImg');
+  const errEl=document.getElementById('cameraError');
+  const captureBtn=document.getElementById('cameraCaptureBtn');
+  const retakeBtn=document.getElementById('cameraRetakeBtn');
+  const useBtn=document.getElementById('cameraUseBtn');
+  const fallbackBtn=document.getElementById('cameraChooseFileFallback');
+
+  modal.style.display='flex';
+  errEl.style.display='none'; errEl.textContent='';
+  video.style.display='block'; capturedImg.style.display='none';
+  captureBtn.style.display='inline-block'; retakeBtn.style.display='none'; useBtn.style.display='none';
+  fallbackBtn.style.display='none';
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showCameraError(t('camera.notAvailable'));
+    return;
+  }
+  try{
+    CAMERA_STREAM=await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+    video.srcObject=CAMERA_STREAM;
+  }catch(err){
+    let msg=t('camera.genericError');
+    if(err && err.name==='NotAllowedError') msg=t('camera.permissionDenied');
+    else if(err && err.name==='NotFoundError') msg=t('camera.notFound');
+    showCameraError(msg);
+  }
+}
+
+function showCameraError(msg){
+  const errEl=document.getElementById('cameraError');
+  errEl.textContent=msg+' '+t('camera.useFileInstead');
+  errEl.style.display='block';
+  document.getElementById('cameraCaptureBtn').style.display='none';
+  const fallbackBtn=document.getElementById('cameraChooseFileFallback');
+  fallbackBtn.style.display='inline-block';
+  fallbackBtn.textContent=t('camera.chooseFile');
+}
+
+function stopCameraStream(){
+  if(CAMERA_STREAM){
+    CAMERA_STREAM.getTracks().forEach(tr=>tr.stop());
+    CAMERA_STREAM=null;
+  }
+}
+
+function closeCameraModal(){
+  stopCameraStream();
+  const modal=document.getElementById('cameraModal');
+  if(modal) modal.style.display='none';
+  CAMERA_TARGET_KEY=null;
+}
+
+function captureCameraPhoto(){
+  const video=document.getElementById('cameraVideo');
+  const canvas=document.getElementById('cameraCanvas');
+  const capturedImg=document.getElementById('cameraCapturedImg');
+  canvas.width=video.videoWidth||1280;
+  canvas.height=video.videoHeight||960;
+  canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+  capturedImg.src=canvas.toDataURL('image/jpeg',0.92);
+
+  video.style.display='none';
+  capturedImg.style.display='block';
+  document.getElementById('cameraCaptureBtn').style.display='none';
+  document.getElementById('cameraRetakeBtn').style.display='inline-block';
+  document.getElementById('cameraUseBtn').style.display='inline-block';
+}
+
+function retakeCameraPhoto(){
+  document.getElementById('cameraCapturedImg').style.display='none';
+  document.getElementById('cameraVideo').style.display='block';
+  document.getElementById('cameraCaptureBtn').style.display='inline-block';
+  document.getElementById('cameraRetakeBtn').style.display='none';
+  document.getElementById('cameraUseBtn').style.display='none';
+}
+
+function useCameraPhoto(){
+  const canvas=document.getElementById('cameraCanvas');
+  const key=CAMERA_TARGET_KEY;
+  canvas.toBlob(blob=>{
+    if(!blob || !key) return;
+    const file=new File([blob], 'camera-photo.jpg', {type:'image/jpeg'});
+    closeCameraModal();
+    if(key==='photo') handlePhotoUpload(file);
+    else handleFileSelect(key, file);
+  }, 'image/jpeg', 0.92);
+}
+
+function useChooseFileFallback(){
+  const key=CAMERA_TARGET_KEY;
+  closeCameraModal();
+  if(!key) return;
+  const fileInput=document.getElementById('file-'+key.replace(/_/g,'-')+'-file');
+  if(fileInput) fileInput.click();
+}
+
 /* Clears one document's uploaded photo(s) and, if it had already been
    successfully extracted, everything that extraction wrote — after
    confirming, since that ₹5 was already charged and won't be refunded by
@@ -405,24 +542,24 @@ let CHECKOUT_BTN_MODE='idle';
    states only, per spec: idle (shows the flat price), failed (retry, not
    charged), low-balance (add money). lastFailed is true right after a
    package attempt came back with at least one failed document. */
-function updateCheckoutBox(lastFailed){
+function updateCheckoutBox(failReason){
   const box=document.getElementById('checkoutBox');
   const payBtn=document.getElementById('checkoutPayBtn');
   const resultEl=document.getElementById('checkoutResult');
   if(!box) return;
 
   const batch=computeReadyDocs();
-  if(!batch.length && !lastFailed){ box.style.display='none'; return; }
+  if(!batch.length && !failReason){ box.style.display='none'; return; }
   box.style.display='block';
 
   const price=getCurrentPackagePrice();
   const priceRs=(price/100).toFixed(0);
 
-  if(lastFailed){
+  if(failReason){
     CHECKOUT_BTN_MODE='idle';
     payBtn.textContent=t('ai.retryBtn');
     payBtn.style.display=batch.length?'':'none';
-    resultEl.textContent=t('ai.extractFailed');
+    resultEl.textContent = failReason==='network' ? t('err.connectionLost') : t('ai.extractFailed');
     resultEl.className='status err';
   } else if(PRO.balancePaise<price){
     CHECKOUT_BTN_MODE='low-balance';
@@ -475,7 +612,14 @@ function collapseAiBoxToSummary(){
   if(!n) return;
   const need=new Set(typeof PICKS!=='undefined' ? PICKS.filter(p=>CHECKED[p.id]).flatMap(p=>p.fields||[]) : []);
   const filled=[...need].filter(f=>FIELD_SOURCE[f] && EXTRACTED_SET.has(FIELD_SOURCE[f])).length;
-  el.textContent=t('status.docsExtractedSummary',{n,s:n>1?'s':'',filled,fs:filled===1?'':'s'});
+  /* AI_MISSED_FIELDS (forms-data.js) is only ever populated with fields
+     THIS extraction batch's doc(s) could have supplied (see
+     startPackageExtraction()), so intersecting with `need` here is just
+     defensive — a field from an unrelated docType never ends up in it. */
+  const missed=[...AI_MISSED_FIELDS].filter(f=>need.has(f)).length;
+  el.textContent = missed>0
+    ? t('status.filledAndMissed',{filled,fs:filled===1?'':'s',missed})
+    : t('status.docsExtractedSummary',{n,s:n>1?'s':'',filled,fs:filled===1?'':'s'});
   setAiBoxState('summary');
 }
 
@@ -580,7 +724,13 @@ async function startPackageExtraction(){
     if(stateEl){ stateEl.textContent=t('ai.extractingBadge'); stateEl.className='upload-slot-state'; }
   });
   const statusEl=document.getElementById('proStatus');
-  if(statusEl){ statusEl.textContent=''; statusEl.className='status'; }
+  if(statusEl){
+    statusEl.innerHTML='';
+    const l1=document.createElement('div'); l1.textContent=t('status.readingDoc');
+    const l2=document.createElement('div'); l2.textContent=t('status.onlyChargedIfSuccess');
+    statusEl.appendChild(l1); statusEl.appendChild(l2);
+    statusEl.className='status';
+  }
 
   try{
     const res=await fetch(WORKER_URL+'/extract-package',{
@@ -594,10 +744,14 @@ async function startPackageExtraction(){
     });
     const json=await res.json();
 
-    if(json.code==='AUTH_REQUIRED'){ PRO.walletId=''; saveProState(); throw new Error(t('err.walletReset')); }
+    if(json.code==='AUTH_REQUIRED'){
+      PRO.walletId=''; saveProState();
+      const e=new Error(t('err.walletReset')); e.isWalletReset=true; throw e;
+    }
     if(res.status===402){
       PRO.balancePaise=json.balancePaise||0; renderProCredits();
       if(payBtn) payBtn.disabled=false;
+      if(statusEl){ statusEl.textContent=''; }
       updateCheckoutBox();
       openBuyModal();
       return;
@@ -617,12 +771,28 @@ async function startPackageExtraction(){
     }
 
     if(payBtn) payBtn.disabled=false;
+    if(statusEl){ statusEl.textContent=''; }
     if(json.ok){
       PRO.balancePaise=json.balancePaise; renderProCredits();
+      /* Which fields THIS batch's doc(s) could have supplied — see
+         docTypeOutputFields() (ui.js) — vs which ones actually ended up
+         filled. A field that's still empty here wasn't skipped, it's one
+         Gemini genuinely couldn't read (see AI_MISSED_FIELDS, forms-data.js) —
+         the extraction still succeeded and still got charged; this is a
+         per-field gap, not a failure. */
+      const need=new Set(typeof PICKS!=='undefined' ? PICKS.filter(p=>CHECKED[p.id]).flatMap(p=>p.fields||[]) : []);
+      results.forEach(r=>{
+        if(!r.ok) return;
+        const coverable=(typeof docTypeOutputFields==='function') ? docTypeOutputFields(r.docType) : new Set();
+        [...coverable].filter(f=>need.has(f)).forEach(f=>{
+          if(g(f)) AI_MISSED_FIELDS.delete(f); else AI_MISSED_FIELDS.add(f);
+        });
+      });
+      updateSections();
       updateCheckoutBox();
       collapseAiBoxToSummary();
     } else {
-      updateCheckoutBox(true);
+      updateCheckoutBox('doc-failed');
     }
   }catch(err){
     if(payBtn) payBtn.disabled=false;
@@ -630,8 +800,13 @@ async function startPackageExtraction(){
       const stateEl=document.getElementById('state-'+item.docType);
       if(stateEl && !EXTRACTED_SET.has(item.docType)){ stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err'; }
     });
-    if(statusEl){ statusEl.textContent=t('err.generic',{msg:err.message}); statusEl.className='status err'; }
-    updateCheckoutBox(true);
+    if(err.isWalletReset){
+      if(statusEl){ statusEl.textContent=err.message; statusEl.className='status err'; }
+      updateCheckoutBox();
+    } else {
+      if(statusEl){ statusEl.textContent=''; }
+      updateCheckoutBox('network');
+    }
   }
 }
 
@@ -723,7 +898,25 @@ async function startPayment(amountRs){
           statusEl.className='status ok';
           setTimeout(closeBuyModal, 1500);
         }catch(err){
-          statusEl.textContent=t('status.paymentUnconfirmed',{msg:err.message});
+          /* Razorpay itself already confirmed the charge (this handler only
+             fires on a successful payment) — what failed is OUR /verify
+             call, e.g. a network blip right after. The money is not lost;
+             say so plainly instead of surfacing whatever err.message is
+             (a raw fetch/HTTP error means nothing to the user here). */
+          statusEl.innerHTML='';
+          const l1=document.createElement('div'); l1.textContent=t('pay.receivedNotConfirmed');
+          const l2=document.createElement('div'); l2.textContent=t('pay.balanceWillUpdate');
+          const refreshBtn=document.createElement('button');
+          refreshBtn.type='button';
+          refreshBtn.className='settings-reset';
+          refreshBtn.textContent=t('pay.refreshBalance');
+          refreshBtn.onclick=async function(){
+            refreshBtn.disabled=true;
+            await fetchWalletBalance();
+            statusEl.textContent=t('pay.balanceRefreshed',{bal:(PRO.balancePaise/100).toFixed(2)});
+            statusEl.className='status ok';
+          };
+          statusEl.appendChild(l1); statusEl.appendChild(l2); statusEl.appendChild(refreshBtn);
           statusEl.className='status err';
         }
       },
@@ -735,18 +928,18 @@ async function startPayment(amountRs){
        payment itself is declined/errors out while the checkout modal is
        still open (card decline, insufficient funds, etc.), which is a
        different event from the user just closing the modal (ondismiss,
-       above) or a successful payment (handler, above). Built with DOM
-       methods rather than innerHTML since err.description/err.reason come
-       from Razorpay's response — no reason to trust them as safe HTML. */
-    rzp.on('payment.failed', function(resp){
-      const err=(resp && resp.error) || {};
-      statusEl.textContent='';
-      const msg=document.createElement('span');
-      msg.textContent=t('status.paymentFailed',{reason:err.description||t('status.unknownReason'),extra:err.reason?' ('+err.reason+')':''});
+       above) or a successful payment (handler, above). Never surfaces
+       Razorpay's own err.description/err.reason — that's raw payment-
+       gateway/bank text ("technical error text"), not something a user
+       needs; the only fact that matters is nothing was charged. */
+    rzp.on('payment.failed', function(){
+      statusEl.innerHTML='';
+      const msg=document.createElement('div');
+      msg.textContent=t('pay.failed');
       const retryBtn=document.createElement('button');
       retryBtn.type='button';
       retryBtn.className='settings-reset';
-      retryBtn.textContent=t('status.retryBtn');
+      retryBtn.textContent=t('pay.tryAgain');
       retryBtn.onclick=function(){ startPayment(amountRs); };
       statusEl.appendChild(msg);
       statusEl.appendChild(retryBtn);
@@ -755,7 +948,9 @@ async function startPayment(amountRs){
 
     rzp.open();
   }catch(err){
-    statusEl.textContent=t('err.generic',{msg:err.message});
+    /* Failed before Razorpay's checkout even opened (e.g. /order couldn't
+       be reached) — nothing was ever charged. */
+    statusEl.textContent=t('pay.couldNotStart');
     statusEl.className='status err';
   }
 }

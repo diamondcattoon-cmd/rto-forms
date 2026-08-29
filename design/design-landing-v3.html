@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTO Forms India — design reference (landing)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #142850;
+    --stamp: #d6481f;
+    --approve: #1a7a4a;
+    --line: #e6e2da;
+    --txt: #1c2434;
+    --txt-2: #5b6478;
+    --white: #ffffff;
+    --wash: #faf9f6;
+
+    /* category colours — icon tile bg + icon stroke */
+    --c-reg-bg:#eaf1fa;   --c-reg:#2b6cb0;
+    --c-trn-bg:#fbeee9;   --c-trn:#d6481f;
+    --c-lic-bg:#e9f4ee;   --c-lic:#1a7a4a;
+    --c-per-bg:#f1ecfb;   --c-per:#6d43c8;
+    --c-oth-bg:#eff0f3;   --c-oth:#5b6478;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--wash);
+    color: var(--txt);
+    font-family: "IBM Plex Sans", sans-serif;
+  }
+  button, input { font: inherit; }
+  a { color: inherit; }
+  button:focus-visible, a:focus-visible, input:focus-visible {
+    outline: 3px solid rgba(214,72,31,.3); outline-offset: 3px;
+  }
+  .hidden { display: none !important; }
+
+  .page-width { width: 100%; max-width: 1600px; margin: 0 auto; padding: 0 32px; }
+
+  /* ── header ── */
+  .site-header { background: var(--white); border-bottom: 1px solid var(--line); }
+  .header-inner { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; white-space: nowrap; }
+  .brand-mark { width: 9px; height: 9px; background: var(--stamp); transform: rotate(45deg); }
+  .brand-name { font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
+  .desktop-nav { display: flex; align-items: center; gap: 28px; }
+  .nav-link { color: var(--ink); text-decoration: none; font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .nav-link:hover { color: var(--stamp); }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .wallet-chip {
+    display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--white);
+    color: var(--ink); font: 600 .78rem "IBM Plex Mono", monospace; text-decoration: none;
+  }
+  .wallet-chip:hover { border-color: var(--ink); }
+  .language-set { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--white); }
+  .language-button {
+    border: 0; border-right: 1px solid var(--line); min-height: 36px; padding: 0 10px;
+    cursor: pointer; color: var(--txt-2); background: var(--white);
+    font: 600 .72rem "IBM Plex Mono", monospace;
+  }
+  .language-button:last-child { border-right: 0; }
+  .language-button.active { background: var(--ink); color: var(--white); }
+  .mobile-menu-button { display: none; width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+  .mobile-menu-button svg { width: 22px; height: 22px; }
+  .mobile-nav { padding: 10px 16px 16px; border-top: 1px solid var(--line); background: var(--white); }
+  .mobile-nav a { display: block; padding: 13px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .mobile-nav a:last-child { border-bottom: 0; }
+
+  /* ── hero — centered, iLovePDF style ── */
+  .hero { text-align: center; padding: 62px 0 30px; }
+  .hero h1 {
+    max-width: 1000px; margin: 0 auto;
+    color: var(--ink); font-size: 3.1rem; font-weight: 700;
+    letter-spacing: -.035em; line-height: 1.08;
+  }
+  .hero p {
+    max-width: 760px; margin: 18px auto 0;
+    color: var(--txt-2); font-size: 1.08rem; line-height: 1.55;
+  }
+
+  /* ── search ── */
+  .search-wrap { max-width: 720px; margin: 30px auto 0; }
+  .search-box {
+    display: flex; align-items: center; gap: 13px;
+    min-height: 58px; padding: 0 18px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--white);
+  }
+  .search-box:focus-within { border-color: var(--ink); }
+  .search-icon { width: 20px; height: 20px; color: var(--txt-2); flex: 0 0 auto; }
+  .search-input { width: 100%; min-height: 54px; border: 0; outline: 0; background: transparent; color: var(--txt); font-size: 1rem; }
+  .search-input::placeholder { color: #8b93a3; }
+
+  .search-results { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--white); text-align: left; }
+  .result-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
+  .result-row:last-child { border-bottom: 0; }
+  .result-row:hover { background: var(--wash); }
+  .result-name { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 600; }
+  .result-description { margin: 2px 0 0; color: var(--txt-2); font-size: .83rem; }
+  .empty-result { margin-top: 12px; padding: 32px 18px; text-align: center; border: 1px dashed #cfc9bd; border-radius: 10px; background: var(--white); }
+  .empty-result p { margin: 0; }
+  .empty-copy { margin-top: 8px !important; color: var(--txt-2); font-size: .9rem; }
+  .whatsapp-button {
+    display: inline-flex; align-items: center; min-height: 44px; margin-top: 18px; padding: 0 18px;
+    border-radius: 8px; text-decoration: none; color: var(--white); background: var(--stamp);
+    font-size: .88rem; font-weight: 600;
+  }
+  .whatsapp-button:hover { background: #bd3e1a; }
+
+  /* ── filter pills ── */
+  .pill-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 34px 0 26px; }
+  .pill {
+    min-height: 42px; padding: 0 20px;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--white);
+    color: var(--txt); cursor: pointer; font-size: .92rem; font-weight: 500;
+    transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+  }
+  .pill:hover { border-color: var(--ink); }
+  .pill.active { background: var(--ink); border-color: var(--ink); color: var(--white); }
+
+  /* ── cards ── */
+  .card-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 18px; }
+  .card {
+    display: flex; flex-direction: column;
+    min-height: 200px; padding: 24px;
+    background: var(--white); border: 1px solid var(--line); border-radius: 10px;
+    text-decoration: none; color: inherit;
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  }
+  .card:hover { border-color: #c9c2b6; box-shadow: 0 4px 14px rgba(20,40,80,.07); transform: translateY(-1px); }
+  .card-icon {
+    width: 52px; height: 52px; display: grid; place-items: center;
+    border-radius: 9px; margin-bottom: 22px;
+  }
+  .card-icon svg { width: 25px; height: 25px; }
+  .card h3 { margin: 0; color: var(--ink); font-size: 1.15rem; font-weight: 600; line-height: 1.25; }
+  .card p { margin: 9px 0 0; color: var(--txt-2); font-size: .9rem; line-height: 1.5; }
+  .card-foot { margin-top: auto; padding-top: 14px; font: 500 .72rem "IBM Plex Mono", monospace; letter-spacing: .03em; }
+  .card-foot.online { color: var(--approve); }
+  .card-foot.blank { color: var(--txt-2); }
+
+  .i-reg { background: var(--c-reg-bg); color: var(--c-reg); }
+  .i-trn { background: var(--c-trn-bg); color: var(--c-trn); }
+  .i-lic { background: var(--c-lic-bg); color: var(--c-lic); }
+  .i-per { background: var(--c-per-bg); color: var(--c-per); }
+  .i-oth { background: var(--c-oth-bg); color: var(--c-oth); }
+
+  /* packages get a slightly larger card */
+  .packages { padding-top: 8px; padding-bottom: 46px; }
+  .packages .card-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .packages .card { min-height: 190px; }
+
+  .section-head { text-align: center; margin-bottom: 24px; }
+  .section-head h2 { margin: 0; color: var(--ink); font-size: 1.85rem; font-weight: 700; letter-spacing: -.02em; }
+  .section-head p { margin: 9px 0 0; color: var(--txt-2); font-size: .98rem; }
+
+  .catalogue { padding-bottom: 60px; }
+
+  /* ── trust ── */
+  .trust-strip { background: var(--white); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .trust-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 18px; padding: 26px 0; }
+  .trust-item { display: flex; align-items: center; gap: 9px; color: var(--txt-2); font-size: .88rem; }
+  .check { color: var(--approve); font-weight: 700; }
+
+  /* ── footer ── */
+  .site-footer { padding: 40px 0 28px; }
+  .footer-main { display: flex; justify-content: space-between; gap: 44px; }
+  .footer-disclaimer { max-width: 560px; margin: 14px 0 0; color: var(--txt-2); font-size: .85rem; line-height: 1.6; }
+  .footer-links { display: grid; grid-template-columns: repeat(3, auto); gap: 13px 32px; align-content: start; }
+  .footer-link { color: var(--txt-2); text-decoration: none; font-size: .86rem; }
+  .footer-link:hover { color: var(--stamp); }
+  .footer-bottom { display: flex; justify-content: space-between; gap: 20px; margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--txt-2); font-size: .82rem; }
+  .footer-contact { display: flex; gap: 22px; flex-wrap: wrap; }
+
+  @media (max-width: 1400px) { .card-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+  @media (max-width: 1100px) {
+    .card-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .packages .card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .desktop-nav { gap: 16px; }
+    .hero h1 { font-size: 2.4rem; }
+  }
+  @media (max-width: 767px) {
+    .page-width { padding: 0 16px; }
+    .desktop-nav { display: none; }
+    .mobile-menu-button { display: inline-grid; place-items: center; }
+    .hero { padding: 34px 0 18px; }
+    .hero h1 { font-size: 1.75rem; }
+    .hero p { font-size: .96rem; margin-top: 12px; }
+    .search-wrap { margin-top: 22px; }
+    .pill-row { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; margin: 24px 0 18px; padding-bottom: 4px; }
+    .pill { flex: 0 0 auto; min-height: 40px; padding: 0 16px; font-size: .86rem; }
+    .card-grid, .packages .card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    .card, .packages .card { min-height: 128px; padding: 15px; }
+    .card-icon { width: 40px; height: 40px; margin-bottom: 14px; border-radius: 8px; }
+    .card-icon svg { width: 20px; height: 20px; }
+    .card h3 { font-size: .92rem; }
+    .card p { display: none; }
+    .card-foot { padding-top: 10px; font-size: .66rem; }
+    .section-head h2 { font-size: 1.4rem; }
+    .trust-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px 10px; }
+    .footer-main, .footer-bottom { flex-direction: column; }
+    .footer-links { grid-template-columns: repeat(2, auto); justify-content: start; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="page-width header-inner">
+    <a href="#top" class="brand"><span class="brand-mark"></span><span class="brand-name">RTO Forms India</span></a>
+    <nav class="desktop-nav">
+      <a class="nav-link" href="#packages">Packages</a>
+      <a class="nav-link" href="#all-forms">All Forms</a>
+      <a class="nav-link" href="#how-it-works">How it works</a>
+      <a class="nav-link" href="#footer">FAQ</a>
+    </nav>
+    <div class="header-actions">
+      <a class="wallet-chip" href="#">&#8377;0.00</a>
+      <div class="language-set">
+        <button id="lang-en" class="language-button active" type="button" aria-pressed="true">EN</button>
+        <button id="lang-hi" class="language-button" type="button" aria-pressed="false">HI</button>
+      </div>
+      <button id="menu-btn" class="mobile-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="mobile-nav" class="mobile-nav hidden">
+    <a class="nav-link" href="#packages">Packages</a>
+    <a class="nav-link" href="#all-forms">All Forms</a>
+    <a class="nav-link" href="#how-it-works">How it works</a>
+    <a class="nav-link" href="#footer">FAQ</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <section class="page-width hero">
+    <h1>Every RTO form you need, in one place</h1>
+    <p>Fill official Motor Vehicles Act forms online and download a print-ready PDF. All are 100% FREE and easy to use &mdash; transfer, renewal, duplicate RC, hypothecation and more, with just a few clicks.</p>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.2 4.2"/></svg>
+        <label for="form-search" class="hidden">Search forms</label>
+        <input id="form-search" class="search-input" type="search" autocomplete="off" placeholder="Search forms, affidavits, or a task...">
+      </div>
+      <div id="search-results" class="search-results hidden" aria-live="polite"></div>
+      <div id="no-results" class="empty-result hidden" aria-live="polite">
+        <p id="no-results-title"></p>
+        <p class="empty-copy">Need this form? Tell us on WhatsApp and we'll add it.</p>
+        <a class="whatsapp-button" href="https://wa.me/918709731996?text=I%20need%20an%20RTO%20form" target="_blank" rel="noopener noreferrer">Message on WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="packages" class="page-width packages">
+    <div class="section-head">
+      <h2>Start with a package</h2>
+      <p>One set of details fills every form the job needs.</p>
+    </div>
+    <div class="card-grid" id="package-grid"></div>
+  </section>
+
+  <section id="all-forms" class="page-width catalogue">
+    <div class="section-head">
+      <h2>All 41 forms</h2>
+      <p>Fill online, or download the blank official format.</p>
+    </div>
+    <div class="pill-row" id="pill-row" role="tablist"></div>
+    <div class="card-grid" id="forms-grid" aria-live="polite"></div>
+  </section>
+
+  <section id="how-it-works" class="trust-strip">
+    <div class="page-width trust-grid">
+      <div class="trust-item"><span class="check">&#10003;</span><span>No login required</span></div>
+      <div class="trust-item"><span class="check">&#10003;</span><span>Data stays in your browser</span></div>
+      <div class="trust-item"><span class="check">&#10003;</span><span>41 forms covered</span></div>
+      <div class="trust-item"><span class="check">&#10003;</span><span>Free to use</span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer id="footer" class="page-width site-footer">
+  <div class="footer-main">
+    <div>
+      <div class="brand"><span class="brand-mark"></span><span class="brand-name">RTO Forms India</span></div>
+      <p class="footer-disclaimer">A free tool for filling Motor Vehicles Act 1988 forms online. Your data stays in your browser &mdash; nothing is stored on any server. We are not a government agency.</p>
+    </div>
+    <nav class="footer-links">
+      <a class="footer-link" href="#all-forms">All Forms</a>
+      <a class="footer-link" href="#how-it-works">How it works</a>
+      <a class="footer-link" href="#footer">FAQ</a>
+      <a class="footer-link" href="/contact-us.html">Contact Us</a>
+      <a class="footer-link" href="/privacy-policy.html">Privacy Policy</a>
+      <a class="footer-link" href="/terms-of-service.html">Terms of Service</a>
+      <a class="footer-link" href="/refund-policy.html">Refund Policy</a>
+    </nav>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2026 RTO Forms India</span>
+    <div class="footer-contact">
+      <a class="footer-link" href="https://wa.me/918709731996" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      <a class="footer-link" href="mailto:rtoformsindia@gmail.com">Email</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* Icons — one per category, plus a few specific ones for packages */
+const ICONS = {
+  transfer:'<path d="M7 7h11l-3-3M17 17H6l3 3M18 7l-3 3M6 17l3-3"/>',
+  renew:'<path d="M19 8V4m0 0h-4m4 0-5 5a7 7 0 1 0 2 7"/>',
+  copy:'<rect x="8" y="8" width="10" height="11" rx="1"/><path d="M6 16H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1"/>',
+  bank:'<path d="M3 20h18M5 20V10l7-5 7 5v10M9 20v-5h6v5"/>',
+  pin:'<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+  doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h5"/>',
+  card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>',
+  wheel:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+  route:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h.5"/>',
+  file:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h5M9 13h6M9 17h4"/>'
+};
+const CAT_CLASS = { Registration:'i-reg', Transfer:'i-trn', Licence:'i-lic', Permit:'i-per', Other:'i-oth' };
+
+const packages = [
+  { title:'Vehicle Transfer',   desc:'Transfer a vehicle to a new owner',        count:'4 forms', icon:'transfer', cls:'i-trn', href:'/vehicle-transfer' },
+  { title:'RC Renewal',         desc:'Renew your registration certificate',      count:'2 forms', icon:'renew',    cls:'i-reg', href:'/rc-renewal' },
+  { title:'Duplicate RC',       desc:'Get a duplicate registration certificate', count:'2 forms', icon:'copy',     cls:'i-reg', href:'/duplicate-rc' },
+  { title:'HP Removal',         desc:'Remove hypothecation after loan closure',  count:'2 forms', icon:'bank',     cls:'i-trn', href:'/hp-removal' },
+  { title:'Address Change',     desc:'Update address on your RC',                count:'2 forms', icon:'pin',      cls:'i-reg', href:'/address-change' },
+  { title:'Transfer on Death',  desc:"Transfer ownership after owner's death",   count:'3 forms', icon:'doc',      cls:'i-trn', href:'/transfer-on-death' }
+];
+
+/* Reference data only — the real site renders this from forms-data.js */
+const forms = [
+  { cat:'Registration', code:'20',  name:'Registration of Motor Vehicle', desc:'Register a vehicle — Rule 47', type:'Fill online', icon:'file' },
+  { cat:'Registration', code:'21',  name:'Sale Certificate', desc:'Issued by dealer — Rule 47(a)', type:'Fill online', icon:'file' },
+  { cat:'Registration', code:'22',  name:'Roadworthiness Certificate', desc:'Emission & noise compliance', type:'Fill online', icon:'wheel' },
+  { cat:'Registration', code:'23',  name:'Certificate of Registration', desc:'RC book form — Rule 48', type:'Download blank', icon:'card' },
+  { cat:'Registration', code:'24',  name:'Register of Motor Vehicles', desc:'Register kept by RA — Rule 49', type:'Download blank', icon:'file' },
+  { cat:'Registration', code:'25',  name:'Renewal of Registration', desc:'Renew RC — Rule 52', type:'Fill online', icon:'renew' },
+  { cat:'Registration', code:'26',  name:'Duplicate RC', desc:'Lost or torn RC — Rule 53', type:'Fill online', icon:'copy' },
+  { cat:'Registration', code:'27',  name:'New Registration Mark', desc:'On moving state — Rule 54', type:'Fill online', icon:'route' },
+  { cat:'Registration', code:'27A', name:'New Registration Mark — BH', desc:'BH-Series — Rule 51B(4)', type:'Fill online', icon:'route' },
+  { cat:'Registration', code:'33',  name:'Change of Address', desc:'Address change in RC — Rule 59', type:'Fill online', icon:'pin' },
+
+  { cat:'Transfer', code:'28',      name:'No Objection Certificate', desc:'NOC — Rules 54, 58', type:'Fill online', icon:'file' },
+  { cat:'Transfer', code:'29 + 30', name:'Vehicle Transfer Package', desc:'Form 29 + 30 + both affidavits', type:'Fill online', icon:'transfer' },
+  { cat:'Transfer', code:'31',      name:'Transfer on Death of Owner', desc:'To nominee — Rule 56(3)', type:'Fill online', icon:'doc' },
+  { cat:'Transfer', code:'32',      name:'Transfer — Public Auction', desc:'Bought at auction — Rule 57', type:'Fill online', icon:'transfer' },
+  { cat:'Transfer', code:'34',      name:'Hire-Purchase Endorsement', desc:'HP entry — Rule 60', type:'Fill online', icon:'bank' },
+  { cat:'Transfer', code:'35',      name:'Termination of Hire-Purchase', desc:'Cancel HP entry — Rule 61(1)', type:'Fill online', icon:'bank' },
+  { cat:'Transfer', code:'36',      name:'Fresh RC by Financier', desc:'Financier takes possession', type:'Fill online', icon:'bank' },
+  { cat:'Transfer', code:'DN',      name:'Motor Vehicle Delivery Note', desc:'Delivery confirmation checklist', type:'Fill online', icon:'file' },
+  { cat:'Transfer', code:'MR',      name:'Motor Vehicle Money Receipt', desc:'Payment receipt for vehicle sale', type:'Fill online', icon:'file' },
+
+  { cat:'Licence', code:'1',   name:'Declaration of Physical Fitness', desc:'Self-declaration — Rule 5(1)', type:'Fill online', icon:'file' },
+  { cat:'Licence', code:'1A',  name:'Medical Certificate', desc:'By medical practitioner', type:'Download blank', icon:'file' },
+  { cat:'Licence', code:'2',   name:"Learner's Licence / DL", desc:'LL, DL, new class or renewal', type:'Fill online', icon:'card' },
+  { cat:'Licence', code:'3',   name:"Learner's Licence", desc:'Issued by authority', type:'Download blank', icon:'card' },
+  { cat:'Licence', code:'4A',  name:'International Driving Permit', desc:'For driving abroad', type:'Fill online', icon:'route' },
+  { cat:'Licence', code:'5',   name:'Driving Certificate', desc:'From driving school', type:'Download blank', icon:'file' },
+  { cat:'Licence', code:'6',   name:'Form of Driving Licence', desc:'DL booklet form', type:'Download blank', icon:'card' },
+  { cat:'Licence', code:'7',   name:'Driving Licence Card', desc:'Card-type licence', type:'Download blank', icon:'card' },
+  { cat:'Licence', code:'8',   name:'Addition of Vehicle Class', desc:'Add class to DL — Rule 17(1)', type:'Fill online', icon:'file' },
+  { cat:'Licence', code:'9',   name:'Renewal of Driving Licence', desc:'DL renewal — Rule 18(1)', type:'Fill online', icon:'renew' },
+  { cat:'Licence', code:'LLD', name:'Duplicate Learner / Driving Licence', desc:'Lost or torn licence', type:'Fill online', icon:'copy' },
+
+  { cat:'Permit', code:'38', name:'Certificate of Fitness', desc:'For transport vehicle — Rule 62', type:'Download blank', icon:'wheel' },
+  { cat:'Permit', code:'45', name:'Tourist Permit Application', desc:'Tourist vehicle — Rule 82', type:'Fill online', icon:'route' },
+  { cat:'Permit', code:'46', name:'National Permit Application', desc:'Goods carriage — Rule 86', type:'Fill online', icon:'route' },
+  { cat:'Permit', code:'47', name:'National Permit Authorisation', desc:'Authorisation certificate', type:'Download blank', icon:'file' },
+  { cat:'Permit', code:'48', name:'Tourist Permit Authorisation', desc:'For tourist permit — Rule 83', type:'Fill online', icon:'file' },
+
+  { cat:'Other', code:'14', name:'Register of Driving School Trainees', desc:'Enrolment register — Rule 27', type:'Download blank', icon:'file' },
+  { cat:'Other', code:'15', name:'Register of Driving Hours', desc:'Daily register — Rule 27', type:'Download blank', icon:'file' },
+  { cat:'Other', code:'16', name:'Trade Certificate Application', desc:'Dealer trade certificate', type:'Fill online', icon:'file' },
+  { cat:'Other', code:'17', name:'Trade Certificate', desc:'Issued to dealer — Rule 35', type:'Download blank', icon:'file' },
+  { cat:'Other', code:'51', name:'Certificate of Insurance', desc:'Motor insurance COI format', type:'Download blank', icon:'file' },
+  { cat:'Other', code:'54', name:'Accident Information Report', desc:'Police accident report', type:'Download blank', icon:'file' }
+];
+
+function svg(name) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || ICONS.file) + '</svg>';
+}
+
+function card({ cls, icon, title, desc, foot, footClass, href }) {
+  const a = document.createElement('a');
+  a.className = 'card';
+  a.href = href || '#';
+  a.innerHTML =
+    '<span class="card-icon ' + cls + '">' + svg(icon) + '</span>' +
+    '<h3>' + title + '</h3>' +
+    '<p>' + desc + '</p>' +
+    (foot ? '<span class="card-foot ' + (footClass || '') + '">' + foot + '</span>' : '');
+  return a;
+}
+
+/* packages */
+const pkgGrid = document.getElementById('package-grid');
+packages.forEach(p => pkgGrid.appendChild(card({
+  cls: p.cls, icon: p.icon, title: p.title, desc: p.desc, foot: p.count, href: p.href
+})));
+
+/* pills */
+const CATS = ['All', 'Registration', 'Transfer', 'Licence', 'Permit', 'Other'];
+const pillRow = document.getElementById('pill-row');
+const formsGrid = document.getElementById('forms-grid');
+
+CATS.forEach((c, i) => {
+  const b = document.createElement('button');
+  b.className = 'pill' + (i === 0 ? ' active' : '');
+  b.type = 'button';
+  b.textContent = c === 'All' ? 'All 41' : c;
+  b.dataset.cat = c;
+  b.addEventListener('click', () => {
+    [...pillRow.children].forEach(x => x.classList.toggle('active', x === b));
+    renderForms(c);
+  });
+  pillRow.appendChild(b);
+});
+
+function renderForms(cat) {
+  formsGrid.replaceChildren();
+  forms.filter(f => cat === 'All' || f.cat === cat).forEach(f => {
+    const online = f.type === 'Fill online';
+    formsGrid.appendChild(card({
+      cls: CAT_CLASS[f.cat], icon: f.icon,
+      title: f.name, desc: f.desc,
+      foot: f.type, footClass: online ? 'online' : 'blank'
+    }));
+  });
+}
+renderForms('All');
+
+/* search */
+const searchInput = document.getElementById('form-search');
+const searchResults = document.getElementById('search-results');
+const noResults = document.getElementById('no-results');
+
+searchInput.addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+  searchResults.replaceChildren();
+  if (!q) { searchResults.classList.add('hidden'); noResults.classList.add('hidden'); return; }
+
+  const hits = forms.filter(f => (f.code + ' ' + f.name + ' ' + f.desc + ' ' + f.cat).toLowerCase().includes(q));
+  if (!hits.length) {
+    searchResults.classList.add('hidden');
+    noResults.classList.remove('hidden');
+    document.getElementById('no-results-title').textContent = 'No results for "' + e.target.value.trim() + '"';
+    return;
+  }
+  noResults.classList.add('hidden');
+  searchResults.classList.remove('hidden');
+  hits.forEach(f => {
+    const row = document.createElement('a');
+    row.className = 'result-row';
+    row.href = '#';
+    row.innerHTML =
+      '<span class="card-icon ' + CAT_CLASS[f.cat] + '" style="width:38px;height:38px;margin:0;border-radius:7px">' + svg(f.icon) + '</span>' +
+      '<span style="flex:1"><h3 class="result-name">' + f.name + '</h3><p class="result-description">' + f.desc + '</p></span>' +
+      '<span class="card-foot ' + (f.type === 'Fill online' ? 'online' : 'blank') + '" style="margin:0;padding:0">' + f.type + '</span>';
+    searchResults.appendChild(row);
+  });
+});
+
+/* language + menu */
+function setLang(on, off) {
+  on.classList.add('active'); off.classList.remove('active');
+  on.setAttribute('aria-pressed', 'true'); off.setAttribute('aria-pressed', 'false');
+}
+document.getElementById('lang-en').addEventListener('click', () => setLang(document.getElementById('lang-en'), document.getElementById('lang-hi')));
+document.getElementById('lang-hi').addEventListener('click', () => setLang(document.getElementById('lang-hi'), document.getElementById('lang-en')));
+
+const menuBtn = document.getElementById('menu-btn');
+const mobileNav = document.getElementById('mobile-nav');
+menuBtn.addEventListener('click', () => {
+  const open = !mobileNav.classList.contains('hidden');
+  mobileNav.classList.toggle('hidden', open);
+  menuBtn.setAttribute('aria-expanded', String(!open));
+});
+mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  mobileNav.classList.add('hidden');
+  menuBtn.setAttribute('aria-expanded', 'false');
+}));
+</script>
+</body>
+</html>

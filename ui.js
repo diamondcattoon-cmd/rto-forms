@@ -1,54 +1,19 @@
 /* ════════ UI — rendering, event handlers ════════
    Everything that touches the DOM in response to data changing or the user
-   clicking something: the forms-catalog grid (renderForms/fillNow/
-   openOfficial/filterCat), the fill-tool's dynamic sections (buildBundles/
-   buildPicks/updateSections/fieldHTML/handleInput), the restore-notice
-   banner, the Jharkhand cost calculator, and generatePDF() (which hands off
-   to the PICKS[i].gen functions in pdf-generate.js). Loads after
-   forms-data.js — its own bootstrap calls at the bottom (renderForms(),
-   buildBundles(); buildPicks(); updateSections();) need FORMS/PICKS/FIELDS/
-   CHECKED to already exist. */
+   clicking something: fillNow/openOfficial (the two actions the landing
+   page's catalog cards — landing.js — hand off to), the fill-tool's dynamic
+   sections (buildBundles/buildPicks/updateSections/fieldHTML/handleInput),
+   the restore-notice banner, the Jharkhand cost calculator, and
+   generatePDF() (which hands off to the PICKS[i].gen functions in
+   pdf-generate.js). Loads after forms-data.js — its own bootstrap calls at
+   the bottom (buildBundles(); buildPicks(); updateSections();) need
+   FORMS/PICKS/FIELDS/CHECKED to already exist. */
 
 /* ════════ FORMS CATALOG DATA ════════ */
-/* Auto-detect local forms folder */
+/* Auto-detect local forms folder — read by openOfficial() below and by
+   landing.js (blank-PDF download source). */
 let USE_LOCAL=false;
-(async()=>{try{const r=await fetch('/forms/FORM-29.pdf',{method:'HEAD'});USE_LOCAL=r.ok;if(USE_LOCAL)renderForms();}catch(e){USE_LOCAL=false;}})();
-
-let curCat='all';
-function renderForms(){
-  const grid=document.getElementById('formsGrid');
-  /* Not every page has the full 31-form catalog grid — a task page (e.g.
-     /vehicle-transfer) deliberately omits it to stay focused, reachable
-     instead via the "Saare 31 forms dekho" toggle (#fullFormPicker) or a
-     link back to the homepage's catalog. Without this guard, the
-     unconditional renderForms() call below would throw on such a page and
-     halt this entire script — including everything after it (buildBundles,
-     applyTaskDefaults, etc.). */
-  if(!grid) return;
-  const q=(document.getElementById('formSearch')?.value||'').toLowerCase().trim();
-  const list=FORMS.filter(f=>{
-    const catOk = curCat==='all'||f.cat===curCat;
-    const qOk = !q || f.num.toLowerCase().includes(q) || f.name.toLowerCase().includes(q) || f.desc.toLowerCase().includes(q);
-    return catOk && qOk;
-  });
-  if(!list.length){
-    grid.innerHTML='<p style="grid-column:1/-1;color:var(--txt-2);font-size:14px;padding:20px 0">'+t('catalog.noMatch')+'</p>';
-    return;
-  }
-  grid.innerHTML=list.map((f,idx)=>{
-    const i=FORMS.indexOf(f);
-    let click, liveCls;
-    if(f.fill){ click=`fillNow(${i})`; liveCls='is-live'; }
-    else { click=`openOfficial(${i})`; liveCls=''; }
-    const icon=CAT_ICON[f.cat]||'\uD83D\uDCC4';
-    return `
-    <div class="fcard ${liveCls}" onclick="${click}">
-      <span class="fcard-icon">${icon}</span>
-      <div class="fcard-name">Form ${f.num} \u2014 ${f.name}</div>
-      <div class="fcard-desc">${f.desc}</div>
-    </div>`;
-  }).join('');
-}
+(async()=>{try{const r=await fetch('/forms/FORM-29.pdf',{method:'HEAD'});USE_LOCAL=r.ok;}catch(e){USE_LOCAL=false;}})();
 
 function fillNow(i){
   const f=FORMS[i];
@@ -68,14 +33,6 @@ function openOfficial(i){
   const url=(f.pdfs&&f.pdfs.length)?base+f.pdfs[0]:'https://parivahan.gov.in/en/forms-all';
   window.open(url,'_blank');
 }
-function filterCat(cat,btn){
-  curCat=cat;
-  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  renderForms();
-}
-
-renderForms();
 
 /* Reads a field's current value out of VALS (forms-data.js) — used by
    generatePDF() below to build the data object each PICKS[i].gen() draws from. */
@@ -480,8 +437,10 @@ function fieldHTML(id){
   const dateTab=f.type==='date'?`onkeydown="dateTabFix(event,this)"`:'';
   const isAi=AI_FILLED_FIELDS.has(id);
   const isVerified=VERIFIED_FIELDS.has(id);
+  const isMissed=AI_MISSED_FIELDS.has(id);
   const aiBadge=isAi?'<span class="fld-ai-badge">AI</span>':'';
   const verifiedBadge=isVerified?'<span class="fld-verified-badge">✓</span>':'';
+  const missedBadge=isMissed?'<span class="fld-missed-badge" title="AI could not read this — fill it in">?</span>':'';
   const conflict=PENDING_CONFLICTS[id];
   const conflictNote=conflict
     ? (()=>{
@@ -490,7 +449,7 @@ function fieldHTML(id){
         return `<div class="fld-conflict-note" id="conflict_${id}">${t('conflict.differs',{winner:winnerLbl,loser:loserLbl})} <button type="button" onclick="switchFieldConflict('${id}')">${t('conflict.useOther',{loser:loserLbl})}</button><button type="button" class="fld-conflict-dismiss" onclick="dismissFieldConflict('${id}')" aria-label="Dismiss">&times;</button></div>`;
       })()
     : '';
-  return `<div class="fld ${f.full?'full':''}${isAi?' fld-ai':''}${isVerified?' fld-verified':''}" id="fldwrap_${id}"><label><span>${f.label}${aiBadge}${verifiedBadge}</span>${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}${conflictNote}</div>`;
+  return `<div class="fld ${f.full?'full':''}${isAi?' fld-ai':''}${isVerified?' fld-verified':''}${isMissed?' fld-missed':''}" id="fldwrap_${id}"><label><span>${f.label}${aiBadge}${verifiedBadge}${missedBadge}</span>${counter}</label><input type="${f.type||'text'}" id="${id}" placeholder="${f.ph||''}" value="${v}" ${maxl} ${imode} ${dateTab} oninput="handleInput('${id}',this)">${hint}${conflictNote}</div>`;
 }
 
 /* Tab on a date field should move to the next input, not the calendar picker */
@@ -538,6 +497,17 @@ function handleInput(id, el){
         check.textContent='✓';
         label.appendChild(check);
       }
+    }
+  }
+  /* The user just filled in a field AI couldn't read — same
+     no-full-re-render treatment as the AI-filled case above. */
+  if(AI_MISSED_FIELDS.has(id)){
+    AI_MISSED_FIELDS.delete(id);
+    const wrap=document.getElementById('fldwrap_'+id);
+    if(wrap){
+      wrap.classList.remove('fld-missed');
+      const badge=wrap.querySelector('.fld-missed-badge');
+      if(badge) badge.remove();
     }
   }
   /* A manual edit supersedes whatever document(s) supplied this field —
@@ -852,21 +822,42 @@ function generatePDF(blank, mode){
         setTimeout(()=>{inp.classList.remove('fld-blink');},2200);
       }
     };
-    if(need.has('s_name') && !g('s_name')){highlightErr('s_name',t('err.ownerName')); return;}
+    /* Neither party is hard-required on its own anymore — real workflow:
+       a dealer/agent often fills only the buyer (or only the seller) and
+       comes back for the other side later. What IS required: at least ONE
+       of the two names, whichever forms actually use them (need.has and
+       needsBuyer below) — a completely blank set of parties can't produce
+       a meaningful filled PDF, so that case is pointed at the blank-forms
+       download instead of erroring on a specific field (there isn't one
+       single field to blame). A party left entirely blank prints blank on
+       the PDF (see addrJoin/hRow/hPair, pdf-generate.js — already handle
+       empty strings cleanly, never "undefined"/"null"). */
+    const sellerFilled=!!g('s_name');
+    const buyerFilled=!!g('b_name');
+    if((need.has('s_name') || needsBuyer) && !sellerFilled && !buyerFilled){
+      st.textContent=t('err.needOneName');
+      st.className='status err';
+      const blankBtnEl=document.getElementById('blankBtn');
+      if(blankBtnEl){
+        blankBtnEl.classList.add('fld-blink');
+        blankBtnEl.scrollIntoView({behavior:'smooth',block:'center'});
+        setTimeout(()=>blankBtnEl.classList.remove('fld-blink'),2200);
+      }
+      return;
+    }
     if(needsReg && !g('reg_no')){highlightErr('reg_no',t('err.regNo')); return;}
-    if(needsBuyer && !g('b_name')){highlightErr('b_name',t('err.buyerName')); return;}
-    /* Mobile is compulsory only for forms that actually include a mobile
-       number field — checked separately for seller ('mobile') and buyer
-       ('b_mobile') since a pick can require either, both, or neither
-       (e.g. Form 30 needs both; most single-party forms need only
-       'mobile'). Both checks must run — this used to only check 'mobile',
-       which let a PDF generate with a required buyer mobile left blank. */
-    if(need.has('mobile')){
+    /* Mobile is compulsory only for a party that's actually being filled —
+       checked separately for seller ('mobile') and buyer ('b_mobile')
+       since a pick can require either, both, or neither field, AND now
+       either party can legitimately be the empty one (see above). A
+       mobile number for a party with no name at all would be meaningless
+       to require. */
+    if(need.has('mobile') && sellerFilled){
       const mob=g('mobile');
       if(!mob){highlightErr('mobile',t('err.mobile')); return;}
       if(mob.length!==10){highlightErr('mobile',t('err.mobileDigits')); return;}
     }
-    if(need.has('b_mobile')){
+    if(need.has('b_mobile') && buyerFilled){
       const bmob=g('b_mobile');
       if(!bmob){highlightErr('b_mobile',t('err.buyerMobile')); return;}
       if(bmob.length!==10){highlightErr('b_mobile',t('err.buyerMobileDigits')); return;}
