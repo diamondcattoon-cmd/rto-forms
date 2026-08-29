@@ -72,8 +72,8 @@ function renderPackages(){
     const b=BUNDLES.find(x=>x.id===id);
     if(!b) return;
     grid.appendChild(buildCard({
-      cls:b.cls, icon:b.icon in ICONS ? b.icon : 'file',
-      title:b.label, desc:b.desc,
+      cls:b.cls, icon:b.svgIcon in ICONS ? b.svgIcon : 'file',
+      title:b.label, desc:t('landing.pkg.'+id),
       foot:t('landing.formCount',{n:b.picks.length,s:b.picks.length===1?'':'s'}),
       onClick:()=>packageClick(id),
     }));

@@ -325,39 +325,36 @@ const DOC_TYPES=[
 ];
 
 /* ── TASK BUNDLES — one click selects a set of related documents ──
-   `desc` (Hinglish, matches FORMS[i].desc's convention — see forms-data.js
-   top) is shown on the landing page's package cards (landing.js); `cls` is
-   the same category-tint class the form catalog cards use (style.css). */
+   `icon` is an emoji, used only by the task-page "Quick start" buttons
+   (buildBundles(), ui.js) — leave it alone. `svgIcon`/`cls` are for the
+   landing page's package cards (landing.js) instead: `svgIcon` is a key
+   into landing.js's ICONS (ported from design/design-landing-v3.html's own
+   per-package icon choices), `cls` is the same category-tint class the
+   form catalog cards use (style.css, .i-reg/.i-trn/...). The card's
+   description text is NOT here — it's in i18n.js (`landing.pkg.<id>`),
+   always English, per spec; a description is UI text, not catalog data. */
 const BUNDLES=[
-  {id:'b_transfer', label:'Vehicle Transfer', icon:'🚗', cls:'i-trn',
-   desc:'Gaadi kisi aur ke naam karni hai',
+  {id:'b_transfer', label:'Vehicle Transfer', icon:'🚗', svgIcon:'transfer', cls:'i-trn',
    picks:['pk29','pk30','pkAS','pkAP'],
    suggest:['pk28','pk26','pkDN','pkMR']},
-  {id:'b_rcrenew', label:'RC Renewal', icon:'🔄', cls:'i-reg',
-   desc:'RC expire ho rahi hai, renew karani hai',
+  {id:'b_rcrenew', label:'RC Renewal', icon:'🔄', svgIcon:'renew', cls:'i-reg',
    picks:['pk25'], suggest:['pk33']},
-  {id:'b_duprc', label:'Duplicate RC', icon:'📋', cls:'i-reg',
-   desc:'RC kho gayi ya phat gayi — duplicate chahiye',
+  {id:'b_duprc', label:'Duplicate RC', icon:'📋', svgIcon:'copy', cls:'i-reg',
    picks:['pk26'], suggest:['pkAS']},
-  {id:'b_death', label:'Transfer on Death', icon:'📜', cls:'i-trn',
-   desc:"Gaadi ke malik ka dehant ho gaya — nominee ke naam karni hai",
+  {id:'b_death', label:'Transfer on Death', icon:'📜', svgIcon:'doc', cls:'i-trn',
    picks:['pk31'], suggest:['pkAS','pk26']},
-  {id:'b_hp', label:'HP / Loan', icon:'🏦', cls:'i-trn',
-   desc:'Gaadi loan pe li hai — RC mein financier ka naam chadhana hai',
+  {id:'b_hp', label:'HP / Loan', icon:'🏦', svgIcon:'bank', cls:'i-trn',
    picks:['pk34'], suggest:['pk35','pk33']},
   /* Deliberately separate from b_hp above — that one is for ADDING a
      hire-purchase/loan note to the RC (Form 34); this one is for the
      opposite, much more common task once a loan is paid off: REMOVING it
      (Form 35). Conflating the two under one bundle would mean whichever
      form is "primary" silently wrongs the other use case. */
-  {id:'b_hpremove', label:'Remove Hypothecation', icon:'🔓', cls:'i-trn',
-   desc:'Loan chuka diya — RC se financier ka naam hatana hai',
+  {id:'b_hpremove', label:'Remove Hypothecation', icon:'🔓', svgIcon:'bank', cls:'i-trn',
    picks:['pk35'], suggest:['pk33']},
-  {id:'b_address', label:'Address Change', icon:'📍', cls:'i-reg',
-   desc:'RC mein naya address update karna hai',
+  {id:'b_address', label:'Address Change', icon:'📍', svgIcon:'pin', cls:'i-reg',
    picks:['pk33'], suggest:['pk26']},
-  {id:'b_newreg', label:'New Registration', icon:'🆕', cls:'i-reg',
-   desc:'Nayi gaadi register karani hai',
+  {id:'b_newreg', label:'New Registration', icon:'🆕', svgIcon:'card', cls:'i-reg',
    picks:['pk20','pk21','pk22'], suggest:['pk28']},
 ];
 

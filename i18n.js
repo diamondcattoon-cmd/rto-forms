@@ -68,6 +68,13 @@ const I18N_STRINGS = {
     'landing.trust2': 'Data stays in your browser',
     'landing.trust3': '{n} forms covered',
     'landing.trust4': 'Free to use',
+    /* package card descriptions — always English, no Hinglish, per spec */
+    'landing.pkg.b_transfer': 'Transfer a vehicle to a new owner',
+    'landing.pkg.b_rcrenew': 'Renew your registration certificate',
+    'landing.pkg.b_duprc': 'Get a duplicate registration certificate',
+    'landing.pkg.b_hpremove': 'Remove hypothecation after loan closure',
+    'landing.pkg.b_address': 'Update address on your RC',
+    'landing.pkg.b_death': "Transfer ownership after owner's death",
 
     /* ── root landing tool section (old-style layout, root only) ── */
     'root.toolTitle': 'Fill RTO forms online',
@@ -281,6 +288,13 @@ const I18N_STRINGS = {
     'landing.trust2': 'Data aapke browser mein hi rehta hai',
     'landing.trust3': '{n} forms covered',
     'landing.trust4': 'Bilkul free',
+    /* Always English, no Hinglish — same text as the en block. */
+    'landing.pkg.b_transfer': 'Transfer a vehicle to a new owner',
+    'landing.pkg.b_rcrenew': 'Renew your registration certificate',
+    'landing.pkg.b_duprc': 'Get a duplicate registration certificate',
+    'landing.pkg.b_hpremove': 'Remove hypothecation after loan closure',
+    'landing.pkg.b_address': 'Update address on your RC',
+    'landing.pkg.b_death': "Transfer ownership after owner's death",
 
     /* ── root landing tool section (old-style layout, root only) ── */
     'root.toolTitle': 'RTO forms online bharo',
