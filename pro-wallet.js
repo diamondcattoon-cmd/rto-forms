@@ -13,9 +13,10 @@
    there is no upfront "set up your wallet" step. It's minted by the Worker
    on first payment (see startPayment()) and reused for every /balance and
    /extract call after that (sent as the `token` param — token IS the
-   walletId, see worker/src/index.js). A mobile number is only ever
-   collected inside Razorpay's own checkout UI, purely as a recovery contact
-   — see sendWalletLink()/claimWalletLinkFromUrl(). */
+   walletId, see worker/src/index.js). There is no account-recovery path if
+   this token is lost (cleared storage, new device) — an earlier MSG91-based
+   recovery-link flow was removed since it was never actually configured in
+   production. */
 const WORKER_URL='https://rto-ai-extract.diamondcattoon.workers.dev';
 
 let PRO=Object.assign({walletId:''}, JSON.parse(localStorage.getItem('rtoProState')||'{}'));
@@ -73,69 +74,6 @@ function renderProCredits(){
   if(el) el.textContent='₹'+(PRO.balancePaise/100).toFixed(2);
 }
 
-/* ── Account recovery (mobile number → existing wallet, not identity) ──
-   Collapsed by default (see toggleRecoveryForm() / #recoveryForm in
-   index.html) — this is a fallback for "I'm on a new device/browser and my
-   old wallet's token is gone", not part of the normal first-time flow. */
-function toggleRecoveryForm(){
-  const el=document.getElementById('recoveryForm');
-  if(!el) return;
-  const show=el.style.display==='none';
-  el.style.display=show?'block':'none';
-  if(show) document.getElementById('walletMobileInput').focus();
-}
-async function sendWalletLink(){
-  const input=document.getElementById('walletMobileInput');
-  const v=input.value.replace(/\D/g,'');
-  const statusEl=document.getElementById('walletLinkStatus');
-  if(v.length!==10 || !/^[6-9]/.test(v)){ statusEl.textContent=t('err.validMobile'); statusEl.className='status err'; return; }
-
-  const btn=document.getElementById('sendLinkBtn');
-  btn.disabled=true; statusEl.textContent=t('status.linkSending'); statusEl.className='status';
-  try{
-    const res=await fetch(WORKER_URL+'/link/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile:v})});
-    const j=await res.json();
-    if(!res.ok || j.error){
-      statusEl.textContent = j.code==='NO_WALLET_FOUND'
-        ? t('status.noWalletFound')
-        : (j.error||t('status.linkError'));
-      statusEl.className='status err';
-      btn.disabled=false;
-      return;
-    }
-    statusEl.textContent=t('status.linkSent',{mobile:v}); statusEl.className='status ok';
-  }catch(e){
-    statusEl.textContent=t('err.networkRetry'); statusEl.className='status err';
-    btn.disabled=false;
-  }
-}
-/* Runs once on page load: if the URL is a claim link (/w/<token>, from the
-   recovery SMS), claim it immediately — this rotates to a brand-new
-   walletId server-side and carries the balance across — store the result,
-   and strip the token out of the visible URL/history so it doesn't linger. */
-async function claimWalletLinkFromUrl(){
-  const m=/^\/w\/([a-f0-9]+)$/.exec(location.pathname);
-  if(!m) return;
-  const claimToken=m[1];
-  history.replaceState(null,'','/'); // scrub the token from the address bar right away
-
-  const statusEl=document.getElementById('walletLinkStatus');
-  if(statusEl){ statusEl.textContent=t('status.recovering'); statusEl.className='status'; }
-  try{
-    const res=await fetch(WORKER_URL+'/link/claim/'+encodeURIComponent(claimToken),{method:'POST'});
-    const j=await res.json();
-    if(!res.ok || j.error){
-      if(statusEl){ statusEl.textContent=j.error||t('err.linkExpired'); statusEl.className='status err'; }
-      return;
-    }
-    PRO.walletId=j.walletId; PRO.balancePaise=j.balancePaise; saveProState();
-    renderProCredits();
-    if(statusEl){ statusEl.textContent=t('status.walletRecovered',{bal:j.balanceRs}); statusEl.className='status ok'; }
-    document.getElementById('tool').scrollIntoView({behavior:'smooth'});
-  }catch(e){
-    if(statusEl){ statusEl.textContent=t('err.networkRetry'); statusEl.className='status err'; }
-  }
-}
 async function fetchWalletBalance(){
   if(!PRO.walletId) return;
   try{
@@ -417,23 +355,17 @@ function removeDoc(docType){
   updateCheckoutBox();
 }
 
-/* ── Combined AI checkout ──
-   Documents no longer each have their own "Extract" trigger — instead every
-   ready-but-not-yet-extracted document is shown together in one checkout
-   box (updateCheckoutBox()) behind a single "Pay & Extract" button. The
-   IMPORTANT part: billing stays exactly per-document underneath — the ₹5
-   deduction still only happens inside runExtraction(), after the Worker
-   confirms a successful Gemini extraction for THAT ONE document (unchanged
-   from before, see worker/src/index.js's /extract handler). The "combined"
-   part is purely a frontend loop over runExtraction() calls; nothing about
-   the charge model changed, which is what keeps the Refund Policy's
-   "failed extraction is never charged" promise true. */
-const DOC_LABEL={aadhaar:'Aadhaar', pan:'PAN', rc:'RC'};
+/* ── Combined AI checkout — package pricing ──
+   One flat price for the whole TASK (task-pricing.js's TASK_PRICING),
+   charged ONCE for every ready document together — never per document.
+   See worker/src/index.js's /extract-package: it runs every document
+   first and only deducts if ALL of them succeed, so there is no
+   "charge then refund" path here to get wrong — a partial failure simply
+   never gets charged in the first place. */
 const EXTRACTED_SET=new Set(); // docTypes successfully extracted this session
 
 /* Returns {docType, images, uploadsKey} for a docType if its preview is
-   ready, else null. Aadhaar combines front (+ optional back) into one call —
-   matches how extractAadhaar() used to bundle them before this refactor. */
+   ready, else null. Aadhaar combines front (+ optional back) into one call. */
 function getBatchItem(docType){
   if(docType==='aadhaar'){
     const front=DOC_STATE.aadhaar_front;
@@ -448,48 +380,68 @@ function getBatchItem(docType){
 }
 
 /* Everything with a ready preview that hasn't been successfully extracted
-   yet — a doc that failed stays in this list (so clicking "Pay & Extract"
-   again naturally retries it too, on top of its own dedicated Retry button). */
+   yet — a doc that failed (or was never attempted because an earlier doc
+   in the same package failed) stays in this list, so clicking the button
+   again naturally retries just what's left. */
 function computeReadyDocs(){
   return ['aadhaar','pan','rc'].map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.docType));
 }
 
-/* Renders the checkout box: what's left to pay for, the running total, and
-   (when lastRun is passed, right after a batch finishes) a plain-language
-   result — how many were actually charged vs failed vs never attempted
-   because the balance ran out partway through. */
-function updateCheckoutBox(lastRun){
+/* Current package price in paise for whatever's checked/on this page right
+   now — see getCurrentTaskId() (ui.js) and TASK_PRICING (task-pricing.js).
+   This is a LABEL only; the Worker decides for itself what to actually
+   charge and never trusts a client-sent amount. */
+function getCurrentPackagePrice(){
+  const taskId=(typeof getCurrentTaskId==='function') ? getCurrentTaskId() : 'default';
+  return TASK_PRICING[taskId] ?? TASK_PRICING.default;
+}
+
+/* Tracks which action the single checkout button currently performs —
+   'idle' starts/retries extraction, 'low-balance' opens the top-up modal
+   instead. Read by checkoutBtnAction(), set by updateCheckoutBox(). */
+let CHECKOUT_BTN_MODE='idle';
+
+/* Renders the ONE checkout button + one status line — nothing else. Three
+   states only, per spec: idle (shows the flat price), failed (retry, not
+   charged), low-balance (add money). lastFailed is true right after a
+   package attempt came back with at least one failed document. */
+function updateCheckoutBox(lastFailed){
   const box=document.getElementById('checkoutBox');
-  const rowsEl=document.getElementById('checkoutRows');
   const payBtn=document.getElementById('checkoutPayBtn');
   const resultEl=document.getElementById('checkoutResult');
   if(!box) return;
 
   const batch=computeReadyDocs();
-  if(!batch.length && !lastRun){ box.style.display='none'; return; }
+  if(!batch.length && !lastFailed){ box.style.display='none'; return; }
   box.style.display='block';
 
-  const n=batch.length, total=n*5;
-  rowsEl.innerHTML = n
-    ? batch.map(item=>`<div class="checkout-row"><span>${DOC_LABEL[item.docType]}</span><span class="mono">₹5</span></div>`).join('')
-      + `<div class="checkout-row checkout-total"><span>${t('checkout.rowTotal',{n,s:n>1?'s':''})}</span><span class="mono">${t('checkout.upTo',{total})}</span></div>`
-    : `<div class="checkout-row"><span>${t('status.allExtracted')}</span></div>`;
-  payBtn.style.display = n ? '' : 'none';
-  payBtn.textContent = n<=1 ? t('checkout.payBtn1') : t('checkout.payBtnN',{total});
+  const price=getCurrentPackagePrice();
+  const priceRs=(price/100).toFixed(0);
 
-  if(lastRun){
-    const {succeeded,failed,stoppedOnBalance}=lastRun;
-    let msg='';
-    if(succeeded) msg+=t('status.batchSucceeded',{n:succeeded,s:succeeded>1?'s':'',amt:succeeded*5});
-    if(failed) msg+=t('status.batchFailed',{n:failed,amt:failed*5});
-    if(stoppedOnBalance) msg+=t('status.balancePartial');
-    resultEl.textContent=msg.trim();
-    resultEl.className = (failed || stoppedOnBalance) ? 'status err' : 'status ok';
+  if(lastFailed){
+    CHECKOUT_BTN_MODE='idle';
+    payBtn.textContent=t('ai.retryBtn');
+    payBtn.style.display=batch.length?'':'none';
+    resultEl.textContent=t('ai.extractFailed');
+    resultEl.className='status err';
+  } else if(PRO.balancePaise<price){
+    CHECKOUT_BTN_MODE='low-balance';
+    payBtn.textContent=t('ai.addMoneyBtn');
+    payBtn.style.display='';
+    resultEl.textContent=t('ai.balanceTooLow',{price:priceRs});
+    resultEl.className='status err';
   } else {
-    resultEl.textContent=''; resultEl.className='status';
+    CHECKOUT_BTN_MODE='idle';
+    payBtn.textContent=t('ai.fillWithAi',{price:priceRs});
+    payBtn.style.display='';
+    resultEl.textContent='';
+    resultEl.className='status';
   }
+}
 
-  updateAiBoxBalanceNote();
+function checkoutBtnAction(){
+  if(CHECKOUT_BTN_MODE==='low-balance') openBuyModal();
+  else startPackageExtraction();
 }
 
 /* ── AI box (task-page v2 layout only) ──
@@ -510,24 +462,6 @@ function setAiBoxState(state){
 }
 function showAiBoxPicker(){ setAiBoxState('picker'); }
 
-/* Shows current wallet balance + a top-up shortcut inline in the picker box
-   the moment it's clear the balance won't cover every ready-to-extract
-   document — instead of only finding out after clicking "Pay & Extract"
-   and hitting runExtraction()'s balance guard. Opens the SAME "Add Money"
-   modal that guard already uses (openBuyModal()) — Razorpay itself never
-   opens until a package is picked inside that modal, so this doesn't skip
-   the "our modal first, Razorpay second" gate that already exists. */
-function updateAiBoxBalanceNote(){
-  const el=document.getElementById('aiBoxBalanceNote');
-  if(!el) return;
-  const n=computeReadyDocs().length;
-  if(!n){ el.style.display='none'; return; }
-  const totalPaise=n*500;
-  if(PRO.balancePaise>=totalPaise){ el.style.display='none'; return; }
-  el.style.display='flex';
-  el.innerHTML='<span>'+t('ai.balancePrefix',{n:(PRO.balancePaise/100).toFixed(0)})+'</span><button type="button" class="btn-blank" onclick="openBuyModal()">'+t('ai.addFifty')+'</button>';
-}
-
 /* Collapses the AI box to its one-line summary — only on a batch that
    finished cleanly (nothing failed, balance didn't run out) — a partial
    result stays in the picker view so the Retry button and per-document
@@ -543,41 +477,6 @@ function collapseAiBoxToSummary(){
   const filled=[...need].filter(f=>FIELD_SOURCE[f] && EXTRACTED_SET.has(FIELD_SOURCE[f])).length;
   el.textContent=t('status.docsExtractedSummary',{n,s:n>1?'s':'',filled,fs:filled===1?'':'s'});
   setAiBoxState('summary');
-}
-
-/* The "Pay & Extract" button: runs every ready document through
-   runExtraction() ONE AT A TIME (never in parallel — two concurrent
-   /extract calls could both pass the Worker's balance check before either
-   deducts, since it isn't a locked/atomic check-and-set). If a call comes
-   back 'skipped-balance' the loop stops right there rather than trying
-   (and failing) every remaining document for the same reason — the buy
-   modal is already open at that point from inside runExtraction(). */
-async function startCombinedExtraction(){
-  const batch=computeReadyDocs();
-  if(!batch.length) return;
-  const payBtn=document.getElementById('checkoutPayBtn');
-  payBtn.disabled=true;
-  let succeeded=0, failed=0, stoppedOnBalance=false;
-  for(const item of batch){
-    const result=await runExtraction(item.docType, item.images, item.uploadsKey);
-    if(result==='success') succeeded++;
-    else if(result==='failed') failed++;
-    else if(result==='skipped-balance'){ stoppedOnBalance=true; break; }
-  }
-  payBtn.disabled=false;
-  updateCheckoutBox({succeeded, failed, stoppedOnBalance});
-  if(succeeded>0 && !failed && !stoppedOnBalance) collapseAiBoxToSummary();
-}
-
-/* Per-document Retry button (shown only after that specific document
-   failed for a non-balance reason, e.g. a Gemini/network error) — retries
-   just that one document, same ₹5-on-success rule, without touching
-   whatever else already succeeded. */
-async function retryDoc(docType){
-  const item=getBatchItem(docType);
-  if(!item) return;
-  await runExtraction(item.docType, item.images, item.uploadsKey);
-  updateCheckoutBox();
 }
 
 /* Manual Individual/Firm toggle next to the Seller section (index.html,
@@ -615,86 +514,124 @@ function dismissFieldConflict(fieldId){
   updateSections();
 }
 
-/* Runs one document's extraction. Returns 'success' | 'failed' |
-   'skipped-balance' (balance too low — nothing was attempted, no charge,
-   buy modal opened) so callers (startCombinedExtraction's loop, retryDoc)
-   can tell "this one worked", "this one errored — safe to try the next
-   one anyway" and "the wallet is the problem — stop asking" apart. */
-async function runExtraction(docType, images, uploadsKey){
-  const statusEl=document.getElementById('proStatus');
-  const stateEl=document.getElementById('state-'+docType);
-  const retryBtn=document.getElementById('extract-'+docType);
-  const label=DOC_LABEL[docType]||docType.toUpperCase();
+/* Applies ONE document's already-successful extraction to the form fields
+   — same mapping/merge/highlight logic for every doc regardless of whether
+   the overall package ended up charged (see startPackageExtraction()):
+   Gemini already did the work, so there's no reason to hide a result that
+   happened to sit in a package where a DIFFERENT document failed. Only the
+   wallet balance is conditional on the whole package succeeding. */
+async function applyExtractionResult(docType, data, item){
+  const mapped=AI_FIELD_MAP[docType](data, getEffectiveRole(docType));
+  /* Uppercase first (matches every other AI-written or manually-typed
+     value in this app — see handleInput() in ui.js), THEN merge — so
+     the values compared/stored by mergeExtractedFields, including
+     whatever ends up in a conflict notice, are already in the app's
+     one display convention. */
+  const upperMapped={};
+  Object.keys(mapped).forEach(k=>{ if(mapped[k]) upperMapped[k]=String(mapped[k]).toUpperCase(); });
+  mergeExtractedFields(docType, upperMapped, {vals:VALS, fieldSource:FIELD_SOURCE, pendingConflicts:PENDING_CONFLICTS});
+  /* Only mark a field as "AI-filled" (amber badge) if THIS extraction is
+     the one whose value is actually showing — a field mergeExtractedFields
+     skipped (lower priority than what's already applied) doesn't newly
+     become AI-sourced from this call; whatever already owns it keeps
+     owning it, untouched. */
+  Object.keys(upperMapped).forEach(k=>{ if(FIELD_SOURCE[k]===docType){ AI_FILLED_FIELDS.add(k); VERIFIED_FIELDS.delete(k); } });
 
-  if(PRO.balancePaise<500){
-    statusEl.textContent=t('status.needBalance',{label});
-    statusEl.className='status';
+  /* RC is the only document that ever signals firm-vs-individual
+     ownership (see PROMPTS.rc, worker/src/index.js) — updateSections()
+     below picks this up to hide the (inapplicable) father's-name field
+     for a firm, and generatePDF() (ui.js) blanks it on the printed PDF
+     regardless of any stray value sitting in VALS.s_father. */
+  if(docType==='rc') SELLER_OWNER_TYPE=resolveOwnerType(data);
+
+  scheduleSaveVals();
+  updateSections();
+
+  const dims=await loadImageDims(item.images[0].dataUrl);
+  PRO.uploads[item.uploadsKey]={dataUrl:item.images[0].dataUrl,w:dims.w,h:dims.h,raw:data};
+
+  EXTRACTED_SET.add(docType);
+  renderProResult(docType, data);
+}
+
+/* The single "Fill with AI / Retry" button: sends every ready document as
+   ONE package to /extract-package (worker/src/index.js), which charges the
+   flat task price once — and only if every document in the package
+   succeeded. A partial failure applies whatever DID succeed (see
+   applyExtractionResult() above) and leaves the failed doc(s) in
+   computeReadyDocs() for the next click to retry, without re-billing for
+   what already worked. */
+async function startPackageExtraction(){
+  const batch=computeReadyDocs();
+  if(!batch.length) return;
+  const taskId=(typeof getCurrentTaskId==='function') ? getCurrentTaskId() : 'default';
+  const price=getCurrentPackagePrice();
+
+  if(PRO.balancePaise<price){
+    updateCheckoutBox();
     openBuyModal();
-    return 'skipped-balance';
+    return;
   }
 
-  stateEl.textContent=t('ai.extractingBadge'); stateEl.className='upload-slot-state';
-  if(retryBtn) retryBtn.style.display='none';
-  statusEl.textContent=t('status.extractingDoc',{label}); statusEl.className='status';
+  const payBtn=document.getElementById('checkoutPayBtn');
+  if(payBtn) payBtn.disabled=true;
+  batch.forEach(item=>{
+    const stateEl=document.getElementById('state-'+item.docType);
+    if(stateEl){ stateEl.textContent=t('ai.extractingBadge'); stateEl.className='upload-slot-state'; }
+  });
+  const statusEl=document.getElementById('proStatus');
+  if(statusEl){ statusEl.textContent=''; statusEl.className='status'; }
 
   try{
-    const res=await fetch(WORKER_URL+'/extract',{
+    const res=await fetch(WORKER_URL+'/extract-package',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({token:PRO.walletId, docType, images: images.map(img=>({data:img.dataUrl, mimeType:img.mimeType}))})
+      body:JSON.stringify({
+        token:PRO.walletId,
+        taskId,
+        docs:batch.map(item=>({docType:item.docType, images:item.images.map(img=>({data:img.dataUrl, mimeType:img.mimeType}))}))
+      })
     });
     const json=await res.json();
-    if(!res.ok || json.error){
-      if(json.code==='AUTH_REQUIRED'){ PRO.walletId=''; saveProState(); throw new Error(t('err.walletReset')); }
-      if(res.status===402){ PRO.balancePaise=json.balancePaise||0; renderProCredits(); }
-      throw new Error(json.error||t('err.extractionFailed'));
+
+    if(json.code==='AUTH_REQUIRED'){ PRO.walletId=''; saveProState(); throw new Error(t('err.walletReset')); }
+    if(res.status===402){
+      PRO.balancePaise=json.balancePaise||0; renderProCredits();
+      if(payBtn) payBtn.disabled=false;
+      updateCheckoutBox();
+      openBuyModal();
+      return;
+    }
+    if(!res.ok) throw new Error(json.error||t('ai.extractFailed'));
+
+    const results=json.results||[];
+    for(const r of results){
+      const stateEl=document.getElementById('state-'+r.docType);
+      if(!r.ok){
+        if(stateEl){ stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err'; }
+        continue;
+      }
+      const item=batch.find(b=>b.docType===r.docType);
+      await applyExtractionResult(r.docType, r.data, item);
+      if(stateEl){ stateEl.textContent=t('status.extracted'); stateEl.className='upload-slot-state done'; }
     }
 
-    const data=json.data;
-    const mapped=AI_FIELD_MAP[docType](data, getEffectiveRole(docType));
-    /* Uppercase first (matches every other AI-written or manually-typed
-       value in this app — see handleInput() in ui.js), THEN merge — so
-       the values compared/stored by mergeExtractedFields, including
-       whatever ends up in a conflict notice, are already in the app's
-       one display convention. */
-    const upperMapped={};
-    Object.keys(mapped).forEach(k=>{ if(mapped[k]) upperMapped[k]=String(mapped[k]).toUpperCase(); });
-    mergeExtractedFields(docType, upperMapped, {vals:VALS, fieldSource:FIELD_SOURCE, pendingConflicts:PENDING_CONFLICTS});
-    /* Only mark a field as "AI-filled" (amber badge) if THIS extraction is
-       the one whose value is actually showing — a field mergeExtractedFields
-       skipped (lower priority than what's already applied) doesn't newly
-       become AI-sourced from this call; whatever already owns it keeps
-       owning it, untouched. */
-    Object.keys(upperMapped).forEach(k=>{ if(FIELD_SOURCE[k]===docType){ AI_FILLED_FIELDS.add(k); VERIFIED_FIELDS.delete(k); } });
-
-    /* RC is the only document that ever signals firm-vs-individual
-       ownership (see PROMPTS.rc, worker/src/index.js) — updateSections()
-       below picks this up to hide the (inapplicable) father's-name field
-       for a firm, and generatePDF() (ui.js) blanks it on the printed PDF
-       regardless of any stray value sitting in VALS.s_father. */
-    if(docType==='rc') SELLER_OWNER_TYPE=resolveOwnerType(data);
-
-    scheduleSaveVals();
-    updateSections();
-
-    const dims=await loadImageDims(images[0].dataUrl);
-    PRO.uploads[uploadsKey]={dataUrl:images[0].dataUrl,w:dims.w,h:dims.h,raw:data};
-
-    PRO.balancePaise=json.balancePaise; renderProCredits();
-
-    EXTRACTED_SET.add(docType);
-    stateEl.textContent=t('status.extracted'); stateEl.className='upload-slot-state done';
-    if(retryBtn) retryBtn.style.display='none';
-    statusEl.textContent=t('status.extractedOk',{label,bal:json.balanceRs});
-    statusEl.className='status ok';
-    renderProResult(docType, data);
-    return 'success';
+    if(payBtn) payBtn.disabled=false;
+    if(json.ok){
+      PRO.balancePaise=json.balancePaise; renderProCredits();
+      updateCheckoutBox();
+      collapseAiBoxToSummary();
+    } else {
+      updateCheckoutBox(true);
+    }
   }catch(err){
-    stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err';
-    if(retryBtn){ retryBtn.style.display='block'; retryBtn.disabled=false; retryBtn.textContent=t('status.retry',{label}); }
-    statusEl.textContent=t('err.generic',{msg:err.message});
-    statusEl.className='status err';
-    return 'failed';
+    if(payBtn) payBtn.disabled=false;
+    batch.forEach(item=>{
+      const stateEl=document.getElementById('state-'+item.docType);
+      if(stateEl && !EXTRACTED_SET.has(item.docType)){ stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err'; }
+    });
+    if(statusEl){ statusEl.textContent=t('err.generic',{msg:err.message}); statusEl.className='status err'; }
+    updateCheckoutBox(true);
   }
 }
 
@@ -825,5 +762,4 @@ async function startPayment(amountRs){
 
 renderProCredits();
 fetchWalletBalance();
-claimWalletLinkFromUrl();
-console.log('RTO PRO build: v6 (Razorpay-first wallet — random token identity, mobile only for recovery)');
+console.log('RTO PRO build: v7 (Razorpay-first wallet — random token identity, no recovery path)');

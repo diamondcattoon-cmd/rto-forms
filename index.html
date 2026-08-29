@@ -195,16 +195,6 @@
         </div>
         <p class="fld-hint" data-i18n="root.uploadInstructions">Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN par kiska document hai wo waheen select karo.</p>
 
-        <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;" data-i18n="ai.recoveryToggle">Purana wallet is device pe wapas chahiye?</a></p>
-        <div class="pro-wallet-row" id="recoveryForm" style="display:none">
-          <div class="modal-code-in">
-            <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono" data-i18n-placeholder="ai.recoveryPlaceholder">
-            <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()" data-i18n="ai.recoverySend">Recovery link bhejo</button>
-          </div>
-          <div class="status" id="walletLinkStatus"></div>
-          <p class="fld-hint" data-i18n="ai.recoveryHint">Jis number se payment kiya tha wo daalo — SMS mein ek link aayega, usi phone pe click karo (30 min valid, ek hi baar use hota hai).</p>
-        </div>
-
         <p class="fld-hint" id="docSlotEmptyNote" style="display:none" data-i18n="ai.emptyNote">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
 
         <label class="consent-chk" for="uploadConsentChk">
@@ -245,7 +235,6 @@
                 <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
               </div>
             </div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="retryDoc('aadhaar')">Retry Aadhaar (₹5)</button>
           </div>
 
           <div class="upload-slot" id="docSlot-pan">
@@ -264,7 +253,6 @@
             </div>
             <div class="doc-preview-wrap" id="preview-pan"></div>
             <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="retryDoc('pan')">Retry PAN (₹5)</button>
           </div>
 
           <div class="upload-slot" id="docSlot-rc">
@@ -279,7 +267,6 @@
             </div>
             <div class="doc-preview-wrap" id="preview-rc"></div>
             <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
-            <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
           </div>
 
           <div class="upload-slot">
@@ -295,9 +282,7 @@
         </div>
 
         <div class="checkout-box" id="checkoutBox" style="display:none">
-          <div class="checkout-rows" id="checkoutRows"></div>
-          <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()" data-i18n="ai.payExtract">Pay &amp; Extract</button>
-          <p class="checkout-note" data-i18n="ai.checkoutNote">₹5 per document — sirf successful extraction par katta hai, fail hone par kuch nahi katta.</p>
+          <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="checkoutBtnAction()">Fill with AI</button>
           <div class="status" id="checkoutResult"></div>
         </div>
 
@@ -518,6 +503,7 @@
 <script src="/field-mapping.js"></script>
 <script src="/pdf-generate.js"></script>
 <script src="/forms-data.js"></script>
+<script src="/task-pricing.js"></script>
 <script src="/ui.js"></script>
 <script src="/pro-wallet.js"></script>
 <div class="modal-overlay" id="proBuyModal" style="display:none">

@@ -149,7 +149,6 @@
               </div>
               <div class="doc-preview-wrap" id="preview-rc"></div>
               <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
-              <button type="button" class="btn-generate doc-extract-btn" id="extract-rc" style="display:none" onclick="retryDoc('rc')">Retry RC (₹5)</button>
             </div>
 
             <div class="upload-slot locked" id="docSlot-aadhaar">
@@ -184,7 +183,6 @@
                   <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
                 </div>
               </div>
-              <button type="button" class="btn-generate doc-extract-btn" id="extract-aadhaar" style="display:none" onclick="retryDoc('aadhaar')">Retry Aadhaar (₹5)</button>
             </div>
 
             <div class="upload-slot locked" id="docSlot-pan">
@@ -203,16 +201,11 @@
               </div>
               <div class="doc-preview-wrap" id="preview-pan"></div>
               <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
-              <button type="button" class="btn-generate doc-extract-btn" id="extract-pan" style="display:none" onclick="retryDoc('pan')">Retry PAN (₹5)</button>
             </div>
           </div>
 
-          <div class="ai-box-balance-note" id="aiBoxBalanceNote" style="display:none"></div>
-
           <div class="checkout-box" id="checkoutBox" style="display:none">
-            <div class="checkout-rows" id="checkoutRows"></div>
-            <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="startCombinedExtraction()" data-i18n="ai.payExtract">Pay &amp; Extract</button>
-            <p class="checkout-note" data-i18n="ai.checkoutNote">₹5 per document — only charged on a successful extraction, nothing charged if it fails.</p>
+            <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="checkoutBtnAction()">Fill with AI</button>
             <div class="status" id="checkoutResult"></div>
           </div>
 
@@ -221,16 +214,6 @@
             <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()" data-i18n="ai.addMoney">+ Add Money</button>
           </div>
           <p class="pro-context" id="proContext"></p>
-          <p class="pro-recovery-toggle"><a href="#" onclick="toggleRecoveryForm();return false;" data-i18n="ai.recoveryToggle">Need your old wallet back on this device?</a></p>
-          <div class="pro-wallet-row" id="recoveryForm" style="display:none">
-            <div class="modal-code-in">
-              <input type="tel" inputmode="numeric" maxlength="10" id="walletMobileInput" placeholder="98XXXXXXXX" class="mono" data-i18n-placeholder="ai.recoveryPlaceholder">
-              <button type="button" class="btn-generate" id="sendLinkBtn" onclick="sendWalletLink()" data-i18n="ai.recoverySend">Send recovery link</button>
-            </div>
-            <div class="status" id="walletLinkStatus"></div>
-            <p class="fld-hint" data-i18n="ai.recoveryHint">Enter the number you paid with — an SMS link will arrive, click it on that same phone (valid 30 min, single use).</p>
-          </div>
-
           <details class="extra-photo-block">
             <summary data-i18n="ai.photoToggle">+ Attach a face photo to the PDF too? (optional)</summary>
             <div class="upload-slot" style="margin-top:10px">
@@ -396,6 +379,7 @@
 <script src="/field-mapping.js"></script>
 <script src="/pdf-generate.js"></script>
 <script src="/forms-data.js"></script>
+<script src="/task-pricing.js"></script>
 <script src="/ui.js"></script>
 <script src="/pro-wallet.js"></script>
 <div class="modal-overlay" id="proBuyModal" style="display:none">

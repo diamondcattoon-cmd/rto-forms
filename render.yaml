@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: rto-forms
-    env: node
-    buildCommand: npm install
-    startCommand: node server.js

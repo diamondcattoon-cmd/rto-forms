@@ -163,6 +163,25 @@ const TASK_BUNDLE_MAP={
   'address-change':   'b_address',
 };
 
+/* Which TASK_PRICING (task-pricing.js) key applies right now — pro-wallet.js
+   calls this to label/charge the "Fill with AI" button. On a task page it's
+   always that page's own bundle (window.TASK), even if the user has added
+   extra forms on top via "+ Add forms" — the page's identity is what's
+   being priced, not the exact form list. On the root page (window.TASK
+   unset) there's no such fixed identity, so it falls back to matching the
+   CURRENTLY CHECKED picks against a bundle's picks exactly (order doesn't
+   matter, extra or missing picks don't count as a match); no match (or a
+   totally custom selection) prices at TASK_PRICING.default. */
+function getCurrentTaskId(){
+  if(typeof window!=='undefined' && window.TASK && TASK_BUNDLE_MAP[window.TASK]) return TASK_BUNDLE_MAP[window.TASK];
+  const checkedIds=PICKS.filter(p=>CHECKED[p.id]).map(p=>p.id).sort();
+  const match=BUNDLES.find(b=>{
+    const bp=[...b.picks].sort();
+    return bp.length===checkedIds.length && bp.every((id,i)=>id===checkedIds[i]);
+  });
+  return match ? match.id : 'default';
+}
+
 /* Runs once at bootstrap (see the bottom of this file). No-ops completely
    when window.TASK is unset or unrecognized — e.g. the root index.html —
    so this can never change that page's behavior. On a real task page: (1)
@@ -633,7 +652,7 @@ function updateDocSlotVisibility(need, anyB){
 
 /* Small Individual/Firm toggle shown above the Seller section's fields —
    reflects SELLER_OWNER_TYPE (forms-data.js), which a fresh RC extraction
-   sets automatically (see runExtraction(), pro-wallet.js) and this toggle
+   sets automatically (see applyExtractionResult(), pro-wallet.js) and this toggle
    lets the user correct or set manually, with or without ever using AI
    extraction. Always shown when the Seller section itself is showing —
    there's no "only relevant sometimes" case here, unlike the per-document

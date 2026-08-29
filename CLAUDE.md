@@ -17,20 +17,25 @@ upfront mobile/OTP step — see `pro-wallet.js`).
 
 ```bash
 npm install
-node server.js          # static file server on http://localhost:3000 (or $PORT)
 npm test                 # node --test — runs test/*.test.js
 ```
 
 No build step or bundler — every `.js` file at the repo root is served as-is
-and loaded directly by `index.html`. `npm start` runs `node server.js`.
+and loaded directly by `index.html`. There is no local server needed to
+browse the site; open `index.html` directly or serve the folder with any
+static file server.
 
 ## Deploy
 
-- Main site: Render.com, configured via `render.yaml` (`npm install` build,
-  `node server.js` start). Push to the connected branch to deploy. Note
-  `index.html`'s `<link rel="canonical">` currently points at
-  `rto-forms.onrender.com`, not `rtoformsindia.com` — confirm which domain is
-  actually live before assuming the Worker's CORS (`ALLOWED_ORIGIN`) matches.
+- Main site: **Cloudflare Pages**, connected to this repo — push to the
+  connected branch to deploy. `_redirects` (repo root) routes unmatched
+  paths to `404.html` (Pages otherwise falls back to serving `index.html`
+  with a 200 for any unmatched path — this was a live bug, fixed by adding
+  `404.html` + the `_redirects` catch-all). Note `index.html`'s
+  `<link rel="canonical">` still points at `rto-forms.onrender.com` (a
+  retired Render deployment, no longer live) instead of `rtoformsindia.com`
+  — harmless for CORS (the Worker's `ALLOWED_ORIGIN` matches the real live
+  domain, confirmed) but wrong for SEO; worth fixing the tag.
 - PRO feature backend: Cloudflare Worker, deployed with Wrangler from
   `worker/` (`npx wrangler deploy`) — see `worker/README.md` for one-time
   setup, required secrets, and the `WALLET` KV binding. Do not deploy by
@@ -40,16 +45,12 @@ and loaded directly by `index.html`. `npm start` runs `node server.js`.
 
 ## Architecture
 
-### `server.js`
-Minimal Express app that serves static files from the repo root, a `/health`
-endpoint, and a SPA-style fallback (`/w/:token` → `index.html`) for wallet
-recovery links — see `worker/README.md`'s "Frontend integration" section.
-**`README.md` (repo root) is stale** — it describes an older
-Puppeteer/`POST /api/generate` server-side PDF pipeline that no longer exists
-in `server.js`. All PDF generation now happens in the browser via jsPDF.
-`form29.html`, `form30.html`, and `affidavit.html` at the repo root are
-leftovers from that old approach and are not referenced by `index.html` or
-`server.js`.
+There is no server-side component for the main site — it's pure static
+files on Cloudflare Pages. All PDF generation happens in the browser via
+jsPDF. (There used to be an Express server, `server.js`, plus a Puppeteer/
+`POST /api/generate` server-side PDF pipeline before that — both are gone;
+don't reintroduce a server dependency for the main site without a real
+reason, since Pages deploy is what's actually live in production.)
 
 ### `index.html` — markup only
 Just HTML + a fixed sequence of `<script src>` tags, in this exact order
@@ -60,12 +61,9 @@ field-mapping.js → pdf-generate.js → forms-data.js → ui.js → pro-wallet.
 These are classic (non-module) scripts sharing one global scope — every
 top-level `const`/`function` in one file is a plain global visible to the
 files after it. All script `src` attributes are **absolute paths**
-(`/pdf-generate.js`, not `pdf-generate.js`) deliberately: a relative path
-resolves against the current URL, and wallet recovery links load the page
-from `/w/<token>`, not `/` — a relative script src there 404s (or worse,
-silently resolves to the `/w/:token` fallback route and gets served
-`index.html`'s HTML instead of JS). Keep new asset references
-(`<script src>`, `<link href>`, fetch URLs) absolute for the same reason.
+(`/pdf-generate.js`, not `pdf-generate.js`) — keep new asset references
+(`<script src>`, `<link href>`, fetch URLs) absolute too, so they resolve
+correctly regardless of which path served the current page.
 
 - **`field-mapping.js`** — `toISODate()` and `AI_FIELD_MAP` (Gemini
   extraction → form field mapping). Shared between the browser and the Node
@@ -96,16 +94,16 @@ silently resolves to the `/w/:token` fallback route and gets served
   badge; `handleInput()` drops that marking the instant the user edits one.
 - **`pro-wallet.js`** — the paid features: Aadhaar/PAN/RC photo upload →
   Gemini Vision extraction (via the Worker), and the wallet. There is no
-  upfront "verify your mobile" step — `PRO.walletId` is a random token
-  minted by the Worker on first payment (`startPayment()` → `/order`) and
-  reused directly as the bearer credential for `/balance`/`/extract` (sent
-  as `token`). A mobile number is only ever collected inside Razorpay's own
-  checkout UI, purely as a recovery contact (`sendWalletLink`/
-  `claimWalletLinkFromUrl`, collapsed behind "Purana wallet wapas chahiye?"
-  — not shown by default). `PRO.walletId` persists in `localStorage`
-  (`rtoProState`); uploaded document images are kept in memory only for the
-  session (never persisted) and can optionally be attached as extra pages
-  to the generated PDF.
+  upfront "verify your mobile" step and no account-recovery path —
+  `PRO.walletId` is a random token minted by the Worker on first payment
+  (`startPayment()` → `/order`) and reused directly as the bearer credential
+  for `/balance`/`/extract` (sent as `token`). An earlier MSG91-based
+  recovery-link flow (`sendWalletLink`/`claimWalletLinkFromUrl`, mobile
+  number as a recovery contact) was removed — MSG91 was never actually
+  configured in production, so it was dead code. `PRO.walletId` persists in
+  `localStorage` (`rtoProState`); uploaded document images are kept in
+  memory only for the session (never persisted) and can optionally be
+  attached as extra pages to the generated PDF.
 
 **`PICKS`** (in `forms-data.js`) is the registry of fillable form packs. Each
 pick has an `id` (e.g. `pk29`, `pk20`), a `type` (which field-groups it
@@ -129,12 +127,11 @@ number — `/order` mints one on first payment and returns it; `/balance` and
 `/extract` trust the `token` param directly as the walletId (bearer-token
 style, no separate session layer). This closes off spending someone else's
 wallet: the earlier design used the mobile number itself as the walletId,
-which was guessable/typeable; a 256-bit random token isn't. A mobile number
-is still captured — best-effort, from Razorpay's payment object in
-`/verify` — but only as a recovery contact (`recoverycontact:<walletId>` /
-`recoverylookup:<mobile>`), used solely by `/link/send` + `/link/claim/<token>`
-to let someone regain access on a new device (which rotates to a brand-new
-walletId and invalidates the old one, rather than just re-authenticating it).
+which was guessable/typeable; a 256-bit random token isn't. There is no
+account-recovery path if a user loses this token — an earlier MSG91-based
+recovery-link flow (`/link/send` + `/link/claim/<token>`, mobile number as
+a recovery contact) was removed since MSG91 was never actually configured
+in production.
 
 ### Tests (`test/*.test.js`, run via `npm test`)
 Node's built-in test runner, no framework. Covers `toISODate`/`AI_FIELD_MAP`
@@ -144,7 +141,3 @@ diffs it against `AI_FIELD_MAP`'s source, so a field renamed on one side and
 not the other fails a test instead of silently breaking auto-fill in
 production (this has happened twice before).
 
-### `generate_pdf.py`, `overlay_pdf.py`
-Standalone Python/reportlab scripts for generating/overlaying PDFs against a
-scanned template. Not wired into `server.js` or `index.html` — exploratory
-tooling, not part of the live request path.

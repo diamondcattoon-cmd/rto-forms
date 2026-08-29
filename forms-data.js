@@ -157,13 +157,13 @@ const AI_FILLED_FIELDS=new Set();
    will read" (e.g. a misread chassis-number digit). Mutually exclusive
    with AI_FILLED_FIELDS — a field is in at most one of the two sets at
    any time. Cleared (back to amber/unverified) if a fresh AI extraction
-   overwrites the field again — see runExtraction()/switchFieldConflict()
+   overwrites the field again — see applyExtractionResult()/switchFieldConflict()
    in pro-wallet.js — since that's new, not-yet-reviewed data. */
 const VERIFIED_FIELDS=new Set();
 
 /* Which document type currently "owns" a given field's applied value —
    used by mergeExtractedFields() (field-mapping.js, called from
-   runExtraction() in pro-wallet.js) to arbitrate when two different
+   applyExtractionResult() in pro-wallet.js) to arbitrate when two different
    uploaded documents supply different values for the same field, instead
    of simple last-write-wins. Declared here (not in pro-wallet.js, which
    is the only file that writes to it) because ui.js's own bootstrap call

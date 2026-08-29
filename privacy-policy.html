@@ -63,7 +63,7 @@
   <h3>c. Payment &amp; wallet information</h3>
   <p>If you add money to your AI auto-fill wallet, payment is collected and processed by Razorpay. We never see or store your card, UPI or bank details. What we do store: a randomly generated wallet ID (not linked to your name), your wallet balance, and — only if you use the "recover my wallet" feature — the mobile number Razorpay's own checkout screen collected during payment, used solely to send a one-time wallet-recovery link.</p>
   <h3>d. Technical / log data</h3>
-  <p>Our hosting provider (Render.com) and Cloudflare (which runs the AI auto-fill backend) may automatically log standard technical data such as IP address, browser type and request timestamps, for security and debugging. This is not used to build advertising profiles, and we do not run third-party ad trackers or analytics scripts on this site.</p>
+  <p>Cloudflare (which hosts the main site and runs the AI auto-fill backend) may automatically log standard technical data such as IP address, browser type and request timestamps, for security and debugging. This is not used to build advertising profiles, and we do not run third-party ad trackers or analytics scripts on this site.</p>
 
   <h2 id="gemini">3. How Google Gemini is used (AI auto-fill)</h2>
   <div class="legal-note">
@@ -85,7 +85,6 @@
     <li>To generate the form PDF you asked for (done in your browser — we never see the finished document unless you choose to email/share it yourself).</li>
     <li>To extract fields from a document photo you submit for AI auto-fill, as described above.</li>
     <li>To process wallet top-ups and deduct the ₹5 charge for each successful AI extraction.</li>
-    <li>To send a one-time wallet-recovery link if you request one via your registered mobile number.</li>
     <li>To keep the service secure and diagnose technical problems.</li>
   </ul>
   <p>We do not sell, rent or share your information with third parties for their own marketing purposes.</p>
@@ -95,7 +94,6 @@
     <li><strong>Form field values</strong> — stored only in your own browser's local storage, under your control, until you clear it.</li>
     <li><strong>Document photos (Aadhaar/PAN/RC)</strong> — not retained by us at all; see Section 3.</li>
     <li><strong>Wallet ID and balance</strong> — retained until you ask us to delete it (contact details below), or as required to resolve a payment dispute.</li>
-    <li><strong>Recovery mobile number</strong> — retained only as long as your wallet exists, used solely for the recovery-link feature.</li>
   </ul>
 
   <h2 id="thirdparty">6. Third-party service providers</h2>
@@ -103,13 +101,11 @@
   <ul>
     <li><strong>Google Gemini API</strong> — document text extraction for AI auto-fill (Section 3).</li>
     <li><strong>Razorpay</strong> — payment processing for wallet top-ups. Razorpay collects your payment details directly; we never see your card/UPI credentials.</li>
-    <li><strong>MSG91</strong> — sends the one-time SMS wallet-recovery link, if you request one.</li>
-    <li><strong>Cloudflare</strong> — runs the AI auto-fill backend (Worker) and provides security/CDN services.</li>
-    <li><strong>Render.com</strong> — hosts the main website.</li>
+    <li><strong>Cloudflare</strong> — hosts the main website (Pages) and runs the AI auto-fill backend (Worker), plus security/CDN services.</li>
   </ul>
 
   <h2 id="rights">7. Your choices &amp; rights</h2>
-  <p>You can use the free form filler without giving us any information at all. For anything you have given us (wallet ID, balance, recovery number), you can contact us at any time to ask what we hold or to request deletion — see <a href="#contact">Section 11</a>. Deleting your wallet ID will also forfeit any remaining unused balance associated with it, so please contact us before clearing your browser storage if you want to preserve access to that balance.</p>
+  <p>You can use the free form filler without giving us any information at all. For anything you have given us (wallet ID, balance), you can contact us at any time to ask what we hold or to request deletion — see <a href="#contact">Section 11</a>. Deleting your wallet ID will also forfeit any remaining unused balance associated with it, so please contact us before clearing your browser storage if you want to preserve access to that balance.</p>
 
   <h2 id="storage-local">8. Cookies &amp; local storage</h2>
   <p>We do not use tracking cookies or third-party advertising cookies. The site uses your browser's <code class="mono">localStorage</code> only to (a) remember in-progress form field values on your device, and (b) remember your wallet ID and AI-fill role preference, so you don't have to re-enter them each visit. None of this is readable by us — it lives only on your device.</p>
