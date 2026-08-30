@@ -341,12 +341,27 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .pro-credits{display:flex;align-items:center;gap:10px}
 .pro-credits-badge{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;background:var(--ink);color:#fff;padding:7px 14px;border-radius:20px;white-space:nowrap}
 .pro-buy-btn{padding:9px 16px;font-size:13px}
-.upload-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:14px}
-.upload-slot{background:var(--white);border:1.5px dashed var(--line);border-radius:10px;padding:12px 14px}
+.upload-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+/* Solid, visible border by default (was a barely-there 1.5px dash) —
+   RC and the buyer's Aadhaar (the only two slots Gemini ever reads, see
+   isSlotExtractable(), pro-wallet.js) get a coloured left edge so it's
+   obvious at a glance which boxes matter for auto-fill vs which are just
+   along for the attachment ride. */
+.upload-slot{background:var(--white);border:1px solid #d8d2c4;border-radius:8px;padding:14px}
+#docSlot-rc,#docSlot-aadhaar-buyer{border-left:3px solid var(--stamp)}
 .upload-slot-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
-.upload-slot-name{font-size:14.5px;font-weight:600}
+/* Small coloured icon tile ahead of the doc name — RC/Aadhaar/PAN/Face
+   Photo each get their own fixed colour+glyph via the id selectors below
+   (a background-image data-URI, not an extra DOM node, so no HTML change
+   is needed anywhere this class is already used). */
+.upload-slot-name{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:600;color:var(--ink)}
+.upload-slot-name::before{content:'';flex:0 0 auto;width:28px;height:28px;border-radius:6px;background-repeat:no-repeat;background-position:center;background-size:16px 16px}
+#docSlot-rc .upload-slot-name::before{background-color:#2b6cb0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='6' width='18' height='12' rx='2'/%3E%3Cpath d='M3 10h18'/%3E%3C/svg%3E")}
+#docSlot-aadhaar-seller .upload-slot-name::before,#docSlot-aadhaar-buyer .upload-slot-name::before{background-color:#1a7a4a;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='12' cy='10' r='2.5'/%3E%3Cpath d='M7.5 17c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4'/%3E%3C/svg%3E")}
+#docSlot-pan-seller .upload-slot-name::before,#docSlot-pan-buyer .upload-slot-name::before{background-color:#6d43c8;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='M7 10h6M7 14h4'/%3E%3C/svg%3E")}
+#docSlot-photo .upload-slot-name::before{background-color:#5b6478;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z'/%3E%3Ccircle cx='12' cy='13' r='3.5'/%3E%3C/svg%3E")}
 .upload-slot-name .upload-slot-state{margin-left:9px}
-.upload-slot-state{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt-3);letter-spacing:.4px;text-transform:uppercase}
+.upload-slot-state{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--txt-3);letter-spacing:.4px;text-transform:uppercase}
 .upload-slot-state.done{color:var(--approve)}
 .upload-slot-state.err{color:var(--stamp)}
 .upload-slot input[type=file]{width:100%;font-size:13.5px;color:var(--txt-2)}
@@ -359,8 +374,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .pdf-page-thumb.sel{border-color:var(--stamp);opacity:1}
 .pdf-page-label{font-size:9px;color:var(--txt-3);text-align:center;margin-top:2px}
 .upload-slot-wide{grid-column:1/-1}
-.aadhaar-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.aadhaar-two-col .fld-hint{display:block;margin-bottom:5px;font-weight:600;color:var(--txt-2)}
+.aadhaar-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.aadhaar-two-col .fld-hint{display:block;margin-bottom:4px;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;color:var(--txt-2)}
 @media(max-width:560px){.aadhaar-two-col{grid-template-columns:1fr}}
 .pro-attach-chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--txt-2);cursor:pointer;margin-bottom:6px}
 .pro-attach-chk input{accent-color:var(--stamp)}
@@ -375,9 +390,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
    handleFileSelect() — see the doc-slot markup in every task page and
    index.html. "Take photo" only makes sense where there's a camera, so
    it's hidden above the mobile breakpoint; "Choose file" always shows. */
-.doc-input-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.doc-input-row{display:flex;gap:8px;flex-wrap:nowrap;margin-top:6px}
 .doc-input-row input[type=file]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.btn-camera,.btn-choose{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--txt);background:var(--white);border:1.5px solid var(--line);border-radius:8px;padding:9px 13px;cursor:pointer;transition:all .15s;user-select:none}
+.doc-input-row .btn-camera,.doc-input-row .btn-choose{flex:1;justify-content:center}
+.btn-camera,.btn-choose{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--txt);background:var(--white);border:1.5px solid var(--line);border-radius:8px;padding:0 12px;cursor:pointer;transition:all .15s;user-select:none}
 .btn-camera:hover,.btn-choose:hover{border-color:var(--ink)}
 .doc-input-disabled label{opacity:.45;cursor:not-allowed;pointer-events:none}
 .consent-hint{font-size:12px;font-weight:600;color:var(--stamp);margin-bottom:8px}
@@ -387,12 +403,13 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .doc-role-opt input{accent-color:var(--stamp);width:14px;height:14px;cursor:pointer}
 .doc-role-note{font-size:12px;color:var(--txt-2);font-style:italic;margin-bottom:8px}
 /* Says up front whether this document's data feeds the form (Gemini
-   extraction) or is only attached as-is to the final PDF — RC and a
-   buyer's Aadhaar get .extract; everything else (PAN, a seller's Aadhaar)
-   stays the plain (attach-only) style. See isDocExtractable()/
-   refreshDocPurposeHint() in pro-wallet.js — #purpose-aadhaar is the only
-   one of these that changes at runtime (its role can toggle). */
-.doc-purpose-hint{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.2px;color:var(--txt-3);margin-bottom:8px}
+   extraction) or is only attached as-is to the final PDF — RC and the
+   buyer's Aadhaar slot get .extract; every other fixed slot (both PAN
+   slots, the seller's Aadhaar) stays the plain (attach-only) style. Each
+   slot's extractability is fixed by which box it is (see
+   isSlotExtractable(), pro-wallet.js) — nothing here changes at runtime
+   any more, unlike the old per-document role toggle this replaced. */
+.doc-purpose-hint{display:inline-block;font-size:.8rem;font-weight:600;letter-spacing:.2px;color:var(--txt-2);margin-bottom:8px}
 .doc-purpose-hint.extract{color:var(--stamp)}
 
 /* Groups the upload slots by who the document belongs to — Vehicle (RC),
@@ -401,7 +418,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
    /fill layout only; task pages keep Face Photo in its own collapsible
    instead, whose <summary> already says the same thing). */
 .doc-group{margin-bottom:18px}
-.doc-group-label{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--txt-2);margin-bottom:10px}
+.doc-group-label{font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-top:20px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line-soft)}
 
 /* ─── AI box picker: consent as the header of the SAME card (no separate
    boxed look), and locked upload cards that nudge the user back to
@@ -661,10 +678,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2.5px solid var
 .ai-box-picker-head{margin-bottom:14px}
 .ai-box-picker-head h4{font-size:15.5px;font-weight:700;color:var(--ink)}
 .ai-box-picker .consent-chk{background:var(--paper)}
-.ai-box-picker .upload-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-.ai-box-picker .upload-slot-wide{grid-column:auto}
-.ai-box-picker .upload-slot-name{font-size:15px;font-weight:700}
-.ai-box-picker .upload-slot{border-width:1.5px;transition:border-color .15s}
+.ai-box-picker .upload-slot{transition:border-color .15s}
 .ai-box-picker .upload-slot.ready{border-color:var(--approve);background:var(--approve-soft)}
 .ai-box-picker .checkout-box{border-color:var(--line)}
 .extra-photo-block{margin-top:14px;font-size:12.5px;color:var(--txt-2)}
@@ -709,6 +723,7 @@ body.no-scroll{overflow:hidden}
   .fld-hint,.calc-hint{font-size:12.5px}
   .fld input{font-size:16.5px}
   .calc-fld input,.calc-fld select{font-size:16.5px}
+  .upload-grid{grid-template-columns:1fr}
   .upload-slot-name{font-size:15px}
   .upload-slot-state{font-size:11.5px}
   .status{font-size:14.5px}
