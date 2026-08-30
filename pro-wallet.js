@@ -50,6 +50,64 @@ function setDocRole(docType, role){
   if(!(docType in DOC_ROLE)) return; /* not a 'choice' doc type — nothing to set */
   DOC_ROLE[docType]=(role==='buyer')?'buyer':'seller';
   saveProState();
+  refreshDocPurposeHint(docType);
+  /* The role toggle can flip a doc between extractable and attach-only
+     AFTER it's already been uploaded (e.g. Aadhaar switched from Seller to
+     Buyer) — re-settle its state text/PRO.uploads entry to match, same as
+     a fresh upload would. Only matters if it has a ready image and hasn't
+     already been billed for; an already-extracted doc keeps its result
+     regardless of a later role change (matches the rest of this file's
+     existing "don't retroactively touch a paid extraction" behavior). */
+  const item=getBatchItem(docType);
+  if(item && !EXTRACTED_SET.has(docType)){
+    if(isDocExtractable(docType)){
+      const stateEl=document.getElementById('state-'+docType);
+      if(stateEl){ stateEl.textContent=t('ai.previewReady'); stateEl.className='upload-slot-state'; }
+    } else {
+      markAttachOnly(docType);
+    }
+  }
+  updateCheckoutBox();
+}
+
+/* Only RC and a BUYER's Aadhaar are ever sent to Gemini — cuts the
+   package to at most 2 extractions (matches TASK_PRICING/the Worker's own
+   "Maximum 2 documents per package" cap, task-pricing.js/worker/src/index.js)
+   and keeps PAN + a seller's Aadhaar as plain attach-only uploads, since
+   neither's data is actually useful to extract (PAN has nothing the forms
+   need; a seller's identity already comes from the RC). */
+function isDocExtractable(docType){
+  if(docType==='rc') return true;
+  if(docType==='aadhaar') return getEffectiveRole('aadhaar')==='buyer';
+  return false; /* pan — never extracted, regardless of role */
+}
+
+/* Updates the small "Fills the form automatically" / "Attached to your
+   PDF" caption next to a doc's name — static in the HTML for rc/pan
+   (their extractability never changes), so this only has anything to do
+   for aadhaar (#purpose-aadhaar), whose extractability follows its role
+   toggle. Safe to call for any docType — no-ops if there's no such
+   element on the page. */
+function refreshDocPurposeHint(docType){
+  const el=document.getElementById('purpose-'+docType);
+  if(!el) return;
+  const extractable=isDocExtractable(docType);
+  el.textContent=t(extractable?'ai.fillsAutomatically':'ai.attachedOnly');
+  el.classList.toggle('extract', extractable);
+}
+
+/* A non-extractable doc (PAN always; a seller's Aadhaar) still needs its
+   image ready for PDF attachment (see generatePDF()'s attachment loop,
+   ui.js, which reads PRO.uploads[key]) — this is that path, mirroring
+   what applyExtractionResult() does for an extracted doc, minus the
+   Gemini call and the `raw` field (there's no extracted data to keep). */
+async function markAttachOnly(docType){
+  const item=getBatchItem(docType);
+  if(!item) return;
+  const dims=await loadImageDims(item.images[0].dataUrl);
+  PRO.uploads[item.uploadsKey]={dataUrl:item.images[0].dataUrl, w:dims.w, h:dims.h};
+  const stateEl=document.getElementById('state-'+docType);
+  if(stateEl){ stateEl.textContent=t('ai.attachedOnly'); stateEl.className='upload-slot-state done'; }
 }
 
 /* The role actually used for a given extraction:
@@ -278,9 +336,6 @@ function setDocImage(key, dataUrl, keepPicker){
 
 function onDocReady(key){
   const docType = (key==='aadhaar_front' || key==='aadhaar_back') ? 'aadhaar' : key;
-  const stateEl=document.getElementById('state-'+docType);
-  stateEl.textContent=t('ai.previewReady');
-  stateEl.className='upload-slot-state';
   /* Purely additive visual cue ("this card is ready") — harmless on the
      root page too (no CSS targets .ready outside the task-page v2 layout,
      see .ai-box-picker .upload-slot.ready in style.css), but added
@@ -289,6 +344,16 @@ function onDocReady(key){
   if(slotEl) slotEl.classList.add('ready');
   const removeBtn=document.getElementById('remove-'+docType);
   if(removeBtn) removeBtn.style.display='inline';
+
+  if(isDocExtractable(docType)){
+    const stateEl=document.getElementById('state-'+docType);
+    stateEl.textContent=t('ai.previewReady');
+    stateEl.className='upload-slot-state';
+  } else {
+    /* PAN, or an Aadhaar currently set to Seller — attach only, never
+       sent to Gemini (see isDocExtractable()/markAttachOnly() above). */
+    markAttachOnly(docType);
+  }
   updateCheckoutBox();
 }
 
@@ -516,12 +581,15 @@ function getBatchItem(docType){
   return {docType, images:[doc], uploadsKey:docType};
 }
 
-/* Everything with a ready preview that hasn't been successfully extracted
-   yet — a doc that failed (or was never attempted because an earlier doc
-   in the same package failed) stays in this list, so clicking the button
-   again naturally retries just what's left. */
+/* Everything EXTRACTABLE (see isDocExtractable() above) with a ready
+   preview that hasn't been successfully extracted yet — a doc that failed
+   (or was never attempted because an earlier doc in the same package
+   failed) stays in this list, so clicking the button again naturally
+   retries just what's left. PAN, and an Aadhaar not currently set to
+   Buyer, never appear here at all — see markAttachOnly() for how those
+   still get attached to the PDF without ever reaching Gemini. */
 function computeReadyDocs(){
-  return ['aadhaar','pan','rc'].map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.docType));
+  return ['aadhaar','rc'].filter(isDocExtractable).map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.docType));
 }
 
 /* Current package price in paise for whatever's checked/on this page right
@@ -957,4 +1025,5 @@ async function startPayment(amountRs){
 
 renderProCredits();
 fetchWalletBalance();
+refreshDocPurposeHint('aadhaar');
 console.log('RTO PRO build: v7 (Razorpay-first wallet — random token identity, no recovery path)');

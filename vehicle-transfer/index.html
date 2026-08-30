@@ -141,6 +141,7 @@
             <div class="upload-slot locked" id="docSlot-rc">
               <div class="upload-slot-top"><span class="upload-slot-name">RC<span class="upload-slot-state" id="state-rc" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-rc" style="display:none" onclick="removeDoc('rc')" data-i18n="ai.remove">✕ Remove</button></div>
               <p class="doc-role-note" data-i18n="ai.rcNote">RC fills in the seller's details</p>
+              <p class="doc-purpose-hint extract" data-i18n="ai.fillsAutomatically">Fills the form automatically</p>
               <p class="consent-hint" id="consentHint-rc" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
               <div class="doc-input-row">
                 <button type="button" class="btn-camera" onclick="handleTakePhotoClick('rc')" data-i18n="ai.takePhoto">📷 Take photo</button>
@@ -159,6 +160,7 @@
                 <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
                 <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
               </div>
+              <p class="doc-purpose-hint" id="purpose-aadhaar">Attached to your PDF</p>
               <p class="consent-hint" id="consentHint-aadhaar" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
               <div class="aadhaar-two-col">
                 <div>
@@ -188,11 +190,7 @@
 
             <div class="upload-slot locked" id="docSlot-pan">
               <div class="upload-slot-top"><span class="upload-slot-name">PAN<span class="upload-slot-state" id="state-pan" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan" style="display:none" onclick="removeDoc('pan')" data-i18n="ai.remove">✕ Remove</button></div>
-              <div class="doc-role-row" id="docRole-pan" style="display:none">
-                <span class="doc-role-lbl" data-i18n="ai.whoseDoc">Whose is this?</span>
-                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
-                <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
-              </div>
+              <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
               <p class="consent-hint" id="consentHint-pan" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
               <div class="doc-input-row">
                 <button type="button" class="btn-camera" onclick="handleTakePhotoClick('pan')" data-i18n="ai.takePhoto">📷 Take photo</button>

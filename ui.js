@@ -630,6 +630,16 @@ function updateDocSlotVisibility(need, anyB){
   });
   const emptyNote=document.getElementById('docSlotEmptyNote');
   if(emptyNote) emptyNote.style.display=anyVisible?'none':'';
+
+  /* Aadhaar's "Fills the form automatically" / "Attached to your PDF"
+     caption depends on getEffectiveRole('aadhaar') (pro-wallet.js), which
+     itself depends on anyB — so a form-selection change that flips anyB
+     (e.g. adding/removing a buyer-needing form) needs to refresh it too,
+     not just when the role radio itself is clicked. Guarded: pro-wallet.js
+     loads after this file, so this is a no-op during ui.js's own
+     first-bootstrap call (see the explicit initial call at the bottom of
+     pro-wallet.js, which covers that gap). */
+  if(typeof refreshDocPurposeHint==='function') refreshDocPurposeHint('aadhaar');
 }
 
 /* Small Individual/Firm toggle shown above the Seller section's fields —

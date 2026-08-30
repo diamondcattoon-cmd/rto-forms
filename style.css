@@ -385,6 +385,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .doc-role-opt{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--txt);cursor:pointer}
 .doc-role-opt input{accent-color:var(--stamp);width:14px;height:14px;cursor:pointer}
 .doc-role-note{font-size:12px;color:var(--txt-2);font-style:italic;margin-bottom:8px}
+/* Says up front whether this document's data feeds the form (Gemini
+   extraction) or is only attached as-is to the final PDF — RC and a
+   buyer's Aadhaar get .extract; everything else (PAN, a seller's Aadhaar)
+   stays the plain (attach-only) style. See isDocExtractable()/
+   refreshDocPurposeHint() in pro-wallet.js — #purpose-aadhaar is the only
+   one of these that changes at runtime (its role can toggle). */
+.doc-purpose-hint{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.2px;color:var(--txt-3);margin-bottom:8px}
+.doc-purpose-hint.extract{color:var(--stamp)}
 
 /* ─── AI box picker: consent as the header of the SAME card (no separate
    boxed look), and locked upload cards that nudge the user back to
