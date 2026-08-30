@@ -101,6 +101,7 @@ const I18N_STRINGS = {
     'task.duplicaterc.sub': 'Form 26 — a print-ready PDF, filled online',
     'task.hpremoval.sub': 'Form 35 — a print-ready PDF, filled online',
     'task.addresschange.sub': 'Form 33 — a print-ready PDF, filled online',
+    'task.transferondeath.sub': 'Form 31 — a print-ready PDF, filled online',
 
     /* ── AI box ── */
     'ai.title': 'Fill with AI',
@@ -192,8 +193,61 @@ const I18N_STRINGS = {
     /* ── forms catalog (root) ── */
     'catalog.selectAbove': 'select forms above',
 
-    /* ── tax calculator (root) ── */
+    /* ── blank-form info pages (/form-<num>-<slug>/) — shared section
+       labels, reused by every page of this type; the actual per-form prose
+       is in its own blank.f<num>.* keys below. Always English, no
+       Hinglish, per spec. ── */
+    'blankform.eyebrow': 'Official CMVR Form',
+    'blankform.whatLabel': 'What is this form?',
+    'blankform.whenLabel': 'When do you need it?',
+    'blankform.whoLabel': 'Who fills it out?',
+    'blankform.attachLabel': 'What to bring / attach',
+    'blankform.downloadBtn': 'Download Form {n} (PDF)',
+    'blankform.downloadNote': 'Official blank format — print, fill by hand, and submit.',
+
+    /* Form 1A — Medical Certificate */
+    'blank.f1a.what': 'A medical fitness certificate from a registered medical practitioner, confirming you are physically fit to hold a driving licence. You don’t fill this form yourself — a doctor does.',
+    'blank.f1a.when': 'Needed when applying for or renewing a licence to drive a transport (commercial) vehicle, and for anyone renewing any driving licence past the age of 40. Some RTOs also ask for it with a fresh licence application.',
+    'blank.f1a.who': 'A registered medical practitioner (RMP) examines you and signs the certificate — you just need to get examined and collect the signed form.',
+    'blank.f1a.attach': 'Carry this blank form to your doctor. They complete Part A (and Part B, an eyesight test by an ophthalmologist, if your RTO requires it), then sign and stamp it. Submit the completed certificate with your licence application — not the blank form.',
+    'blank.f1a.related': 'Applying for a licence? See <a href="/#all-forms">Form 2 (Learner’s / DL Application)</a> and Form 9 (DL Renewal) in the full forms list.',
+
+    /* Form 23 — Certificate of Registration */
+    'blank.f23.what': 'The official format of the Registration Certificate (RC) itself — the document a Registering Authority issues recording a vehicle’s owner, make, chassis/engine number and registration particulars. This is the OUTPUT of registration, not an application you fill in.',
+    'blank.f23.when': 'Issued once when a vehicle is first registered, and re-issued in this same format after a renewal, address change, ownership transfer, or a replacement for a lost/damaged RC — you don’t submit this form, you receive it.',
+    'blank.f23.who': 'Prepared and issued by the Registering Authority (RTO/DTO). You don’t fill or submit Form 23 — you fill the application that triggers it (new registration, renewal, transfer, duplicate, or address change).',
+    'blank.f23.attach': 'Nothing attaches to this form — it’s what you get back, not what you send in. The application that leads to it (Form 20, 25, 26, 29/30, or 33) has its own attachment list.',
+    'blank.f23.related': 'Lost or damaged your RC? You need <a href="/duplicate-rc">Form 26 — Duplicate RC</a>, not this blank format. Renewing an expiring RC? Use the <a href="/rc-renewal">RC Renewal package</a>.',
+
+    /* Form 38 — Certificate of Fitness */
+    'blank.f38.what': 'The Certificate of Fitness (CoF) for a transport/commercial vehicle — issued after a physical inspection confirms the vehicle is roadworthy and safe to ply.',
+    'blank.f38.when': 'Required before a transport vehicle can be registered or operated commercially, and needs periodic renewal (the interval depends on vehicle type and age) to stay legally on the road.',
+    'blank.f38.who': 'The registered owner or operator of the transport vehicle applies; the physical inspection and certification is carried out by the Motor Vehicle Inspector at the RTO or an authorised testing centre.',
+    'blank.f38.attach': 'RC copy, valid insurance certificate, Pollution Under Control (PUC) certificate, and the vehicle itself for physical inspection at the testing centre or RTO.',
+    'blank.f38.related': 'Applying for a permit? Tourist and national permits usually need a valid Certificate of Fitness first — see the full <a href="/#all-forms">Permit forms list</a>.',
+
+    /* ── tax calculator (/tax-calculator) — money-related, English in both
+       blocks regardless of language toggle, same convention as money-UI ── */
     'calc.placeholder': 'Enter the ex-showroom price — the estimate will appear here.',
+    'calc.eyebrow': 'Estimate',
+    'calc.title': 'Jharkhand Vehicle Registration Cost Calculator',
+    'calc.intro1': "Get an approximate on-road registration cost for a new vehicle in Jharkhand — road tax, registration fee, smart card, HSRP plate and hypothecation charges, all in one place. Enter the ex-showroom price and a few vehicle details below.",
+    'calc.intro2': 'This is an estimate for budgeting, not an official quote — always confirm the final amount with your DTO/RTO before paying.',
+    'calc.priceHint': 'A GST-inclusive price also works — road tax is calculated on the GST-exclusive value automatically.',
+    'calc.whatsIncludedTitle': "What's included in the estimate",
+    'calc.whatsIncludedWhat': 'Road tax, one-time fees, and rebates',
+    'calc.whatsIncludedWhatBody': 'Road tax (slab-based on price, vehicle type and pre-owned status), registration fee, RC smart card fee, HSRP number plate fee, and postal/misc charges — plus a road-tax rebate if you select Electric or CNG/LPG.',
+    'calc.whatsIncludedWho': 'Hypothecation (loan) charges',
+    'calc.whatsIncludedWhoBody': "If you're financing the vehicle, switch \"On loan / finance?\" to Yes — the hire-purchase (HP) endorsement fee is added to the total automatically.",
+    'calc.whatsIncludedAttach': "Not included",
+    'calc.whatsIncludedAttachBody': 'Insurance premium, extended warranty, accessories, dealer handling charges, and any octroi/local body tax — these vary by dealer and aren\'t part of RTO registration.',
+    'calc.howRatesTitle': 'How the rates are calculated',
+    'calc.howRatesBody': "Road tax is charged as a percentage of the GST-exclusive (ex-showroom) price, on a slab that rises with the vehicle's price; pre-owned vehicles carry a small additional percentage. Electric vehicles get a road-tax rebate, and some states rebate CNG/LPG too. These rates are based on publicly available Jharkhand estimates and are reviewed periodically — they are not a substitute for your DTO/RTO's official assessment.",
+    'calc.disclaimer': '⚠️ Approximate estimate only. Actual RTO charges can vary based on state notifications. Confirm the final amount with your DTO/RTO. Rates last updated: review pending.',
+    'calc.faq1q': 'Is this Jharkhand registration cost calculator official?',
+    'calc.faq1a': 'No — this is an independent estimate based on publicly available rate information. It is not issued by, or affiliated with, the Jharkhand Transport Department. Always confirm the exact amount with your DTO/RTO before paying.',
+    'calc.faq2q': 'Does this calculator work for other states?',
+    'calc.faq2a': 'Not yet — the rate slabs used here are specific to Jharkhand. Road tax percentages, rebates and fees vary significantly by state, so this estimate will not be accurate outside Jharkhand.',
 
     /* ── error / validation messages ── */
     'err.selectForm': 'Select at least one form to include.',
@@ -321,6 +375,7 @@ const I18N_STRINGS = {
     'task.duplicaterc.sub': 'Form 26 — ek print-ready PDF mein',
     'task.hpremoval.sub': 'Form 35 — ek print-ready PDF mein',
     'task.addresschange.sub': 'Form 33 — ek print-ready PDF mein',
+    'task.transferondeath.sub': 'Form 31 — ek print-ready PDF mein',
 
     /* ── AI box ── */
     /* title/subtitle always English, no Hinglish — same as en block. */
@@ -411,8 +466,56 @@ const I18N_STRINGS = {
     /* ── forms catalog (root) ── */
     'catalog.selectAbove': 'upar se forms select karo',
 
-    /* ── tax calculator (root) ── */
-    'calc.placeholder': 'Ex-showroom price daalo — estimate yahan dikhega.',
+    /* ── blank-form info pages — always English, no Hinglish, per spec.
+       Same text as the en block. ── */
+    'blankform.eyebrow': 'Official CMVR Form',
+    'blankform.whatLabel': 'What is this form?',
+    'blankform.whenLabel': 'When do you need it?',
+    'blankform.whoLabel': 'Who fills it out?',
+    'blankform.attachLabel': 'What to bring / attach',
+    'blankform.downloadBtn': 'Download Form {n} (PDF)',
+    'blankform.downloadNote': 'Official blank format — print, fill by hand, and submit.',
+
+    'blank.f1a.what': 'A medical fitness certificate from a registered medical practitioner, confirming you are physically fit to hold a driving licence. You don’t fill this form yourself — a doctor does.',
+    'blank.f1a.when': 'Needed when applying for or renewing a licence to drive a transport (commercial) vehicle, and for anyone renewing any driving licence past the age of 40. Some RTOs also ask for it with a fresh licence application.',
+    'blank.f1a.who': 'A registered medical practitioner (RMP) examines you and signs the certificate — you just need to get examined and collect the signed form.',
+    'blank.f1a.attach': 'Carry this blank form to your doctor. They complete Part A (and Part B, an eyesight test by an ophthalmologist, if your RTO requires it), then sign and stamp it. Submit the completed certificate with your licence application — not the blank form.',
+    'blank.f1a.related': 'Applying for a licence? See <a href="/#all-forms">Form 2 (Learner’s / DL Application)</a> and Form 9 (DL Renewal) in the full forms list.',
+
+    'blank.f23.what': 'The official format of the Registration Certificate (RC) itself — the document a Registering Authority issues recording a vehicle’s owner, make, chassis/engine number and registration particulars. This is the OUTPUT of registration, not an application you fill in.',
+    'blank.f23.when': 'Issued once when a vehicle is first registered, and re-issued in this same format after a renewal, address change, ownership transfer, or a replacement for a lost/damaged RC — you don’t submit this form, you receive it.',
+    'blank.f23.who': 'Prepared and issued by the Registering Authority (RTO/DTO). You don’t fill or submit Form 23 — you fill the application that triggers it (new registration, renewal, transfer, duplicate, or address change).',
+    'blank.f23.attach': 'Nothing attaches to this form — it’s what you get back, not what you send in. The application that leads to it (Form 20, 25, 26, 29/30, or 33) has its own attachment list.',
+    'blank.f23.related': 'Lost or damaged your RC? You need <a href="/duplicate-rc">Form 26 — Duplicate RC</a>, not this blank format. Renewing an expiring RC? Use the <a href="/rc-renewal">RC Renewal package</a>.',
+
+    'blank.f38.what': 'The Certificate of Fitness (CoF) for a transport/commercial vehicle — issued after a physical inspection confirms the vehicle is roadworthy and safe to ply.',
+    'blank.f38.when': 'Required before a transport vehicle can be registered or operated commercially, and needs periodic renewal (the interval depends on vehicle type and age) to stay legally on the road.',
+    'blank.f38.who': 'The registered owner or operator of the transport vehicle applies; the physical inspection and certification is carried out by the Motor Vehicle Inspector at the RTO or an authorised testing centre.',
+    'blank.f38.attach': 'RC copy, valid insurance certificate, Pollution Under Control (PUC) certificate, and the vehicle itself for physical inspection at the testing centre or RTO.',
+    'blank.f38.related': 'Applying for a permit? Tourist and national permits usually need a valid Certificate of Fitness first — see the full <a href="/#all-forms">Permit forms list</a>.',
+
+    /* ── tax calculator (/tax-calculator) — money-related, kept English
+       even in the Hinglish block, same convention as money-UI ── */
+    'calc.placeholder': 'Enter the ex-showroom price — the estimate will appear here.',
+    'calc.eyebrow': 'Estimate',
+    'calc.title': 'Jharkhand Vehicle Registration Cost Calculator',
+    'calc.intro1': "Get an approximate on-road registration cost for a new vehicle in Jharkhand — road tax, registration fee, smart card, HSRP plate and hypothecation charges, all in one place. Enter the ex-showroom price and a few vehicle details below.",
+    'calc.intro2': 'This is an estimate for budgeting, not an official quote — always confirm the final amount with your DTO/RTO before paying.',
+    'calc.priceHint': 'A GST-inclusive price also works — road tax is calculated on the GST-exclusive value automatically.',
+    'calc.whatsIncludedTitle': "What's included in the estimate",
+    'calc.whatsIncludedWhat': 'Road tax, one-time fees, and rebates',
+    'calc.whatsIncludedWhatBody': 'Road tax (slab-based on price, vehicle type and pre-owned status), registration fee, RC smart card fee, HSRP number plate fee, and postal/misc charges — plus a road-tax rebate if you select Electric or CNG/LPG.',
+    'calc.whatsIncludedWho': 'Hypothecation (loan) charges',
+    'calc.whatsIncludedWhoBody': "If you're financing the vehicle, switch \"On loan / finance?\" to Yes — the hire-purchase (HP) endorsement fee is added to the total automatically.",
+    'calc.whatsIncludedAttach': "Not included",
+    'calc.whatsIncludedAttachBody': 'Insurance premium, extended warranty, accessories, dealer handling charges, and any octroi/local body tax — these vary by dealer and aren\'t part of RTO registration.',
+    'calc.howRatesTitle': 'How the rates are calculated',
+    'calc.howRatesBody': "Road tax is charged as a percentage of the GST-exclusive (ex-showroom) price, on a slab that rises with the vehicle's price; pre-owned vehicles carry a small additional percentage. Electric vehicles get a road-tax rebate, and some states rebate CNG/LPG too. These rates are based on publicly available Jharkhand estimates and are reviewed periodically — they are not a substitute for your DTO/RTO's official assessment.",
+    'calc.disclaimer': '⚠️ Approximate estimate only. Actual RTO charges can vary based on state notifications. Confirm the final amount with your DTO/RTO. Rates last updated: review pending.',
+    'calc.faq1q': 'Is this Jharkhand registration cost calculator official?',
+    'calc.faq1a': 'No — this is an independent estimate based on publicly available rate information. It is not issued by, or affiliated with, the Jharkhand Transport Department. Always confirm the exact amount with your DTO/RTO before paying.',
+    'calc.faq2q': 'Does this calculator work for other states?',
+    'calc.faq2a': 'Not yet — the rate slabs used here are specific to Jharkhand. Road tax percentages, rebates and fees vary significantly by state, so this estimate will not be accurate outside Jharkhand.',
 
     /* ── error / validation messages ── */
     'err.selectForm': 'Kam se kam ek form select karo.',

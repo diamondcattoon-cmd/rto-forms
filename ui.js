@@ -1,7 +1,9 @@
 /* ════════ UI — rendering, event handlers ════════
    Everything that touches the DOM in response to data changing or the user
-   clicking something: fillNow/openOfficial (the two actions the landing
-   page's catalog cards — landing.js — hand off to), the fill-tool's dynamic
+   clicking something: openOfficial (what a landing-page catalog card's
+   "download blank" click hands off to — see landing.js; the "fill online"
+   click navigates straight to /fill?picks=... instead, no in-page handoff
+   needed since the tool lives on its own page now), the fill-tool's dynamic
    sections (buildBundles/buildPicks/updateSections/fieldHTML/handleInput),
    the restore-notice banner, the Jharkhand cost calculator, and
    generatePDF() (which hands off to the PICKS[i].gen functions in
@@ -14,18 +16,6 @@
    landing.js (blank-PDF download source). */
 let USE_LOCAL=false;
 (async()=>{try{const r=await fetch('/forms/FORM-29.pdf',{method:'HEAD'});USE_LOCAL=r.ok;}catch(e){USE_LOCAL=false;}})();
-
-function fillNow(i){
-  const f=FORMS[i];
-  const ids=[].concat(f.fill);
-  PICKS.forEach(p=>{ CHECKED[p.id]=ids.includes(p.id); });
-  /* switch to the type of the first selected pick */
-  const firstPick=PICKS.find(p=>ids.includes(p.id));
-  if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
-  buildPicks();
-  updateSections();
-  document.getElementById('tool').scrollIntoView({behavior:'smooth'});
-}
 
 function openOfficial(i){
   const f=FORMS[i];
@@ -102,7 +92,8 @@ function applyBundle(bid){
   if(btns[idx]) btns[idx].classList.add('on');
   buildPicks();
   updateSections();
-  document.getElementById('tool').scrollIntoView({behavior:'smooth'});
+  const toolEl=document.getElementById('tool');
+  if(toolEl) toolEl.scrollIntoView({behavior:'smooth'});
 }
 
 /* ── Task pages (e.g. /vehicle-transfer/index.html) ──
@@ -113,11 +104,12 @@ function applyBundle(bid){
    applyBundlePicks() rather than a second, task-specific data table that
    could drift from BUNDLES. Add one entry here per new task page. */
 const TASK_BUNDLE_MAP={
-  'vehicle-transfer': 'b_transfer',
-  'rc-renewal':       'b_rcrenew',
-  'duplicate-rc':     'b_duprc',
-  'hp-removal':       'b_hpremove',
-  'address-change':   'b_address',
+  'vehicle-transfer':  'b_transfer',
+  'rc-renewal':        'b_rcrenew',
+  'duplicate-rc':      'b_duprc',
+  'hp-removal':        'b_hpremove',
+  'address-change':    'b_address',
+  'transfer-on-death': 'b_death',
 };
 
 /* Which TASK_PRICING (task-pricing.js) key applies right now — pro-wallet.js
@@ -150,14 +142,33 @@ function getCurrentTaskId(){
    page is meant to read as "here are this task's forms", not the entire
    31-form catalog, while staying exactly one click away from it. */
 function applyTaskDefaults(){
-  if(typeof window==='undefined' || !window.TASK) return;
-  const bundleId=TASK_BUNDLE_MAP[window.TASK];
-  if(!bundleId) return;
-  applyBundlePicks(bundleId);
-  const block=document.getElementById('fullFormPicker');
-  const toggleLine=document.getElementById('pickerToggleLine');
-  if(block) block.style.display='none';
-  if(toggleLine) toggleLine.style.display='';
+  if(typeof window==='undefined') return;
+  const bundleId=window.TASK && TASK_BUNDLE_MAP[window.TASK];
+  if(bundleId){
+    applyBundlePicks(bundleId);
+    const block=document.getElementById('fullFormPicker');
+    const toggleLine=document.getElementById('pickerToggleLine');
+    if(block) block.style.display='none';
+    if(toggleLine) toggleLine.style.display='';
+    return;
+  }
+  /* /fill?picks=pk21,pk22 or /fill?bundle=b_transfer — a landing catalog
+     card or package card deep-links here with which form(s) to pre-check.
+     Unlike window.TASK this doesn't collapse the full picker behind a
+     toggle: /fill IS the full picker, there's no narrower task identity to
+     hide it behind. No-ops harmlessly on any other page (no matching
+     params, or nothing to check into). */
+  const params=new URLSearchParams(location.search);
+  const bundleParam=params.get('bundle');
+  const picksParam=params.get('picks');
+  if(bundleParam){
+    applyBundlePicks(bundleParam);
+  } else if(picksParam){
+    const ids=picksParam.split(',').filter(Boolean);
+    PICKS.forEach(p=>{ CHECKED[p.id]=ids.includes(p.id); });
+    const firstPick=PICKS.find(p=>ids.includes(p.id));
+    if(firstPick) ACTIVE_TYPE=firstPick.type||'rto';
+  }
 }
 
 /* The "Saare 31 forms dekho" / "Forms list chhupao" toggle itself — plain
@@ -212,6 +223,7 @@ function switchType(tid){
 
 function renderPicksList(){
   const wrap=document.getElementById('picksWrap');
+  if(!wrap) return;
   const inType = PICKS.filter(p=>(p.type||'rto')===ACTIVE_TYPE);
   const suggest = computeSuggestPickIds();
   wrap.innerHTML = inType.map(p=>{
@@ -682,8 +694,14 @@ function updateSections(){
     const ownerTypeRow=isOwnerSection ? ownerTypeToggleHTML() : '';
     html+=`<div class="fset"><div class="fset-label"><span class="fset-num">${n++}</span><h4>${title}</h4></div>${ownerTypeRow}<div class="grid2">${ids.map(fieldHTML).join('')}</div></div>`;
   });
-  document.getElementById('dynFields').innerHTML = html ||
-    '<p style="color:var(--txt-2);font-size:13.5px;padding:6px 0 14px">Select at least one form above to see its fields.</p>';
+  /* Guarded — a page with no fill-tool at all (e.g. a blank-form info
+     page, /form-<num>-<slug>/) still runs this same shared bootstrap; it
+     just has nothing to render into. */
+  const dynFieldsEl=document.getElementById('dynFields');
+  if(dynFieldsEl){
+    dynFieldsEl.innerHTML = html ||
+      '<p style="color:var(--txt-2);font-size:13.5px;padding:6px 0 14px">Select at least one form above to see its fields.</p>';
+  }
 
   /* Mobile FAB visibility */
   const fab=document.getElementById('mobileFab');
@@ -734,7 +752,7 @@ function calcEstimate(){
   const priceRaw = parseFloat((document.getElementById('calcPrice').value||'').replace(/[^0-9.]/g,''));
   const result = document.getElementById('calcResult');
   if(!priceRaw || priceRaw < 1000){
-    result.innerHTML = '<p class="calc-placeholder">Ex-showroom price daalo — estimate yahan dikhega.</p>';
+    result.innerHTML = '<p class="calc-placeholder">'+t('calc.placeholder')+'</p>';
     return;
   }
   const type  = document.getElementById('calcType').value;

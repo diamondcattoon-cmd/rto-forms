@@ -34,27 +34,15 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-<!-- Structured data: WebApplication + FAQ -->
+<!-- Structured data: this page is the browse/catalog entry point — the
+     actual fill-tool's WebApplication schema lives on /fill instead. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
-    {
-      "@type": "WebApplication",
-      "name": "RTO Forms India",
-      "url": "https://rto-forms.onrender.com/",
-      "applicationCategory": "UtilityApplication",
-      "operatingSystem": "Any",
-      "description": "Free online filler for Motor Vehicles Act (CMVR 1989) forms. Fill Form 29, 30, 25, 26, 27, 28, 31, 33, 34, 35 and more — download print-ready A4 PDFs.",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
-      "featureList": "44 CMVR forms catalogued, 29 fillable online, official formats, blank form download, no login required"
-    },
     {
       "@type": "FAQPage",
       "mainEntity": [
@@ -99,8 +87,8 @@
     <nav class="desktop-nav">
       <a class="nav-link" href="#packages" data-i18n="nav.packages">Packages</a>
       <a class="nav-link" href="#all-forms" data-i18n="nav.allForms">All Forms</a>
-      <a class="nav-link" href="#calc" data-i18n="nav.calc">Tax Calculator</a>
-      <a class="nav-link" href="#how" data-i18n="nav.how">How it works</a>
+      <a class="nav-link" href="/tax-calculator" data-i18n="nav.calc">Tax Calculator</a>
+      <a class="nav-link" href="/fill" data-i18n="nav.fill">Fill Forms →</a>
       <a class="nav-link" href="#faq" data-i18n="nav.faq">FAQ</a>
     </nav>
     <div class="header-actions">
@@ -117,8 +105,8 @@
   <nav id="mobile-nav" class="mobile-nav hidden">
     <a class="nav-link" href="#packages" data-i18n="nav.packages">Packages</a>
     <a class="nav-link" href="#all-forms" data-i18n="nav.allForms">All Forms</a>
-    <a class="nav-link" href="#calc" data-i18n="nav.calc">Tax Calculator</a>
-    <a class="nav-link" href="#how" data-i18n="nav.how">How it works</a>
+    <a class="nav-link" href="/tax-calculator" data-i18n="nav.calc">Tax Calculator</a>
+    <a class="nav-link" href="/fill" data-i18n="nav.fill">Fill Forms →</a>
     <a class="nav-link" href="#faq" data-i18n="nav.faq">FAQ</a>
   </nav>
 </header>
@@ -143,6 +131,16 @@
   </div>
 </section>
 
+<!-- ════════ TRUST STRIP ════════ -->
+<div class="page-width">
+  <div class="trust-strip">
+    <span class="trust-strip-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.trust1">No login required</span></span>
+    <span class="trust-strip-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.trust2">Data stays in your browser</span></span>
+    <span class="trust-strip-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="trustStrip3">Forms covered</span></span>
+    <span class="trust-strip-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.trust4">Free to use</span></span>
+  </div>
+</div>
+
 <!-- ════════ PACKAGES ════════ -->
 <section id="packages" class="page-width packages">
   <div class="section-head">
@@ -162,261 +160,6 @@
   <div class="card-grid" id="forms-grid" aria-live="polite"></div>
 </section>
 
-<!-- ════════ TOOL: VEHICLE TRANSFER ════════ -->
-<section class="sec sec-wide" id="tool">
-  <div class="tool-wrap">
-    <div class="tool-head">
-      <div class="tool-head-l">
-        <span class="tool-badge">LIVE</span>
-        <div>
-          <h3 data-i18n="root.toolHeadH3">RTO Form Filler — Any Combination</h3>
-          <p data-i18n="root.toolHeadP">Tick the forms you need — one print-ready PDF</p>
-        </div>
-      </div>
-      <div class="tool-forms">
-        <span class="tf-chip">26 FORMS FILLABLE</span>
-        <span class="tf-chip">MIX ANY COMBINATION</span>
-        <span class="tf-chip">ONE PDF OUTPUT</span>
-        <button type="button" class="tf-chip" onclick="openSettingsModal()">⚙ Settings</button>
-      </div>
-    </div>
-
-    <div class="tool-body">
-
-      <div id="restoreNotice"></div>
-
-      <div class="fset" id="fullFormPicker">
-        <div class="fset-label"><span class="fset-num">1</span><h4 data-i18n="root.formsInclude">Forms to include in the PDF</h4></div>
-        <div class="type-tabs" id="typeTabs"></div>
-        <div class="picks" id="picksWrap"></div>
-        <p class="pick-note" data-i18n="root.formsIncludeNote">The sections below build themselves from the selected forms — only the fields those forms actually use will appear. Select multiple forms (across categories) and every needed field is added once, shared across all of them.</p>
-      </div>
-      <button type="button" class="picker-toggle-line" id="pickerToggleLine" onclick="toggleFullPicker()" style="display:none">Saare 31 forms dekho ↓</button>
-
-      <div class="fset" id="addMoreFset" style="display:none">
-        <div class="fset-label"><span class="fset-num">+</span><h4 data-i18n="root.addMoreForms">Add more forms — often needed together</h4></div>
-        <div class="suggest-list" id="suggestList"></div>
-        <p class="pick-note" data-i18n="root.addMoreNote">Same details se fill hote hain — add karne ka koi extra charge nahi.</p>
-      </div>
-
-      <div class="fset pro-panel" id="proPanel">
-        <div class="fset-label">
-          <span class="fset-num pro-num">AI</span>
-          <h4><span data-i18n="root.autoFillTitle">Auto-fill from documents</span> <span class="pro-tag">PRO</span></h4>
-        </div>
-        <p class="pick-note" data-i18n="root.autoFillDesc">Aadhaar / PAN / RC ki clear photo upload karo — naam, address, reg. no, chassis/engine no. jaisi details apne aap fields mein fill ho jayengi. Har extraction ₹5 leta hai.</p>
-        <p class="pro-context" id="proContext"></p>
-
-        <div class="pro-toprow" style="justify-content:flex-end">
-          <div class="pro-credits">
-            <span class="pro-credits-badge" id="proCreditsBadge">₹0.00</span>
-            <button type="button" class="btn-blank pro-buy-btn" onclick="openBuyModal()" data-i18n="ai.addMoney">+ Add Money</button>
-          </div>
-        </div>
-        <p class="fld-hint" data-i18n="root.uploadInstructions">Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN par kiska document hai wo waheen select karo.</p>
-
-        <p class="fld-hint" id="docSlotEmptyNote" style="display:none" data-i18n="ai.emptyNote">Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.</p>
-
-        <label class="consent-chk" for="uploadConsentChk">
-          <input type="checkbox" id="uploadConsentChk" onchange="onConsentChange()">
-          <span data-i18n="ai.consent">Main confirm karta/karti hoon ki main is document (Aadhaar/PAN/RC) ka authorized user hoon. Main samajhta/samajhti hoon ki iski photo, extraction ke liye Google Gemini API ko bheji jaati hai aur hamare server par store nahi hoti — <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a> padh li hai.</span>
-        </label>
-
-        <div class="upload-grid" id="docSlotGrid">
-          <div class="upload-slot upload-slot-wide" id="docSlot-aadhaar">
-            <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card</span><span class="upload-slot-state" id="state-aadhaar" data-i18n="ai.notUploaded">Not uploaded</span></div>
-            <div class="doc-role-row" id="docRole-aadhaar" style="display:none">
-              <span class="doc-role-lbl" data-i18n="ai.whoseDoc">Whose is this?</span>
-              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="seller" checked onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
-              <label class="doc-role-opt"><input type="radio" name="docRoleAadhaar" value="buyer" onchange="setDocRole('aadhaar',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
-            </div>
-            <p class="consent-hint" id="consentHint-aadhaar" data-i18n="ai.consentHint">Upload karne ke liye upar consent dein ↑</p>
-            <div class="aadhaar-two-col">
-              <div>
-                <span class="fld-hint" data-i18n="ai.frontSide">Front side</span>
-                <div class="doc-input-row">
-                  <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_front')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                  <input type="file" accept="image/*" capture="environment" id="file-aadhaar-front-camera" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
-                  <label class="btn-choose" for="file-aadhaar-front-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-front-file" disabled onchange="handleFileSelect('aadhaar_front', this.files[0])">
-                </div>
-                <div class="doc-preview-wrap" id="preview-aadhaar_front"></div>
-                <div class="pdf-page-picker" id="pages-aadhaar_front" style="display:none"></div>
-              </div>
-              <div>
-                <span class="fld-hint" data-i18n="ai.backSide">Back side (optional)</span>
-                <div class="doc-input-row">
-                  <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_back')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                  <input type="file" accept="image/*" capture="environment" id="file-aadhaar-back-camera" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
-                  <label class="btn-choose" for="file-aadhaar-back-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-back-file" disabled onchange="handleFileSelect('aadhaar_back', this.files[0])">
-                </div>
-                <div class="doc-preview-wrap" id="preview-aadhaar_back"></div>
-                <div class="pdf-page-picker" id="pages-aadhaar_back" style="display:none"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="upload-slot" id="docSlot-pan">
-            <div class="upload-slot-top"><span class="upload-slot-name">PAN Card</span><span class="upload-slot-state" id="state-pan" data-i18n="ai.notUploaded">Not uploaded</span></div>
-            <div class="doc-role-row" id="docRole-pan" style="display:none">
-              <span class="doc-role-lbl" data-i18n="ai.whoseDoc">Whose is this?</span>
-              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="seller" checked onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.seller">Seller</span></label>
-              <label class="doc-role-opt"><input type="radio" name="docRolePan" value="buyer" onchange="setDocRole('pan',this.value)"> <span data-i18n="ai.buyer">Buyer</span></label>
-            </div>
-            <p class="consent-hint" id="consentHint-pan" data-i18n="ai.consentHint">Upload karne ke liye upar consent dein ↑</p>
-            <div class="doc-input-row">
-              <button type="button" class="btn-camera" onclick="handleTakePhotoClick('pan')" data-i18n="ai.takePhoto">📷 Take photo</button>
-              <input type="file" accept="image/*" capture="environment" id="file-pan-camera" disabled onchange="handleFileSelect('pan', this.files[0])">
-              <label class="btn-choose" for="file-pan-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-              <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-file" disabled onchange="handleFileSelect('pan', this.files[0])">
-            </div>
-            <div class="doc-preview-wrap" id="preview-pan"></div>
-            <div class="pdf-page-picker" id="pages-pan" style="display:none"></div>
-          </div>
-
-          <div class="upload-slot" id="docSlot-rc">
-            <div class="upload-slot-top"><span class="upload-slot-name">RC (Registration Certificate)</span><span class="upload-slot-state" id="state-rc" data-i18n="ai.notUploaded">Not uploaded</span></div>
-            <p class="doc-role-note" data-i18n="ai.rcNote">RC se seller ki details bharenge</p>
-            <p class="consent-hint" id="consentHint-rc" data-i18n="ai.consentHint">Upload karne ke liye upar consent dein ↑</p>
-            <div class="doc-input-row">
-              <button type="button" class="btn-camera" onclick="handleTakePhotoClick('rc')" data-i18n="ai.takePhoto">📷 Take photo</button>
-              <input type="file" accept="image/*" capture="environment" id="file-rc-camera" disabled onchange="handleFileSelect('rc', this.files[0])">
-              <label class="btn-choose" for="file-rc-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-              <input type="file" accept="image/*,.pdf,application/pdf" id="file-rc-file" disabled onchange="handleFileSelect('rc', this.files[0])">
-            </div>
-            <div class="doc-preview-wrap" id="preview-rc"></div>
-            <div class="pdf-page-picker" id="pages-rc" style="display:none"></div>
-          </div>
-
-          <div class="upload-slot">
-            <div class="upload-slot-top"><span class="upload-slot-name">Face Photo (for attachment)</span><span class="upload-slot-state" id="state-photo" data-i18n="ai.notUploaded">Not uploaded</span></div>
-            <div class="doc-input-row">
-              <button type="button" class="btn-camera" onclick="handleTakePhotoClick('photo')" data-i18n="ai.takePhoto">📷 Take photo</button>
-              <input type="file" accept="image/*" capture="user" id="file-photo-camera" onchange="handlePhotoUpload(this.files[0])">
-              <label class="btn-choose" for="file-photo-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-              <input type="file" accept="image/*" id="file-photo-file" onchange="handlePhotoUpload(this.files[0])">
-            </div>
-            <div class="doc-preview-wrap" id="preview-photo"></div>
-          </div>
-        </div>
-
-        <div class="checkout-box" id="checkoutBox" style="display:none">
-          <button type="button" class="btn-generate" id="checkoutPayBtn" onclick="checkoutBtnAction()">Fill with AI</button>
-          <div class="status" id="checkoutResult"></div>
-        </div>
-
-        <label class="pro-attach-chk"><input type="checkbox" id="attachDocsChk"> <span data-i18n="ai.attachChk">Attach uploaded documents &amp; photo as extra pages in the final PDF</span></label>
-
-
-        <div class="status" id="proStatus" role="status"></div>
-        <div id="proResults"></div>
-      </div>
-
-      <div id="dynFields"></div>
-
-      <div class="gen-row">
-        <button class="btn-generate" id="genBtn" onclick="generatePDF(false)">Generate selected forms — Download PDF</button>
-        <button class="btn-blank" id="blankBtn" onclick="generatePDF(true)" data-i18n="root.downloadBlank">Download blank forms</button>
-        <span class="gen-note" id="genNote">Output: <span class="mono" id="pageCountNote" data-i18n="catalog.selectAbove">upar se forms select karo</span></span>
-      </div>
-      <div class="status" id="statusMsg" role="status"></div>
-
-    </div>
-  </div>
-</section>
-
-<hr class="dotrule" style="max-width:1080px;margin:0 auto">
-
-<!-- ════════ TAX CALCULATOR ════════ -->
-<section class="sec" id="calc">
-  <div class="sec-eyebrow">Estimate</div>
-  <h2 class="sec-title">Jharkhand registration cost calculator</h2>
-  <p class="sec-sub">Naye vehicle ka approximate registration cost — road tax, fees, HP charges sab ek jagah. Ex-showroom price daalo aur turant estimate paao.</p>
-
-  <div class="calc-wrap">
-    <div class="calc-card">
-      <div class="calc-grid">
-        <div class="calc-fld">
-          <label>Ex-showroom price (₹)</label>
-          <input type="tel" inputmode="numeric" id="calcPrice" placeholder="e.g. 800000" oninput="calcEstimate()">
-          <span class="calc-hint">GST included price chalega — tax GST-exclusive value pe lagta hai</span>
-        </div>
-        <div class="calc-fld">
-          <label>Vehicle type</label>
-          <select id="calcType" onchange="calcEstimate()">
-            <option value="car">Car / 4-wheeler (private)</option>
-            <option value="bike">Two-wheeler</option>
-          </select>
-        </div>
-        <div class="calc-fld">
-          <label>Fuel type</label>
-          <select id="calcFuel" onchange="calcEstimate()">
-            <option value="petrol">Petrol / Diesel</option>
-            <option value="cng">CNG / LPG</option>
-            <option value="ev">Electric (EV)</option>
-          </select>
-        </div>
-        <div class="calc-fld">
-          <label>Owner type</label>
-          <select id="calcOwner" onchange="calcEstimate()">
-            <option value="individual">Individual</option>
-            <option value="company">Company / Firm</option>
-          </select>
-        </div>
-        <div class="calc-fld">
-          <label>Condition</label>
-          <select id="calcCond" onchange="calcEstimate()">
-            <option value="new">New vehicle</option>
-            <option value="used">Pre-owned / Used</option>
-          </select>
-        </div>
-        <div class="calc-fld">
-          <label>On loan / finance?</label>
-          <select id="calcHP" onchange="calcEstimate()">
-            <option value="no">No</option>
-            <option value="yes">Yes (HP endorsement)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="calc-result" id="calcResult">
-        <p class="calc-placeholder" data-i18n="calc.placeholder">Ex-showroom price daalo — estimate yahan dikhega.</p>
-      </div>
-
-      <p class="calc-disclaimer">⚠️ <strong>Approximate estimate only.</strong> Actual RTO charges state notifications ke hisaab se vary kar sakte hain. Final amount apne DTO / RTO se confirm karein. Rates last updated: review pending.</p>
-    </div>
-  </div>
-</section>
-
-<hr class="dotrule" style="max-width:1080px;margin:0 auto">
-
-<hr class="dotrule" style="max-width:1080px;margin:0 auto">
-
-<!-- ════════ HOW IT WORKS ════════ -->
-<section class="sec" id="how">
-  <div class="sec-eyebrow">Process</div>
-  <h2 class="sec-title">Three steps to a ready file</h2>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">01</div>
-      <h4>Fill the details</h4>
-      <p>Seller, purchaser and vehicle information in one short form. Only the essential fields — no registration, no account.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <h4>Download the PDF</h4>
-      <p>One click gives you all four forms as an A4 PDF — filled or blank. Everything is generated inside your browser; nothing is uploaded.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <h4>Print and submit</h4>
-      <p>Affix the court fee stamp, collect signatures, and submit the file at your DTO / RTO. The format is submission-ready.</p>
-    </div>
-  </div>
-</section>
-
-
 <hr class="dotrule" style="max-width:1080px;margin:0 auto">
 
 <!-- ════════ FAQ ════════ -->
@@ -427,7 +170,7 @@
   <div class="faq-list">
     <details class="faq">
       <summary>How do I fill Form 29 and Form 30 for vehicle ownership transfer?</summary>
-      <p>Select the <a href="#tool">Vehicle Transfer Package</a> above, enter the seller, purchaser and vehicle details once, and download Form 29 (notice of transfer), Form 30 (report of transfer) and both affidavits as one print-ready PDF in the official CMVR format. Print, get signatures, affix the court fee stamp on the affidavits, and submit the file at your RTO / DTO.</p>
+      <p>Select the <a href="/vehicle-transfer">Vehicle Transfer Package</a>, enter the seller, purchaser and vehicle details once, and download Form 29 (notice of transfer), Form 30 (report of transfer) and both affidavits as one print-ready PDF in the official CMVR format. Print, get signatures, affix the court fee stamp on the affidavits, and submit the file at your RTO / DTO.</p>
     </details>
     <details class="faq">
       <summary>My RC is lost — which form do I need for a duplicate RC?</summary>
@@ -435,7 +178,7 @@
     </details>
     <details class="faq">
       <summary>Which form is used for NOC from the RTO?</summary>
-      <p>Form 28 (Rules 54, 58) — application for and grant of a No Objection Certificate. The official format has three parts: application, financier consent, and office endorsement. <a href="#tool">Fill it online</a> or download the official blank PDF from the catalog.</p>
+      <p>Form 28 (Rules 54, 58) — application for and grant of a No Objection Certificate. The official format has three parts: application, financier consent, and office endorsement. <a href="/fill?picks=pk28">Fill it online</a> or download the official blank PDF from the catalog.</p>
     </details>
     <details class="faq">
       <summary>What is Form 35 and when is it needed?</summary>
@@ -461,9 +204,9 @@
         <small>A free tool for filling Motor Vehicles Act 1988 forms online. Your data stays in your browser — nothing is stored on any server.</small>
       </div>
       <div class="ftr-links">
-        <a href="#tool">Vehicle Transfer</a>
+        <a href="/fill">Fill Forms</a>
         <a href="#all-forms">All Forms</a>
-        <a href="#how">How it works</a>
+        <a href="/tax-calculator">Tax Calculator</a>
         <a href="#faq">FAQ</a>
         <a href="/contact-us.html">Contact Us</a>
         <a href="/privacy-policy.html">Privacy Policy</a>

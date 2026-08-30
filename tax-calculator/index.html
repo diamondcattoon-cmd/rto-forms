@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Jharkhand Vehicle Registration Cost Calculator | RTO Forms India</title>
+<meta name="description" content="Estimate the on-road registration cost for a new vehicle in Jharkhand — road tax, registration fee, smart card, HSRP plate and HP charges, all in one calculator.">
+<meta name="keywords" content="jharkhand road tax calculator, vehicle registration cost jharkhand, RTO tax calculator, road tax calculator india, on road price calculator jharkhand">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="RTO Forms India">
+<meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://rto-forms.onrender.com/tax-calculator">
+<meta name="theme-color" content="#142850">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RTO Forms">
+
+<!-- Open Graph (WhatsApp / Facebook share) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RTO Forms India">
+<meta property="og:title" content="Jharkhand Vehicle Registration Cost Calculator">
+<meta property="og:description" content="Estimate the on-road registration cost for a new vehicle in Jharkhand — road tax, fees, HP charges, all in one calculator.">
+<meta property="og:url" content="https://rto-forms.onrender.com/tax-calculator">
+<meta property="og:locale" content="en_IN">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Jharkhand Vehicle Registration Cost Calculator">
+<meta name="twitter:description" content="Estimate the on-road registration cost for a new vehicle in Jharkhand — road tax, fees, HP charges.">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23D6481F'/%3E%3Ctext x='32' y='42' font-family='monospace' font-size='24' font-weight='bold' fill='white' text-anchor='middle'%3ERTO%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "name": "Jharkhand Vehicle Registration Cost Calculator",
+      "url": "https://rto-forms.onrender.com/tax-calculator",
+      "description": "Estimate the on-road registration cost for a new vehicle in Jharkhand — road tax, registration fee, smart card, HSRP plate and HP charges, all in one calculator."
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is this Jharkhand registration cost calculator official?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No — this is an independent estimate based on publicly available rate information. It is not issued by, or affiliated with, the Jharkhand Transport Department. Always confirm the exact amount with your DTO/RTO before paying." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this calculator work for other states?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Not yet — the rate slabs used here are specific to Jharkhand. Road tax percentages, rebates and fees vary significantly by state, so this estimate will not be accurate outside Jharkhand." }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- ════════ HEADER ════════ -->
+<header class="site-header">
+  <div class="page-width header-inner">
+    <a href="/" class="brand"><span class="brand-mark"></span><span class="brand-name">RTO Forms India</span></a>
+    <nav class="desktop-nav">
+      <a class="nav-link" href="/#packages" data-i18n="nav.packages">Packages</a>
+      <a class="nav-link" href="/#all-forms" data-i18n="nav.allForms">All Forms</a>
+      <a class="nav-link" href="/fill" data-i18n="nav.fill">Fill Forms →</a>
+      <a class="nav-link" href="/#faq" data-i18n="nav.faq">FAQ</a>
+    </nav>
+    <div class="header-actions">
+      <button type="button" class="wallet-chip" id="hdrWalletBadge" onclick="openBuyModal()" title="Wallet balance — click to add money">₹0.00</button>
+      <div class="lang-toggle lang-toggle-light" id="langToggle">
+        <button type="button" class="lang-opt" data-lang="en" onclick="setLang('en')" data-i18n="lang.en">EN</button>
+        <button type="button" class="lang-opt" data-lang="hi" onclick="setLang('hi')" data-i18n="lang.hi">Hinglish</button>
+      </div>
+      <button id="menu-btn" class="mobile-menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="mobile-nav" class="mobile-nav hidden">
+    <a class="nav-link" href="/#packages" data-i18n="nav.packages">Packages</a>
+    <a class="nav-link" href="/#all-forms" data-i18n="nav.allForms">All Forms</a>
+    <a class="nav-link" href="/fill" data-i18n="nav.fill">Fill Forms →</a>
+    <a class="nav-link" href="/#faq" data-i18n="nav.faq">FAQ</a>
+  </nav>
+</header>
+
+<!-- ════════ TAX CALCULATOR ════════ -->
+<section class="sec" id="calc">
+  <div class="sec-eyebrow" data-i18n="calc.eyebrow">Estimate</div>
+  <h1 class="sec-title" data-i18n="calc.title">Jharkhand Vehicle Registration Cost Calculator</h1>
+  <p class="sec-sub" data-i18n="calc.intro1">Get an approximate on-road registration cost for a new vehicle in Jharkhand — road tax, registration fee, smart card, HSRP plate and hypothecation charges, all in one place. Enter the ex-showroom price and a few vehicle details below.</p>
+  <p class="sec-sub" data-i18n="calc.intro2">This is an estimate for budgeting, not an official quote — always confirm the final amount with your DTO/RTO before paying.</p>
+
+  <div class="calc-wrap">
+    <div class="calc-card">
+      <div class="calc-grid">
+        <div class="calc-fld">
+          <label>Ex-showroom price (₹)</label>
+          <input type="tel" inputmode="numeric" id="calcPrice" placeholder="e.g. 800000" oninput="calcEstimate()">
+          <span class="calc-hint" data-i18n="calc.priceHint">A GST-inclusive price also works — road tax is calculated on the GST-exclusive value automatically.</span>
+        </div>
+        <div class="calc-fld">
+          <label>Vehicle type</label>
+          <select id="calcType" onchange="calcEstimate()">
+            <option value="car">Car / 4-wheeler (private)</option>
+            <option value="bike">Two-wheeler</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>Fuel type</label>
+          <select id="calcFuel" onchange="calcEstimate()">
+            <option value="petrol">Petrol / Diesel</option>
+            <option value="cng">CNG / LPG</option>
+            <option value="ev">Electric (EV)</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>Owner type</label>
+          <select id="calcOwner" onchange="calcEstimate()">
+            <option value="individual">Individual</option>
+            <option value="company">Company / Firm</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>Condition</label>
+          <select id="calcCond" onchange="calcEstimate()">
+            <option value="new">New vehicle</option>
+            <option value="used">Pre-owned / Used</option>
+          </select>
+        </div>
+        <div class="calc-fld">
+          <label>On loan / finance?</label>
+          <select id="calcHP" onchange="calcEstimate()">
+            <option value="no">No</option>
+            <option value="yes">Yes (HP endorsement)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="calc-result" id="calcResult">
+        <p class="calc-placeholder" data-i18n="calc.placeholder">Enter the ex-showroom price — the estimate will appear here.</p>
+      </div>
+
+      <p class="calc-disclaimer" data-i18n="calc.disclaimer">⚠️ Approximate estimate only. Actual RTO charges can vary based on state notifications. Confirm the final amount with your DTO/RTO. Rates last updated: review pending.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="dotrule" style="max-width:1080px;margin:0 auto">
+
+<!-- ════════ WHAT'S INCLUDED ════════ -->
+<section class="sec" id="whats-included">
+  <div class="sec-eyebrow">Details</div>
+  <h2 class="sec-title" data-i18n="calc.whatsIncludedTitle">What's included in the estimate</h2>
+
+  <div class="blank-form-grid">
+    <div class="blank-form-card">
+      <h3 data-i18n="calc.whatsIncludedWhat">Road tax, one-time fees, and rebates</h3>
+      <p data-i18n="calc.whatsIncludedWhatBody">Road tax (slab-based on price, vehicle type and pre-owned status), registration fee, RC smart card fee, HSRP number plate fee, and postal/misc charges — plus a road-tax rebate if you select Electric or CNG/LPG.</p>
+    </div>
+    <div class="blank-form-card">
+      <h3 data-i18n="calc.whatsIncludedWho">Hypothecation (loan) charges</h3>
+      <p data-i18n="calc.whatsIncludedWhoBody">If you're financing the vehicle, switch "On loan / finance?" to Yes — the hire-purchase (HP) endorsement fee is added to the total automatically.</p>
+    </div>
+    <div class="blank-form-card">
+      <h3 data-i18n="calc.whatsIncludedAttach">Not included</h3>
+      <p data-i18n="calc.whatsIncludedAttachBody">Insurance premium, extended warranty, accessories, dealer handling charges, and any octroi/local body tax — these vary by dealer and aren't part of RTO registration.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ HOW RATES ARE CALCULATED ════════ -->
+<section class="sec" id="how-rates">
+  <div class="sec-eyebrow">Method</div>
+  <h2 class="sec-title" data-i18n="calc.howRatesTitle">How the rates are calculated</h2>
+  <p class="blank-form-intro" data-i18n="calc.howRatesBody">Road tax is charged as a percentage of the GST-exclusive (ex-showroom) price, on a slab that rises with the vehicle's price; pre-owned vehicles carry a small additional percentage. Electric vehicles get a road-tax rebate, and some states rebate CNG/LPG too. These rates are based on publicly available Jharkhand estimates and are reviewed periodically — they are not a substitute for your DTO/RTO's official assessment.</p>
+</section>
+
+<hr class="dotrule" style="max-width:1080px;margin:0 auto">
+
+<!-- ════════ FAQ ════════ -->
+<section class="sec" id="faq">
+  <div class="sec-eyebrow">FAQ</div>
+  <h2 class="sec-title">Calculator — common questions</h2>
+  <div class="faq-list">
+    <details class="faq" open>
+      <summary data-i18n="calc.faq1q">Is this Jharkhand registration cost calculator official?</summary>
+      <p data-i18n="calc.faq1a">No — this is an independent estimate based on publicly available rate information. It is not issued by, or affiliated with, the Jharkhand Transport Department. Always confirm the exact amount with your DTO/RTO before paying.</p>
+    </details>
+    <details class="faq">
+      <summary data-i18n="calc.faq2q">Does this calculator work for other states?</summary>
+      <p data-i18n="calc.faq2a">Not yet — the rate slabs used here are specific to Jharkhand. Road tax percentages, rebates and fees vary significantly by state, so this estimate will not be accurate outside Jharkhand.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ════════ FOOTER ════════ -->
+<footer class="ftr">
+  <div class="ftr-in">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        RTO Forms India
+        <small>A free tool for filling Motor Vehicles Act 1988 forms online. Your data stays in your browser — nothing is stored on any server.</small>
+      </div>
+      <div class="ftr-links">
+        <a href="/#packages">Packages</a>
+        <a href="/#all-forms">All Forms</a>
+        <a href="/fill">Fill Forms</a>
+        <a href="/contact-us.html">Contact Us</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms-of-service.html">Terms of Service</a>
+        <a href="/refund-policy.html">Refund Policy</a>
+      </div>
+    </div>
+    <div class="ftr-disclaimer">
+      ⚠️ This is an independent, unofficial tool — NOT an official government website. Forms are based on CMV Rules 1989. Always verify with your RTO/DTO before submission.
+    </div>
+    <div class="ftr-bottom">
+      <span>Jharkhand vehicle registration cost calculator — Built in Jamshedpur, Jharkhand</span>
+      <span class="mono">v1.1 — Forms as per CMV Rules 1989</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/i18n.js"></script>
+<script src="/field-mapping.js"></script>
+<script src="/pdf-generate.js"></script>
+<script src="/forms-data.js"></script>
+<script src="/task-pricing.js"></script>
+<script src="/ui.js"></script>
+<script src="/pro-wallet.js"></script>
+<div class="modal-overlay" id="proBuyModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 data-i18n="modal.buyTitle">Add Money to Wallet</h3>
+      <button type="button" class="modal-close" onclick="closeBuyModal()">&times;</button>
+    </div>
+    <p class="modal-sub" data-i18n="modal.buySub">Instant via UPI / card — no waiting. AI auto-fill charges ₹3–₹5 depending on what you're filling, only on success.</p>
+    <div class="pack-grid">
+      <button type="button" class="pack-card" onclick="startPayment(50)"><span class="pack-n">₹50</span><span class="pack-l" data-i18n="modal.extractions10">10 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(100)"><span class="pack-n">₹100</span><span class="pack-l" data-i18n="modal.extractions20">20 extractions</span></button>
+      <button type="button" class="pack-card" onclick="startPayment(200)"><span class="pack-n">₹200</span><span class="pack-l" data-i18n="modal.extractions40">40 extractions</span></button>
+    </div>
+    <label class="modal-code-lbl" data-i18n="modal.orCustom">Or a custom amount</label>
+    <div class="modal-code-in">
+      <input type="number" id="customAmountInput" min="1" class="mono" data-i18n-placeholder="modal.amountPlaceholder" placeholder="e.g. 150">
+      <button type="button" class="btn-generate" onclick="startPayment(Number(document.getElementById('customAmountInput').value))" data-i18n="modal.pay">Pay</button>
+    </div>
+    <div class="status" id="proCodeStatus"></div>
+  </div>
+</div>
+
+<a class="wa-float" href="https://wa.me/918709731996?text=Hello%2C%20I%20want%20to%20get%20in%20touch%20regarding%20rtoformsindia.com" target="_blank" rel="noopener" aria-label="Contact us on WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.6.1-.2.3-.7 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5s-.6-1.5-.9-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.2-1.4c1.4.8 3 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 14.8 3.5 13.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20 12 20z"/></svg>
+  <span class="wa-txt">Contact / Form request</span>
+</a>
+</body>
+</html>

@@ -1,11 +1,13 @@
-/* ════════ LANDING PAGE (index.html top section only) ════════
-   Renders the package cards, the 41-form catalog grid + category pills,
-   and the hero search box — the "browse and pick a form" experience
-   above the fill-tool (#tool, ui.js/forms-data.js — untouched by this
-   file). Everything here reads from the site's real data (FORMS/BUNDLES,
-   forms-data.js) and hands off clicks to the site's real actions
-   (fillNow/openOfficial/applyBundle, ui.js) — nothing here owns any data
-   or state of its own. Only loaded on index.html, never on a task page.
+/* ════════ LANDING PAGE (index.html) ════════
+   Pure browse-and-pick page — hero/search, package cards, the 41-form
+   catalog grid + category pills, and the trust strip. The actual fill-tool
+   and tax calculator live on their own pages (/fill, /tax-calculator) —
+   this file never touches DOM from either; it only navigates there
+   (goToFill()/packageClick() below) or to a form's own blank-form page
+   (BLANK_FORM_HREF) or openOfficial() (ui.js) for parivahan.gov.in.
+   Everything here reads from the site's real data (FORMS/BUNDLES,
+   forms-data.js) — nothing here owns any data or state of its own. Only
+   loaded on index.html, never on a task page.
 
    Visual design ported from design/design-landing-v3.html (an iLovePDF-
    style reference mockup) — its own hardcoded 41-row `forms`/`packages`
@@ -35,15 +37,22 @@ function svg(name){
    (style.css). 'misc' maps to the design's catch-all "Other" tint. */
 const CAT_CLASS={registration:'i-reg', transfer:'i-trn', licence:'i-lic', permit:'i-per', misc:'i-oth'};
 
-/* Which task page (if any) a landing package card navigates to — same
-   tab, per spec. b_death has no dedicated task page (only 5 exist), so
-   it's applied in-page instead (see packageClick() below), same as any
-   "Quick start" bundle button inside the fill-tool itself. */
+/* Which task page a landing package card navigates to — same tab, per
+   spec. Every LANDING_PACKAGE_IDS entry has one; packageClick() below
+   still falls back to /fill?bundle=<id> for any id that doesn't (e.g. a
+   future package added here before its own task page exists). */
 const PACKAGE_HREF={
   b_transfer:'/vehicle-transfer', b_rcrenew:'/rc-renewal', b_duprc:'/duplicate-rc',
-  b_hpremove:'/hp-removal', b_address:'/address-change',
+  b_hpremove:'/hp-removal', b_address:'/address-change', b_death:'/transfer-on-death',
 };
 const LANDING_PACKAGE_IDS=['b_transfer','b_rcrenew','b_duprc','b_hpremove','b_address','b_death'];
+
+/* Every "fill online" catalog card / search result navigates here — the
+   fill-tool's own page, which reads ?picks= at bootstrap and pre-checks
+   exactly these PICKS ids (see applyTaskDefaults(), ui.js). */
+function goToFill(pickIds){
+  location.href='/fill?picks='+encodeURIComponent(pickIds.join(','));
+}
 
 function buildCard({cls, icon, title, desc, foot, footClass, onClick}){
   const a=document.createElement('a');
@@ -60,8 +69,7 @@ function buildCard({cls, icon, title, desc, foot, footClass, onClick}){
 
 function packageClick(bundleId){
   const href=PACKAGE_HREF[bundleId];
-  if(href){ location.href=href; return; }
-  applyBundle(bundleId);
+  location.href = href || ('/fill?bundle='+encodeURIComponent(bundleId));
 }
 
 function renderPackages(){
@@ -80,15 +88,31 @@ function renderPackages(){
   });
 }
 
+/* A "download blank" form's own info page (/form-<num>-<slug>/), once
+   built — see landing.js's header comment in this repo's task notes.
+   Only forms with a real page here go to it; every other "download blank"
+   card still falls back to openOfficial() (straight to parivahan.gov.in)
+   until its page exists. Add an entry the same turn its page is created. */
+const BLANK_FORM_HREF={
+  '1A': '/form-1a-medical-certificate',
+  '23': '/form-23-certificate-of-registration',
+  '38': '/form-38-certificate-of-fitness',
+};
+
 function formCardFor(f){
   const idx=FORMS.indexOf(f);
   const online=!!f.fill;
+  const blankHref=!online ? BLANK_FORM_HREF[f.num] : null;
   return buildCard({
     cls:CAT_CLASS[f.cat]||'i-oth', icon:FORM_ICON[f.num]||'file',
     title:'Form '+f.num+' — '+f.name, desc:f.desc,
     foot:online?t('landing.fillOnline'):t('landing.downloadBlank'),
     footClass:online?'online':'blank',
-    onClick:()=>{ if(online) fillNow(idx); else openOfficial(idx); },
+    onClick:()=>{
+      if(online) goToFill([].concat(f.fill));
+      else if(blankHref) location.href=blankHref;
+      else openOfficial(idx);
+    },
   });
 }
 
@@ -155,9 +179,12 @@ function initLandingSearch(){
         '<span class="card-icon '+(CAT_CLASS[f.cat]||'i-oth')+'" style="width:38px;height:38px;margin:0;border-radius:7px">'+svg(FORM_ICON[f.num]||'file')+'</span>'+
         '<span style="flex:1"><span class="result-name">Form '+f.num+' — '+f.name+'</span><span class="result-description">'+f.desc+'</span></span>'+
         '<span class="card-foot '+(online?'online':'blank')+'" style="margin:0;padding:0">'+(online?t('landing.fillOnline'):t('landing.downloadBlank'))+'</span>';
+      const blankHref=!online ? BLANK_FORM_HREF[f.num] : null;
       row.addEventListener('click', ev=>{
         ev.preventDefault();
-        if(online) fillNow(idx); else openOfficial(idx);
+        if(online) goToFill([].concat(f.fill));
+        else if(blankHref) location.href=blankHref;
+        else openOfficial(idx);
       });
       resultsEl.appendChild(row);
     });
@@ -182,6 +209,11 @@ function initMobileMenu(){
 
 const allFormsTitleEl=document.getElementById('allFormsTitle');
 if(allFormsTitleEl) allFormsTitleEl.textContent=t('landing.allFormsTitle',{n:FORMS.length});
+
+/* landing.trust3 has a {n} placeholder — data-i18n can't pass vars (see
+   applyI18n(), i18n.js), so this one is set directly, same as above. */
+const trust3El=document.getElementById('trustStrip3');
+if(trust3El) trust3El.textContent=t('landing.trust3',{n:FORMS.length});
 
 renderPackages();
 renderPills();
