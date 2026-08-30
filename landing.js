@@ -30,7 +30,7 @@ const ICONS = {
   file:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h5M9 13h6M9 17h4"/>',
 };
 function svg(name){
-  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||ICONS.file)+'</svg>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||ICONS.file)+'</svg>';
 }
 
 /* Our FORMS[i].cat values → the design's 5 category-tint classes

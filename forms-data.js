@@ -14,11 +14,11 @@ const CAT_ICON={licence:'🪪',registration:'📋',transfer:'🔄',permit:'🛣�
    pipeline or the fill-tool at all. A num with no entry here falls back to
    'file' (landing.js). */
 const FORM_ICON={
-  '1':'file','1A':'file','2':'card','3':'card','4A':'route','5':'file','6':'card','7':'card','8':'file','9':'renew','LLD':'copy',
-  '14':'file','15':'file','16':'file','17':'file','51':'file','54':'file',
-  '20':'file','21':'file','22':'wheel','23':'card','24':'file','25':'renew','26':'copy','27':'route','27A':'route','33':'pin',
-  '28':'file','29 + 30':'transfer','31':'doc','32':'transfer','34':'bank','35':'bank','36':'bank','DN':'file','MR':'file',
-  '38':'wheel','45':'route','46':'route','47':'file','48':'file',
+  '1':'doc','1A':'doc','2':'card','3':'card','4A':'route','5':'doc','6':'card','7':'card','8':'doc','9':'renew','LLD':'copy',
+  '14':'doc','15':'doc','16':'doc','17':'doc','51':'doc','54':'doc',
+  '20':'doc','21':'doc','22':'wheel','23':'card','24':'doc','25':'renew','26':'copy','27':'route','27A':'route','33':'pin',
+  '28':'route','29 + 30':'transfer','31':'transfer','32':'transfer','34':'bank','35':'bank','36':'bank','DN':'doc','MR':'doc',
+  '38':'wheel','45':'route','46':'route','47':'route','48':'route',
 };
 
 const FORMS=[

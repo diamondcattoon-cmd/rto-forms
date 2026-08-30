@@ -25,13 +25,14 @@
   --txt-3:#9AA1B2;
   --white:#FFFFFF;
 
-  /* landing page catalogue — category tint (icon tile bg + icon stroke),
-     ported from design/design-landing-v3.html */
-  --c-reg-bg:#eaf1fa;   --c-reg:#2b6cb0;
-  --c-trn-bg:#fbeee9;   --c-trn:#d6481f;
-  --c-lic-bg:#e9f4ee;   --c-lic:#1a7a4a;
-  --c-per-bg:#f1ecfb;   --c-per:#6d43c8;
-  --c-oth-bg:#eff0f3;   --c-oth:#5b6478;
+  /* landing page catalogue — solid category-tile colour, white glyph on
+     top (iLovePDF-style — a light tint here reads as too faint to tell
+     categories apart at a glance in the grid, which solid colour fixes) */
+  --c-reg:#2b6cb0;
+  --c-trn:#d6481f;
+  --c-lic:#1a7a4a;
+  --c-per:#6d43c8;
+  --c-oth:#5b6478;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -165,20 +166,20 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 
 /* ── catalogue cards (packages + all-forms) ── */
 .card-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
-.card{display:flex;flex-direction:column;min-height:200px;padding:24px;background:var(--white);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:inherit;transition:border-color 150ms ease,box-shadow 150ms ease,transform 150ms ease}
-.card:hover{border-color:#c9c2b6;box-shadow:0 4px 14px rgba(20,40,80,.07);transform:translateY(-1px)}
-.card-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:9px;margin-bottom:22px}
-.card-icon svg{width:25px;height:25px}
-.card h3{margin:0;color:var(--ink);font-size:1.15rem;font-weight:600;line-height:1.25}
-.card p{margin:9px 0 0;color:var(--txt-2);font-size:.9rem;line-height:1.5}
-.card-foot{margin-top:auto;padding-top:14px;font:500 .72rem 'IBM Plex Mono',monospace;letter-spacing:.03em}
+.card{display:flex;flex-direction:column;min-height:200px;padding:26px;background:var(--white);border:1px solid var(--line-soft);border-radius:10px;text-decoration:none;color:inherit;transition:border-color 150ms ease,box-shadow 150ms ease,transform 150ms ease}
+.card:hover{border-color:#c9c2b6;box-shadow:0 4px 14px rgba(20,40,80,.08);transform:translateY(-1px)}
+.card-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:10px;margin-bottom:20px}
+.card-icon svg{width:26px;height:26px}
+.card h3{margin:0;color:var(--ink);font-size:1.2rem;font-weight:600;line-height:1.25}
+.card p{margin:9px 0 0;color:var(--txt-2);font-size:.94rem;line-height:1.5}
+.card-foot{margin-top:auto;padding-top:14px;font:500 .75rem 'IBM Plex Mono',monospace;letter-spacing:.03em}
 .card-foot.online{color:var(--approve)}
 .card-foot.blank{color:var(--txt-2)}
-.i-reg{background:var(--c-reg-bg);color:var(--c-reg)}
-.i-trn{background:var(--c-trn-bg);color:var(--c-trn)}
-.i-lic{background:var(--c-lic-bg);color:var(--c-lic)}
-.i-per{background:var(--c-per-bg);color:var(--c-per)}
-.i-oth{background:var(--c-oth-bg);color:var(--c-oth)}
+.i-reg{background:var(--c-reg);color:#fff}
+.i-trn{background:var(--c-trn);color:#fff}
+.i-lic{background:var(--c-lic);color:#fff}
+.i-per{background:var(--c-per);color:#fff}
+.i-oth{background:var(--c-oth);color:#fff}
 
 .packages{padding-top:8px;padding-bottom:46px}
 .packages .card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -196,10 +197,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 }
 @media(max-width:767px){
   .card-grid,.packages .card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .card,.packages .card{min-height:128px;padding:15px}
-  .card-icon{width:40px;height:40px;margin-bottom:14px;border-radius:8px}
-  .card-icon svg{width:20px;height:20px}
-  .card h3{font-size:.92rem}
+  .card,.packages .card{min-height:128px;padding:16px}
+  .card-icon{width:42px;height:42px;margin-bottom:14px;border-radius:8px}
+  .card-icon svg{width:21px;height:21px}
+  .card h3{font-size:.95rem}
   .card p{display:none}
   .card-foot{padding-top:10px;font-size:.66rem}
   .section-head h2{font-size:1.4rem}
