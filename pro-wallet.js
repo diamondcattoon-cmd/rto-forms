@@ -20,111 +20,58 @@
 const WORKER_URL='https://rto-ai-extract.diamondcattoon.workers.dev';
 
 let PRO=Object.assign({walletId:''}, JSON.parse(localStorage.getItem('rtoProState')||'{}'));
-delete PRO.role; /* migrate away from the old single global role (pre-per-document DOC_ROLE) if a stale copy is still in localStorage */
+delete PRO.role; /* migrate away from the old single global role (pre-per-document-slot) if a stale copy is still in localStorage */
+delete PRO.docRole; /* migrate away from the old per-doc-type role toggle (pre-fixed-slot model) if a stale copy is still in localStorage */
 PRO.uploads={}; /* images kept in memory only for this session — used for PDF attachment */
 PRO.balancePaise=0;
 
-/* ── Per-document role ──
-   Replaces the old single global "fill as seller/buyer" toggle. Each
-   document type that DOC_RULES (field-mapping.js) marks as 'choice' (i.e.
-   could belong to either party — aadhaar, pan) gets its OWN role, so a user
-   can extract the seller's Aadhaar and the buyer's Aadhaar in the same
-   session without one overwriting the other's setting. A 'fixed'-role doc
-   type (rc) has no entry here at all — its role is never asked for, never
-   stored, and AI_FIELD_MAP.rc ignores whatever's passed to it anyway (see
-   field-mapping.js). Defaults come from DOC_RULES itself, not hardcoded
-   here, so a new 'choice' doc type added there needs no change in this file. */
-let DOC_ROLE={};
-Object.keys(DOC_RULES).forEach(docType=>{
-  if(DOC_RULES[docType].role==='choice') DOC_ROLE[docType]=DOC_RULES[docType].defaultRole;
-});
-try{
-  const savedRoles=JSON.parse(localStorage.getItem('rtoProState')||'{}').docRole;
-  if(savedRoles && typeof savedRoles==='object'){
-    Object.keys(DOC_ROLE).forEach(docType=>{ if(savedRoles[docType]==='seller'||savedRoles[docType]==='buyer') DOC_ROLE[docType]=savedRoles[docType]; });
-  }
-}catch(e){}
+function saveProState(){ localStorage.setItem('rtoProState', JSON.stringify({walletId:PRO.walletId})); }
 
-function saveProState(){ localStorage.setItem('rtoProState', JSON.stringify({walletId:PRO.walletId, docRole:DOC_ROLE})); }
-function setDocRole(docType, role){
-  if(!(docType in DOC_ROLE)) return; /* not a 'choice' doc type — nothing to set */
-  DOC_ROLE[docType]=(role==='buyer')?'buyer':'seller';
-  saveProState();
-  refreshDocPurposeHint(docType);
-  /* The role toggle can flip a doc between extractable and attach-only
-     AFTER it's already been uploaded (e.g. Aadhaar switched from Seller to
-     Buyer) — re-settle its state text/PRO.uploads entry to match, same as
-     a fresh upload would. Only matters if it has a ready image and hasn't
-     already been billed for; an already-extracted doc keeps its result
-     regardless of a later role change (matches the rest of this file's
-     existing "don't retroactively touch a paid extraction" behavior). */
-  const item=getBatchItem(docType);
-  if(item && !EXTRACTED_SET.has(docType)){
-    if(isDocExtractable(docType)){
-      const stateEl=document.getElementById('state-'+docType);
-      if(stateEl){ stateEl.textContent=t('ai.previewReady'); stateEl.className='upload-slot-state'; }
-    } else {
-      markAttachOnly(docType);
-    }
-  }
-  updateCheckoutBox();
+/* ── Fixed upload slots ──
+   Each physical upload box is its own slot, whose role (seller/buyer) is
+   baked into which box it is — there is no "Whose is this?" toggle to get
+   wrong. A slot id is either 'rc', or '<docType>_<role>' (aadhaar_seller,
+   pan_seller, aadhaar_buyer, pan_buyer). Aadhaar slots hold TWO images
+   (front/back) under DOC_STATE keys '<slotId>_front'/'<slotId>_back'; every
+   other slot holds one image under DOC_STATE[slotId] directly. */
+function docTypeFromSlot(slotId){
+  if(slotId.indexOf('aadhaar')===0) return 'aadhaar';
+  if(slotId.indexOf('pan')===0) return 'pan';
+  return slotId; /* 'rc' */
+}
+function roleFromSlot(slotId){
+  return slotId.slice(-6)==='_buyer' ? 'buyer' : 'seller';
+}
+/* Element ids in the HTML use hyphens (docSlot-aadhaar-seller, matching
+   the site's usual id convention) while slotId itself uses underscores
+   (aadhaar_seller, matching DOC_STATE/getBatchItem/EXTRACTED_SET keys) —
+   this converts a slotId to its DOM id suffix wherever one is needed. */
+function slotDomId(slotId){
+  return slotId.replace(/_/g,'-');
 }
 
-/* Only RC and a BUYER's Aadhaar are ever sent to Gemini — cuts the
+/* Only RC and the BUYER's Aadhaar are ever sent to Gemini — cuts the
    package to at most 2 extractions (matches TASK_PRICING/the Worker's own
    "Maximum 2 documents per package" cap, task-pricing.js/worker/src/index.js)
-   and keeps PAN + a seller's Aadhaar as plain attach-only uploads, since
-   neither's data is actually useful to extract (PAN has nothing the forms
-   need; a seller's identity already comes from the RC). */
-function isDocExtractable(docType){
-  if(docType==='rc') return true;
-  if(docType==='aadhaar') return getEffectiveRole('aadhaar')==='buyer';
-  return false; /* pan — never extracted, regardless of role */
+   and keeps both PAN slots + the seller's Aadhaar as plain attach-only
+   uploads, since none of their data is actually useful to extract (PAN has
+   nothing the forms need; the seller's identity already comes from the RC). */
+function isSlotExtractable(slotId){
+  return slotId==='rc' || slotId==='aadhaar_buyer';
 }
 
-/* Updates the small "Fills the form automatically" / "Attached to your
-   PDF" caption next to a doc's name — static in the HTML for rc/pan
-   (their extractability never changes), so this only has anything to do
-   for aadhaar (#purpose-aadhaar), whose extractability follows its role
-   toggle. Safe to call for any docType — no-ops if there's no such
-   element on the page. */
-function refreshDocPurposeHint(docType){
-  const el=document.getElementById('purpose-'+docType);
-  if(!el) return;
-  const extractable=isDocExtractable(docType);
-  el.textContent=t(extractable?'ai.fillsAutomatically':'ai.attachedOnly');
-  el.classList.toggle('extract', extractable);
-}
-
-/* A non-extractable doc (PAN always; a seller's Aadhaar) still needs its
-   image ready for PDF attachment (see generatePDF()'s attachment loop,
-   ui.js, which reads PRO.uploads[key]) — this is that path, mirroring
-   what applyExtractionResult() does for an extracted doc, minus the
-   Gemini call and the `raw` field (there's no extracted data to keep). */
-async function markAttachOnly(docType){
-  const item=getBatchItem(docType);
+/* A non-extractable slot (both PAN slots; the seller's Aadhaar) still
+   needs its image ready for PDF attachment (see generatePDF()'s
+   attachment loop, ui.js, which reads PRO.uploads[key]) — this is that
+   path, mirroring what applyExtractionResult() does for an extracted doc,
+   minus the Gemini call and the `raw` field (nothing was extracted). */
+async function markAttachOnly(slotId){
+  const item=getBatchItem(slotId);
   if(!item) return;
   const dims=await loadImageDims(item.images[0].dataUrl);
   PRO.uploads[item.uploadsKey]={dataUrl:item.images[0].dataUrl, w:dims.w, h:dims.h};
-  const stateEl=document.getElementById('state-'+docType);
+  const stateEl=document.getElementById('state-'+slotDomId(slotId));
   if(stateEl){ stateEl.textContent=t('ai.attachedOnly'); stateEl.className='upload-slot-state done'; }
-}
-
-/* The role actually used for a given extraction:
-   - 'fixed'-role doc types (rc) always resolve through resolveDocRole() to
-     their defaultRole, ignoring everything below (field-mapping.js already
-     enforces this too — this is belt-and-suspenders, not the only guard).
-   - Otherwise, if none of the currently CHECKED forms need a buyer at all
-     (PICKS[i].needB — see forms-data.js), there's no buyer to fill in, so
-     force 'seller' regardless of what DOC_ROLE has stored. This covers the
-     case where a buyer role was chosen earlier and the user then switched
-     to a buyer-less package (e.g. RC renewal) without manually resetting it. */
-function getEffectiveRole(docType){
-  const rule=DOC_RULES[docType];
-  if(rule && rule.role==='fixed') return rule.defaultRole;
-  const anyB=typeof PICKS!=='undefined' && PICKS.filter(p=>CHECKED[p.id]).some(p=>p.needB);
-  if(!anyB) return 'seller';
-  return DOC_ROLE[docType] || (rule && rule.defaultRole) || 'seller';
 }
 
 /* Updates every balance badge on the page — the AI panel's own
@@ -200,20 +147,23 @@ function compressImage(dataUrl, maxDim, quality){
    doc-input-row markup) — both members of every pair still gate on the
    same consent checkbox. */
 const CONSENT_GATED_INPUT_IDS=[
-  'file-aadhaar-front-camera','file-aadhaar-front-file',
-  'file-aadhaar-back-camera','file-aadhaar-back-file',
-  'file-pan-camera','file-pan-file',
+  'file-aadhaar-seller-front-camera','file-aadhaar-seller-front-file',
+  'file-aadhaar-seller-back-camera','file-aadhaar-seller-back-file',
+  'file-pan-seller-camera','file-pan-seller-file',
+  'file-aadhaar-buyer-front-camera','file-aadhaar-buyer-front-file',
+  'file-aadhaar-buyer-back-camera','file-aadhaar-buyer-back-file',
+  'file-pan-buyer-camera','file-pan-buyer-file',
   'file-rc-camera','file-rc-file'
 ];
 /* One hint per gated slot (not per input — aadhaar front+back share one slot/hint) — see
    consentHint-* in index.html, sitting right above the greyed-out inputs so it's obvious
    why they're disabled. */
-const CONSENT_HINT_IDS=['consentHint-aadhaar','consentHint-pan','consentHint-rc'];
-/* Task-page v2 layout only — these three cards get a visibly "locked" look
+const CONSENT_HINT_IDS=['consentHint-aadhaar-seller','consentHint-pan-seller','consentHint-aadhaar-buyer','consentHint-pan-buyer','consentHint-rc'];
+/* Task-page v2 layout only — these cards get a visibly "locked" look
    (faded + lock icon, see .ai-box-picker .upload-slot.locked in style.css)
    until consent is given. The root page's older PRO panel doesn't use this
    class at all, so toggling it there is a harmless no-op. */
-const CONSENT_GATED_SLOT_IDS=['docSlot-rc','docSlot-aadhaar','docSlot-pan'];
+const CONSENT_GATED_SLOT_IDS=['docSlot-rc','docSlot-aadhaar-seller','docSlot-pan-seller','docSlot-aadhaar-buyer','docSlot-pan-buyer'];
 function onConsentChange(){
   const checked=document.getElementById('uploadConsentChk').checked;
   CONSENT_GATED_INPUT_IDS.forEach(id=>{
@@ -334,25 +284,33 @@ function setDocImage(key, dataUrl, keepPicker){
   onDocReady(key);
 }
 
+/* aadhaar_seller/aadhaar_buyer each have a _front/_back pair of file
+   inputs sharing one slot — every other key IS its slot id directly. */
+function slotIdFromKey(key){
+  if(key==='aadhaar_seller_front' || key==='aadhaar_seller_back') return 'aadhaar_seller';
+  if(key==='aadhaar_buyer_front' || key==='aadhaar_buyer_back') return 'aadhaar_buyer';
+  return key;
+}
+
 function onDocReady(key){
-  const docType = (key==='aadhaar_front' || key==='aadhaar_back') ? 'aadhaar' : key;
+  const slotId=slotIdFromKey(key);
   /* Purely additive visual cue ("this card is ready") — harmless on the
      root page too (no CSS targets .ready outside the task-page v2 layout,
      see .ai-box-picker .upload-slot.ready in style.css), but added
      unconditionally here since it's the same slot element either way. */
-  const slotEl=document.getElementById('docSlot-'+docType);
+  const slotEl=document.getElementById('docSlot-'+slotDomId(slotId));
   if(slotEl) slotEl.classList.add('ready');
-  const removeBtn=document.getElementById('remove-'+docType);
+  const removeBtn=document.getElementById('remove-'+slotDomId(slotId));
   if(removeBtn) removeBtn.style.display='inline';
 
-  if(isDocExtractable(docType)){
-    const stateEl=document.getElementById('state-'+docType);
+  if(isSlotExtractable(slotId)){
+    const stateEl=document.getElementById('state-'+slotDomId(slotId));
     stateEl.textContent=t('ai.previewReady');
     stateEl.className='upload-slot-state';
   } else {
-    /* PAN, or an Aadhaar currently set to Seller — attach only, never
-       sent to Gemini (see isDocExtractable()/markAttachOnly() above). */
-    markAttachOnly(docType);
+    /* Both PAN slots, or the seller's Aadhaar — attach only, never sent
+       to Gemini (see isSlotExtractable()/markAttachOnly() above). */
+    markAttachOnly(slotId);
   }
   updateCheckoutBox();
 }
@@ -362,15 +320,17 @@ function onDocReady(key){
    up unchanged in the HTML) — that's the better UX there and isn't
    touched. This is ONLY for a laptop/desktop, where `capture` is ignored
    and clicking that file input just opens a plain file picker with no
-   camera at all. Every "Take photo" button (rc/aadhaar_front/aadhaar_back/
-   pan/photo) now calls handleTakePhotoClick(key) instead of being a plain
-   <label for=...>, so it can pick the right path per device.
+   camera at all.
 
    The captured frame is wrapped into a real `File` and passed to the
    EXACT SAME handleFileSelect()/handlePhotoUpload() used for a picked
    file — not a parallel code path — so it goes through the identical
    compression/preview/state pipeline either way; there is nothing
-   camera-specific to keep in sync with those. */
+   camera-specific to keep in sync with those. Every "Take photo" button
+   (rc/aadhaar_seller_front/aadhaar_seller_back/pan_seller/
+   aadhaar_buyer_front/aadhaar_buyer_back/pan_buyer/photo) calls
+   handleTakePhotoClick(key) instead of being a plain <label for=...>, so
+   it can pick the right path per device. */
 function isTouchPrimaryDevice(){
   return !!(window.matchMedia && window.matchMedia('(pointer:coarse)').matches);
 }
@@ -487,16 +447,16 @@ function useChooseFileFallback(){
   if(fileInput) fileInput.click();
 }
 
-/* Clears one document's uploaded photo(s) and, if it had already been
+/* Clears one slot's uploaded photo(s) and, if it had already been
    successfully extracted, everything that extraction wrote — after
    confirming, since that ₹5 was already charged and won't be refunded by
-   removing the result. 'aadhaar' clears both front and back as one unit
-   (they're billed and extracted together — see getBatchItem()); 'photo'
-   is the plain (never billed, never extracted) face-photo attachment and
-   skips all of that. Task-page v2 layout only — root's markup has no
-   #remove-* buttons wired to this. */
-function removeDoc(docType){
-  if(docType==='photo'){
+   removing the result. An aadhaar_seller/aadhaar_buyer slot clears both
+   front and back as one unit (they're billed and extracted together — see
+   getBatchItem()); 'photo' is the plain (never billed, never extracted)
+   face-photo attachment and skips all of that. Task-page v2 layout only —
+   root's markup has no #remove-* buttons wired to this. */
+function removeDoc(slotId){
+  if(slotId==='photo'){
     delete PRO.uploads.photo;
     const prev=document.getElementById('preview-photo'); if(prev) prev.innerHTML='';
     const f=document.getElementById('file-photo'); if(f) f.value='';
@@ -507,42 +467,49 @@ function removeDoc(docType){
     return;
   }
 
-  const alreadyExtracted=EXTRACTED_SET.has(docType);
+  const alreadyExtracted=EXTRACTED_SET.has(slotId);
   if(alreadyExtracted){
     const ok=confirm(t('ai.removeConfirm'));
     if(!ok) return;
   }
 
-  if(docType==='aadhaar'){
-    delete DOC_STATE.aadhaar_front;
-    delete DOC_STATE.aadhaar_back;
-    ['aadhaar_front','aadhaar_back'].forEach(key=>{
+  /* Whether this slot was extracted, or just attached (markAttachOnly()),
+     its image sits in PRO.uploads[slotId] either way (uploadsKey always
+     equals slotId for every non-photo slot — see getBatchItem()) — clear
+     it so a removed document doesn't silently keep riding along as a PDF
+     attachment after the user removed it. */
+  delete PRO.uploads[slotId];
+
+  if(slotId==='aadhaar_seller' || slotId==='aadhaar_buyer'){
+    delete DOC_STATE[slotId+'_front'];
+    delete DOC_STATE[slotId+'_back'];
+    [slotId+'_front', slotId+'_back'].forEach(key=>{
       const prev=document.getElementById('preview-'+key); if(prev) prev.innerHTML='';
       const pages=document.getElementById('pages-'+key); if(pages){ pages.style.display='none'; pages.innerHTML=''; }
     });
-    const fFront=document.getElementById('file-aadhaar-front'); if(fFront) fFront.value='';
-    const fBack=document.getElementById('file-aadhaar-back'); if(fBack) fBack.value='';
+    const idPrefix=slotId.replace(/_/g,'-');
+    const fFront=document.getElementById('file-'+idPrefix+'-front-file'); if(fFront) fFront.value='';
+    const fBack=document.getElementById('file-'+idPrefix+'-back-file'); if(fBack) fBack.value='';
   } else {
-    delete DOC_STATE[docType];
-    const prev=document.getElementById('preview-'+docType); if(prev) prev.innerHTML='';
-    const pages=document.getElementById('pages-'+docType); if(pages){ pages.style.display='none'; pages.innerHTML=''; }
-    const f=document.getElementById('file-'+docType); if(f) f.value='';
+    delete DOC_STATE[slotId];
+    const prev=document.getElementById('preview-'+slotId); if(prev) prev.innerHTML='';
+    const pages=document.getElementById('pages-'+slotId); if(pages){ pages.style.display='none'; pages.innerHTML=''; }
+    const f=document.getElementById('file-'+slotId.replace(/_/g,'-')+'-file'); if(f) f.value='';
   }
 
-  const slotEl=document.getElementById('docSlot-'+docType);
+  const slotEl=document.getElementById('docSlot-'+slotDomId(slotId));
   if(slotEl) slotEl.classList.remove('ready');
-  const stateEl=document.getElementById('state-'+docType);
+  const stateEl=document.getElementById('state-'+slotDomId(slotId));
   if(stateEl){ stateEl.textContent=t('ai.notUploaded'); stateEl.className='upload-slot-state'; }
-  const removeBtn=document.getElementById('remove-'+docType);
+  const removeBtn=document.getElementById('remove-'+slotDomId(slotId));
   if(removeBtn) removeBtn.style.display='none';
-  const retryBtn=document.getElementById('extract-'+docType);
-  if(retryBtn) retryBtn.style.display='none';
 
   if(alreadyExtracted){
-    EXTRACTED_SET.delete(docType);
+    EXTRACTED_SET.delete(slotId);
     /* Only fields THIS document still owns — a field the user has since
        manually edited is no longer in FIELD_SOURCE (handleInput() deletes
        it there), so it's correctly left untouched. */
+    const docType=docTypeFromSlot(slotId);
     Object.keys(FIELD_SOURCE).forEach(f=>{
       if(FIELD_SOURCE[f]===docType){
         VALS[f]='';
@@ -564,32 +531,41 @@ function removeDoc(docType){
    first and only deducts if ALL of them succeed, so there is no
    "charge then refund" path here to get wrong — a partial failure simply
    never gets charged in the first place. */
-const EXTRACTED_SET=new Set(); // docTypes successfully extracted this session
+const EXTRACTED_SET=new Set(); // slotIds successfully extracted this session
 
-/* Returns {docType, images, uploadsKey} for a docType if its preview is
-   ready, else null. Aadhaar combines front (+ optional back) into one call. */
-function getBatchItem(docType){
-  if(docType==='aadhaar'){
-    const front=DOC_STATE.aadhaar_front;
+/* Returns {slotId, docType, role, images, uploadsKey} for a slot if its
+   preview is ready, else null. An aadhaar_seller/aadhaar_buyer slot
+   combines front (+ optional back) into one call. */
+function getBatchItem(slotId){
+  if(slotId==='rc'){
+    const doc=DOC_STATE.rc;
+    if(!doc) return null;
+    return {slotId:'rc', docType:'rc', role:'seller', images:[doc], uploadsKey:'rc'};
+  }
+  if(slotId==='aadhaar_seller' || slotId==='aadhaar_buyer'){
+    const front=DOC_STATE[slotId+'_front'];
     if(!front) return null;
     const images=[front];
-    if(DOC_STATE.aadhaar_back) images.push(DOC_STATE.aadhaar_back);
-    return {docType:'aadhaar', images, uploadsKey:'aadhaar'};
+    if(DOC_STATE[slotId+'_back']) images.push(DOC_STATE[slotId+'_back']);
+    return {slotId, docType:'aadhaar', role:roleFromSlot(slotId), images, uploadsKey:slotId};
   }
-  const doc=DOC_STATE[docType];
-  if(!doc) return null;
-  return {docType, images:[doc], uploadsKey:docType};
+  if(slotId==='pan_seller' || slotId==='pan_buyer'){
+    const doc=DOC_STATE[slotId];
+    if(!doc) return null;
+    return {slotId, docType:'pan', role:roleFromSlot(slotId), images:[doc], uploadsKey:slotId};
+  }
+  return null;
 }
 
-/* Everything EXTRACTABLE (see isDocExtractable() above) with a ready
-   preview that hasn't been successfully extracted yet — a doc that failed
-   (or was never attempted because an earlier doc in the same package
-   failed) stays in this list, so clicking the button again naturally
-   retries just what's left. PAN, and an Aadhaar not currently set to
-   Buyer, never appear here at all — see markAttachOnly() for how those
+/* Everything EXTRACTABLE (see isSlotExtractable() above) with a ready
+   preview that hasn't been successfully extracted yet — a slot that
+   failed (or was never attempted because an earlier one in the same
+   package failed) stays in this list, so clicking the button again
+   naturally retries just what's left. Both PAN slots, and the seller's
+   Aadhaar, never appear here at all — see markAttachOnly() for how those
    still get attached to the PDF without ever reaching Gemini. */
 function computeReadyDocs(){
-  return ['aadhaar','rc'].filter(isDocExtractable).map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.docType));
+  return ['rc','aadhaar_buyer'].map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.slotId));
 }
 
 /* Current package price in paise for whatever's checked/on this page right
@@ -732,8 +708,8 @@ function dismissFieldConflict(fieldId){
    Gemini already did the work, so there's no reason to hide a result that
    happened to sit in a package where a DIFFERENT document failed. Only the
    wallet balance is conditional on the whole package succeeding. */
-async function applyExtractionResult(docType, data, item){
-  const mapped=AI_FIELD_MAP[docType](data, getEffectiveRole(docType));
+async function applyExtractionResult(slotId, data, item){
+  const mapped=AI_FIELD_MAP[item.docType](data, item.role);
   /* Uppercase first (matches every other AI-written or manually-typed
      value in this app — see handleInput() in ui.js), THEN merge — so
      the values compared/stored by mergeExtractedFields, including
@@ -741,20 +717,20 @@ async function applyExtractionResult(docType, data, item){
      one display convention. */
   const upperMapped={};
   Object.keys(mapped).forEach(k=>{ if(mapped[k]) upperMapped[k]=String(mapped[k]).toUpperCase(); });
-  mergeExtractedFields(docType, upperMapped, {vals:VALS, fieldSource:FIELD_SOURCE, pendingConflicts:PENDING_CONFLICTS});
+  mergeExtractedFields(item.docType, upperMapped, {vals:VALS, fieldSource:FIELD_SOURCE, pendingConflicts:PENDING_CONFLICTS});
   /* Only mark a field as "AI-filled" (amber badge) if THIS extraction is
      the one whose value is actually showing — a field mergeExtractedFields
      skipped (lower priority than what's already applied) doesn't newly
      become AI-sourced from this call; whatever already owns it keeps
      owning it, untouched. */
-  Object.keys(upperMapped).forEach(k=>{ if(FIELD_SOURCE[k]===docType){ AI_FILLED_FIELDS.add(k); VERIFIED_FIELDS.delete(k); } });
+  Object.keys(upperMapped).forEach(k=>{ if(FIELD_SOURCE[k]===item.docType){ AI_FILLED_FIELDS.add(k); VERIFIED_FIELDS.delete(k); } });
 
   /* RC is the only document that ever signals firm-vs-individual
      ownership (see PROMPTS.rc, worker/src/index.js) — updateSections()
      below picks this up to hide the (inapplicable) father's-name field
      for a firm, and generatePDF() (ui.js) blanks it on the printed PDF
      regardless of any stray value sitting in VALS.s_father. */
-  if(docType==='rc') SELLER_OWNER_TYPE=resolveOwnerType(data);
+  if(item.docType==='rc') SELLER_OWNER_TYPE=resolveOwnerType(data);
 
   scheduleSaveVals();
   updateSections();
@@ -762,8 +738,8 @@ async function applyExtractionResult(docType, data, item){
   const dims=await loadImageDims(item.images[0].dataUrl);
   PRO.uploads[item.uploadsKey]={dataUrl:item.images[0].dataUrl,w:dims.w,h:dims.h,raw:data};
 
-  EXTRACTED_SET.add(docType);
-  renderProResult(docType, data);
+  EXTRACTED_SET.add(slotId);
+  renderProResult(slotId, data);
 }
 
 /* The single "Fill with AI / Retry" button: sends every ready document as
@@ -788,7 +764,7 @@ async function startPackageExtraction(){
   const payBtn=document.getElementById('checkoutPayBtn');
   if(payBtn) payBtn.disabled=true;
   batch.forEach(item=>{
-    const stateEl=document.getElementById('state-'+item.docType);
+    const stateEl=document.getElementById('state-'+slotDomId(item.slotId));
     if(stateEl){ stateEl.textContent=t('ai.extractingBadge'); stateEl.className='upload-slot-state'; }
   });
   const statusEl=document.getElementById('proStatus');
@@ -828,13 +804,13 @@ async function startPackageExtraction(){
 
     const results=json.results||[];
     for(const r of results){
-      const stateEl=document.getElementById('state-'+r.docType);
+      const item=batch.find(b=>b.docType===r.docType);
+      const stateEl=item ? document.getElementById('state-'+slotDomId(item.slotId)) : null;
       if(!r.ok){
         if(stateEl){ stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err'; }
         continue;
       }
-      const item=batch.find(b=>b.docType===r.docType);
-      await applyExtractionResult(r.docType, r.data, item);
+      await applyExtractionResult(item.slotId, r.data, item);
       if(stateEl){ stateEl.textContent=t('status.extracted'); stateEl.className='upload-slot-state done'; }
     }
 
@@ -865,8 +841,8 @@ async function startPackageExtraction(){
   }catch(err){
     if(payBtn) payBtn.disabled=false;
     batch.forEach(item=>{
-      const stateEl=document.getElementById('state-'+item.docType);
-      if(stateEl && !EXTRACTED_SET.has(item.docType)){ stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err'; }
+      const stateEl=document.getElementById('state-'+slotDomId(item.slotId));
+      if(stateEl && !EXTRACTED_SET.has(item.slotId)){ stateEl.textContent=t('status.failed'); stateEl.className='upload-slot-state err'; }
     });
     if(err.isWalletReset){
       if(statusEl){ statusEl.textContent=err.message; statusEl.className='status err'; }
@@ -895,14 +871,15 @@ async function handlePhotoUpload(file){
   if(removeBtn) removeBtn.style.display='inline';
 }
 
-function renderProResult(docType, data){
+function renderProResult(slotId, data){
   const wrap=document.getElementById('proResults');
   const rows=Object.keys(data).filter(k=>data[k]).map(k=>
     `<div class="pro-result-row"><span>${k.replace(/_/g,' ')}</span><b>${String(data[k]).replace(/</g,'&lt;')}</b></div>`
   ).join('');
+  const label = slotId==='rc' ? 'RC' : slotId==='aadhaar_buyer' ? "Buyer's Aadhaar" : slotId.toUpperCase();
   const card=document.createElement('div');
   card.className='pro-result-card';
-  card.innerHTML=`<b>${docType.toUpperCase()} extracted</b>${rows}`;
+  card.innerHTML=`<b>${label} extracted</b>${rows}`;
   wrap.prepend(card);
 }
 
@@ -1025,5 +1002,4 @@ async function startPayment(amountRs){
 
 renderProCredits();
 fetchWalletBalance();
-refreshDocPurposeHint('aadhaar');
-console.log('RTO PRO build: v7 (Razorpay-first wallet — random token identity, no recovery path)');
+console.log('RTO PRO build: v8 (fixed seller/buyer upload slots — no per-doc role toggle)');

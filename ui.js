@@ -602,44 +602,44 @@ function docTypeOutputFields(docType){
   return fields;
 }
 
-/* Only show the document-upload slots that could actually fill a field the
-   currently-selected forms need — e.g. no RC slot if nothing needs vehicle
-   fields. Face Photo is a plain attachment, not tied to AI extraction, so
-   it's excluded from this and always stays visible.
-   anyB mirrors updateSections()'s own "do any selected forms need a buyer"
-   check (PICKS[i].needB) — reused here to show/hide each slot's per-document
-   role selector (see DOC_RULES): no buyer-needing form selected means there
-   is no buyer to fill in, so the choice is pointless and just confusing
-   (e.g. RC renewal / duplicate RC, which never involve a buyer at all). */
-const DOC_SLOT_TYPES=['aadhaar','pan','rc'];
+/* Only show the RC slot / the SELLER (TRANSFEROR) upload group when
+   something needed actually needs vehicle/seller fields — e.g. no RC slot
+   if nothing needs vehicle fields. Face Photo is a plain attachment, not
+   tied to AI extraction, so it's excluded from this and always stays
+   visible.
+   The BUYER (TRANSFEREE) group is gated purely on anyB (mirrors
+   updateSections()'s own "do any selected forms need a buyer" check,
+   PICKS[i].needB), regardless of field relevance: no buyer-needing form
+   selected means there is no buyer at all (e.g. RC renewal / duplicate RC,
+   which never involve a buyer). Each group's own fixed-role slots (see
+   pro-wallet.js's isSlotExtractable()) never need a per-document role
+   toggle any more — which slot you upload into already says whose
+   document it is. */
 function updateDocSlotVisibility(need, anyB){
-  const grid=document.getElementById('docSlotGrid');
   let anyVisible=false;
-  DOC_SLOT_TYPES.forEach(docType=>{
-    const slot=document.getElementById('docSlot-'+docType);
-    if(!slot) return;
-    const relevant=need && need.size && [...docTypeOutputFields(docType)].some(f=>need.has(f));
-    slot.style.display=relevant?'':'none';
-    if(relevant) anyVisible=true;
 
-    const roleRow=document.getElementById('docRole-'+docType);
-    if(roleRow){
-      const rule=DOC_RULES[docType];
-      roleRow.style.display=(relevant && anyB && rule && rule.role==='choice') ? '' : 'none';
-    }
-  });
+  const rcSlot=document.getElementById('docSlot-rc');
+  if(rcSlot){
+    const relevant=need && need.size && [...docTypeOutputFields('rc')].some(f=>need.has(f));
+    rcSlot.style.display=relevant?'':'none';
+    if(relevant) anyVisible=true;
+  }
+
+  const sellerGroup=document.getElementById('sellerDocGroup');
+  if(sellerGroup){
+    const relevant=need && need.size && [...docTypeOutputFields('aadhaar')].some(f=>need.has(f));
+    sellerGroup.style.display=relevant?'':'none';
+    if(relevant) anyVisible=true;
+  }
+
+  const buyerGroup=document.getElementById('buyerDocGroup');
+  if(buyerGroup){
+    buyerGroup.style.display=anyB?'':'none';
+    if(anyB) anyVisible=true;
+  }
+
   const emptyNote=document.getElementById('docSlotEmptyNote');
   if(emptyNote) emptyNote.style.display=anyVisible?'none':'';
-
-  /* Aadhaar's "Fills the form automatically" / "Attached to your PDF"
-     caption depends on getEffectiveRole('aadhaar') (pro-wallet.js), which
-     itself depends on anyB — so a form-selection change that flips anyB
-     (e.g. adding/removing a buyer-needing form) needs to refresh it too,
-     not just when the role radio itself is clicked. Guarded: pro-wallet.js
-     loads after this file, so this is a no-op during ui.js's own
-     first-bootstrap call (see the explicit initial call at the bottom of
-     pro-wallet.js, which covers that gap). */
-  if(typeof refreshDocPurposeHint==='function') refreshDocPurposeHint('aadhaar');
 }
 
 /* Small Individual/Firm toggle shown above the Seller section's fields —
@@ -937,15 +937,23 @@ function generatePDF(blank, mode){
         p.gen(doc,d);
       });
 
-      /* PRO: attach uploaded Aadhaar/PAN/RC copies + face photo as extra pages */
+      /* PRO: attach uploaded Aadhaar/PAN/RC copies + face photo as extra
+         pages — key set matches PRO.uploads' actual keys, i.e. every
+         fixed upload slot (pro-wallet.js's getBatchItem()/markAttachOnly()),
+         not just the ones that got extracted. */
       const attachChk=document.getElementById('attachDocsChk');
       if(!blank && attachChk && attachChk.checked && typeof PRO!=='undefined'){
-        ['aadhaar','pan','rc','photo'].forEach(key=>{
+        const ATTACH_LABELS={
+          rc:'RC', photo:'FACE PHOTO',
+          aadhaar_seller:'AADHAAR (SELLER)', pan_seller:'PAN (SELLER)',
+          aadhaar_buyer:'AADHAAR (BUYER)', pan_buyer:'PAN (BUYER)',
+        };
+        ['rc','aadhaar_seller','pan_seller','aadhaar_buyer','pan_buyer','photo'].forEach(key=>{
           const up=PRO.uploads && PRO.uploads[key];
           if(!up) return;
           doc.addPage();
           doc.setFont('helvetica','bold'); doc.setFontSize(12);
-          doc.text('Attachment: '+key.toUpperCase(), 15, 15);
+          doc.text('Attachment: '+(ATTACH_LABELS[key]||key.toUpperCase()), 15, 15);
           doc.setFont('helvetica','normal');
           const maxW=180, maxH=245;
           const scale=Math.min(maxW/up.w, maxH/up.h, 1);
