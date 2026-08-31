@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Paddle.js OCR feasibility test — internal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root{ --ink:#16233f; --line:#dcdfe6; --bg:#f7f7f5; --ok:#1a7f4b; --err:#b3261e; }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:720px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .warn{background:#fff4e5;border:1px solid #f0b429;border-radius:8px;padding:12px 14px;font-size:13.5px;margin:14px 0 22px}
+  .warn b{color:#8a5300}
+  .box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input[type=file]{font-size:14px}
+  button{background:var(--ink);color:#fff;border:none;border-radius:7px;padding:10px 18px;font-size:14.5px;font-weight:600;cursor:pointer}
+  button:disabled{background:#9aa3b5;cursor:not-allowed}
+  #preview{max-width:100%;max-height:280px;display:none;margin-top:12px;border-radius:6px;border:1px solid var(--line)}
+  canvas#dbgCanvas{max-width:100%;display:none;margin-top:12px;border-radius:6px;border:1px solid var(--line)}
+  .status{font-size:13.5px;color:#555;margin-top:10px;min-height:18px}
+  .status.err{color:var(--err)}
+  .status.ok{color:var(--ok)}
+  .fields{display:grid;grid-template-columns:120px 1fr;gap:8px 12px;font-size:14px}
+  .fields dt{font-weight:600;color:#555}
+  .fields dd{margin:0}
+  pre{white-space:pre-wrap;word-break:break-word;background:#f3f3f1;border-radius:6px;padding:12px;font-size:13px;max-height:260px;overflow:auto}
+  .timing{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;color:#333;background:#f3f3f1;border-radius:6px;padding:10px 12px;margin-top:10px}
+  h2{font-size:15px;margin:0 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Paddle.js OCR — Aadhaar feasibility test</h1>
+  <div class="warn">
+    <b>Internal test page — not linked, not indexed, not production.</b>
+    Evaluating whether client-side PP-OCR can read an Aadhaar card as a fallback
+    when QR scanning fails. Everything below runs in your browser only — no
+    image or extracted text is ever sent to any server (see the note at the
+    bottom for exactly what network requests this page makes and why).
+  </div>
+
+  <div class="box">
+    <h2>1. Upload a card photo</h2>
+    <div class="row">
+      <input type="file" id="fileInput" accept="image/*">
+      <button id="extractBtn" disabled>Extract</button>
+    </div>
+    <img id="preview" alt="Uploaded preview">
+    <canvas id="dbgCanvas"></canvas>
+    <p class="status" id="statusLine"></p>
+    <div class="timing" id="timingLine" style="display:none"></div>
+  </div>
+
+  <div class="box" id="resultsBox" style="display:none">
+    <h2>2. Parsed fields (best-effort regex — not production logic)</h2>
+    <dl class="fields">
+      <dt>Name</dt><dd id="fName">—</dd>
+      <dt>DOB</dt><dd id="fDob">—</dd>
+      <dt>Aadhaar (last 4)</dt><dd id="fLast4">—</dd>
+      <dt>Address</dt><dd id="fAddr">—</dd>
+    </dl>
+  </div>
+
+  <div class="box" id="rawBox" style="display:none">
+    <h2>3. Raw OCR text (Aadhaar-shaped numbers are masked before display)</h2>
+    <pre id="rawText"></pre>
+  </div>
+
+  <div class="box">
+    <h2>What this page sends over the network</h2>
+    <p style="font-size:13.5px;color:#444">
+      On your first click of "Extract", this page injects the
+      <code>@paddlejs-models/ocr</code> script (from jsDelivr) and lets it fetch
+      its detection/recognition model weight files (from Baidu's model CDN,
+      <code>*.bcebos.com</code>) — those are one-way downloads of ~a few MB of
+      model weights, the same every time, containing no data from you. After
+      that one-time load, every image you upload and every OCR result stays on
+      this device: <code>ocr.recognize()</code> runs entirely via WebGL in your
+      browser, and nothing in this page's code makes a network request that
+      carries the image, the raw OCR text, or the parsed fields anywhere.
+    </p>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ── Masking: never let a full 12-digit Aadhaar-shaped number reach the
+   screen or the console, whether it's in the "parsed" fields or sitting
+   inside the raw OCR text dump. Deliberately broad (any 12-digit run,
+   optionally space/hyphen-grouped in 4s) — over-masking an unrelated
+   12-digit number is harmless on an internal test page; under-masking a
+   real Aadhaar number is not. ── */
+function maskAadhaarNumbers(text){
+  return String(text||'').replace(/\b(\d{4})[\s-]?(\d{4})[\s-]?(\d{4})\b/g, (m, a, b, c) => 'XXXX XXXX ' + c);
+}
+
+/* Best-effort field parsing over the OCR'd lines — not production logic,
+   just enough to eyeball whether OCR quality is usable at all. */
+function parseAadhaarFields(lines){
+  const joined = lines.join('\n');
+  const dobMatch = joined.match(/\b(\d{2}[\/\-]\d{2}[\/\-]\d{4})\b/);
+  const numMatch = joined.match(/\b(\d{4})[\s-]?(\d{4})[\s-]?(\d{4})\b/);
+  const noise = [
+    /government of india/i, /unique identification/i, /uidai/i,
+    /dob|date of birth|year of birth/i, /\b(male|female|transgender)\b/i,
+    /^\s*\d[\d\s-]{7,}\d\s*$/
+  ];
+  const candidates = lines.map(l => l.trim()).filter(l => l && !noise.some(p => p.test(l)));
+  return {
+    name: candidates[0] || '',
+    dob: dobMatch ? dobMatch[1] : '',
+    last4: numMatch ? numMatch[3] : '',
+    address: candidates.slice(1).join(', ')
+  };
+}
+
+const fileInput = document.getElementById('fileInput');
+const extractBtn = document.getElementById('extractBtn');
+const preview = document.getElementById('preview');
+const dbgCanvas = document.getElementById('dbgCanvas');
+const statusLine = document.getElementById('statusLine');
+const timingLine = document.getElementById('timingLine');
+const resultsBox = document.getElementById('resultsBox');
+const rawBox = document.getElementById('rawBox');
+const rawText = document.getElementById('rawText');
+
+let paddleScriptPromise = null;
+let modelInitPromise = null;
+
+/* @paddlejs-models/ocr hard-requires WebGL — check up front (cheap, no
+   model download needed) so a device without it fails fast with a plain
+   message instead of the user clicking Extract and waiting on a hang (see
+   the global error/rejection handlers below for why it hangs rather than
+   erroring cleanly when this is missing or lost mid-run). */
+(function checkWebglSupport(){
+  const c = document.createElement('canvas');
+  const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+  if(!gl){
+    setStatus('This browser has no WebGL support — Paddle.js OCR cannot run here at all.', 'err');
+    extractBtn.disabled = true;
+    fileInput.disabled = true;
+  }
+})();
+
+function setStatus(msg, cls){
+  statusLine.textContent = msg;
+  statusLine.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+/* Lazy-loads the OCR library only on first "Extract" click — this page's
+   own load time pays nothing for it, and no other page on the site
+   references this script at all. */
+function loadPaddleScript(){
+  if(paddleScriptPromise) return paddleScriptPromise;
+  paddleScriptPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@paddlejs-models/ocr@1.2.4/lib/index.js';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Could not load the OCR library from jsDelivr.'));
+    document.head.appendChild(s);
+  });
+  return paddleScriptPromise;
+}
+
+function initModel(){
+  if(modelInitPromise) return modelInitPromise;
+  modelInitPromise = (async () => {
+    await loadPaddleScript();
+    const ocr = window.paddlejs && window.paddlejs.ocr;
+    if(!ocr) throw new Error('window.paddlejs.ocr did not load.');
+    await ocr.init();
+    return ocr;
+  })();
+  return modelInitPromise;
+}
+
+/* @paddlejs-models/ocr hard-depends on WebGL: when the context is
+   unavailable or gets lost mid-run, it throws from inside its own internal
+   event handling rather than rejecting the promise this page is awaiting —
+   that leaves `await ocr.init()`/`ocr.recognize()` hanging forever with no
+   catchable rejection (observed directly while building this page, in a
+   browser profile with no WebGL support at all). These two global handlers
+   are the only way to recover the UI from that: they don't know WHICH
+   awaited call is stuck, so they just force the button/status back to a
+   usable state whenever anything escapes uncaught while OCR work is
+   in flight. Real devices with working WebGL should never hit this path —
+   but it's exactly the kind of failure a low-memory/budget device could
+   trigger via WebGL context loss under memory pressure, which is worth
+   knowing before relying on this library. */
+let ocrWorkInFlight = false;
+function recoverFromStuckOcr(reason){
+  if(!ocrWorkInFlight) return;
+  ocrWorkInFlight = false;
+  setStatus('OCR engine crashed (' + reason + ') — likely a WebGL/GPU problem on this device/browser, not something a retry will fix.', 'err');
+  extractBtn.disabled = false;
+}
+window.addEventListener('error', (e) => recoverFromStuckOcr((e.error && e.error.message) || e.message || 'uncaught error'));
+window.addEventListener('unhandledrejection', (e) => recoverFromStuckOcr((e.reason && e.reason.message) || String(e.reason)));
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if(!file){ extractBtn.disabled = true; return; }
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  extractBtn.disabled = false;
+  resultsBox.style.display = 'none';
+  rawBox.style.display = 'none';
+  timingLine.style.display = 'none';
+  setStatus('');
+});
+
+extractBtn.addEventListener('click', async () => {
+  if(!preview.src) return;
+  extractBtn.disabled = true;
+  resultsBox.style.display = 'none';
+  rawBox.style.display = 'none';
+  timingLine.style.display = 'none';
+  ocrWorkInFlight = true;
+
+  let ocr;
+  const t0 = performance.now();
+  try{
+    setStatus('Loading OCR model (first run downloads model weights)…');
+    ocr = await initModel();
+  }catch(err){
+    ocrWorkInFlight = false;
+    setStatus('Model load failed: ' + err.message, 'err');
+    extractBtn.disabled = false;
+    return;
+  }
+  const t1 = performance.now();
+  const modelLoadMs = Math.round(t1 - t0);
+
+  setStatus('Running OCR on the uploaded image…');
+  const t2 = performance.now();
+  let res;
+  try{
+    res = await ocr.recognize(preview, { canvas: dbgCanvas });
+  }catch(err){
+    ocrWorkInFlight = false;
+    setStatus('OCR recognition failed: ' + err.message, 'err');
+    extractBtn.disabled = false;
+    return;
+  }
+  ocrWorkInFlight = false;
+  const t3 = performance.now();
+  const inferMs = Math.round(t3 - t2);
+
+  dbgCanvas.style.display = 'block';
+
+  const lines = (res && res.text) || [];
+  const maskedLines = lines.map(maskAadhaarNumbers);
+  const fields = parseAadhaarFields(lines);
+
+  document.getElementById('fName').textContent = fields.name || '—';
+  document.getElementById('fDob').textContent = fields.dob || '—';
+  document.getElementById('fLast4').textContent = fields.last4 ? ('•••• •••• ' + fields.last4) : '—';
+  document.getElementById('fAddr').textContent = fields.address || '—';
+  resultsBox.style.display = 'block';
+
+  rawText.textContent = maskedLines.length ? maskedLines.join('\n') : '(no text detected)';
+  rawBox.style.display = 'block';
+
+  timingLine.textContent = 'Model load: ' + modelLoadMs + ' ms   ·   OCR inference: ' + inferMs + ' ms';
+  timingLine.style.display = 'block';
+  /* Timing only — never log OCR content, masked or not, to the console. */
+  console.log('[paddle-ocr-test] model load: ' + modelLoadMs + 'ms, inference: ' + inferMs + 'ms');
+
+  setStatus(lines.length ? 'Done.' : 'Model ran but detected no text — try a clearer, well-lit photo.', lines.length ? 'ok' : 'err');
+  extractBtn.disabled = false;
+});
+</script>
+</body>
+</html>
