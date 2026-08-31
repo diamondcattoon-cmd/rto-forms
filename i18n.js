@@ -128,6 +128,19 @@ const I18N_STRINGS = {
     'ai.remove': '✕ Remove',
     'ai.removeConfirm': 'Removing this will empty the fields it filled in. Any amount already charged is not refunded.',
     'ai.addMoney': '+ Add Money',
+    /* ── Aadhaar Secure QR scan (buyer only) — free, entirely on-device, no
+       Gemini/Worker call. Always English, no Hinglish, per spec. Same text
+       in both language blocks. ── */
+    'ai.scanQr': '📷 Scan QR',
+    'ai.free': 'Free',
+    'ai.qrScanning': 'Looking for a QR code…',
+    'ai.qrChoosePhoto': '📁 Or choose a photo',
+    'ai.qrChoosePhotoHint': 'You can also choose a photo instead.',
+    'ai.qrFilled': 'Details filled from Aadhaar QR',
+    'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
+    'ai.qrCouldNotRead': "Couldn't read the QR. Fill the details manually below.",
+    'ai.qrInstructions': 'Point your camera at the QR code on the Aadhaar card, letter, or e-Aadhaar PDF.',
+    'camera.qrTitle': 'Scan Aadhaar QR',
     /* ── Desktop camera capture modal — always English, no Hinglish, per
        spec. Same text in both language blocks. ── */
     'camera.title': 'Take a photo',
@@ -406,6 +419,17 @@ const I18N_STRINGS = {
     'ai.remove': '✕ Hatao',
     'ai.removeConfirm': 'Isse hatane par bhare hue fields khali ho jaayenge. Paisa wapas nahi hoga.',
     'ai.addMoney': '+ Add Money',
+    /* Always English, no Hinglish, per spec — same text as the en block. */
+    'ai.scanQr': '📷 Scan QR',
+    'ai.free': 'Free',
+    'ai.qrScanning': 'Looking for a QR code…',
+    'ai.qrChoosePhoto': '📁 Or choose a photo',
+    'ai.qrChoosePhotoHint': 'You can also choose a photo instead.',
+    'ai.qrFilled': 'Details filled from Aadhaar QR',
+    'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
+    'ai.qrCouldNotRead': "Couldn't read the QR. Fill the details manually below.",
+    'ai.qrInstructions': 'Point your camera at the QR code on the Aadhaar card, letter, or e-Aadhaar PDF.',
+    'camera.qrTitle': 'Scan Aadhaar QR',
     /* Always English, no Hinglish, per spec — same text as the en block. */
     'camera.title': 'Take a photo',
     'camera.capture': 'Capture',

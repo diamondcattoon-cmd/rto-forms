@@ -417,6 +417,15 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .doc-purpose-hint{display:inline-block;font-size:.8rem;font-weight:600;letter-spacing:.2px;color:var(--txt-2);margin-bottom:8px}
 .doc-purpose-hint.extract{color:var(--stamp)}
 
+/* Buyer's Aadhaar box only — the "Scan QR" row sits above the plain
+   attach-only photo inputs (see openAadhaarQrScan(), aadhaar-qr-scan.js).
+   Free and on-device, unlike the paid RC extraction, hence the separate
+   badge instead of reusing .doc-purpose-hint.extract's price-implying style. */
+.qr-scan-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.qr-scan-btn{padding:0 16px;min-height:36px;font-size:.82rem}
+.qr-free-badge{font-family:'IBM Plex Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--approve)}
+.qr-scan-result{font-size:.8rem;font-weight:600;color:var(--approve);margin:0 0 8px}
+
 /* Groups the upload slots by who the document belongs to — Vehicle (RC),
    Seller, Buyer (hidden entirely when no selected form needs a buyer —
    see updateDocSlotVisibility(), ui.js), Attachment Only (Face Photo,

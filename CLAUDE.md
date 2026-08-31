@@ -56,10 +56,12 @@ reason, since Pages deploy is what's actually live in production.)
 Just HTML + a fixed sequence of `<script src>` tags, in this exact order
 (load-order matters — see each file's own header comment for why):
 ```
-field-mapping.js → pdf-generate.js → forms-data.js → task-pricing.js → ui.js → [landing.js] → pro-wallet.js
+field-mapping.js → pdf-generate.js → forms-data.js → task-pricing.js → ui.js → [landing.js] → aadhaar-qr.js → aadhaar-qr-scan.js → pro-wallet.js
 ```
 `landing.js` only appears on `index.html` (see below) — task pages don't
-load it. These are classic (non-module) scripts sharing one global scope —
+load it; `aadhaar-qr.js`/`aadhaar-qr-scan.js` are the reverse, task pages
+only (the buyer Aadhaar box they wire up doesn't exist on `index.html`).
+These are classic (non-module) scripts sharing one global scope —
 every top-level `const`/`function` in one file is a plain global visible to
 the files after it. All script `src` attributes are **absolute paths**
 (`/pdf-generate.js`, not `pdf-generate.js`) — keep new asset references
@@ -126,6 +128,31 @@ correctly regardless of which path served the current page.
   the captured frame is wrapped into a real `File` and handed to the exact
   same `handleFileSelect()`/`handlePhotoUpload()` a picked file uses, so
   there's no separate compression/preview code path to keep in sync.
+- **`aadhaar-qr.js`** — decodes UIDAI's "Secure QR Code" (the one on
+  e-Aadhaar/PVC cards and the mAadhaar app): the QR payload is one giant
+  base-10 integer → byte array → gzip-inflated (via the native
+  `DecompressionStream`, no bundled library) → 16 fields delimited by byte
+  255. Only the last 4 Aadhaar digits and structured demographic/address
+  fields are present in this QR — never the full 12-digit number — which is
+  what makes reading it compatible with the Aadhaar Act, unlike photo OCR.
+  `decodeAadhaarSecureQr()` is the entry point; it also detects and refuses
+  the pre-2018 XML-based Aadhaar QR (`aadhaarQrIsOldFormat()`), which does
+  carry the full number. Pure and DOM-free, `require()`'d directly by
+  `test/aadhaar-qr.test.js` — same convention as `field-mapping.js`.
+  `aadhaarQrMapToBuyerFields()` always writes to the buyer's (`b_`) fields
+  regardless of whose Aadhaar was scanned, mirroring `DOC_RULES.rc`'s fixed
+  'seller' role (field-mapping.js) for the other side of a transfer.
+- **`aadhaar-qr-scan.js`** — the DOM/camera wiring around the above: the
+  buyer Aadhaar box's "Scan QR" button (task-page markup only — `index.html`
+  has no buyer group), a `getUserMedia` + `jsQR` (CDN global, task pages
+  only) live-scan loop as the primary path, and a "choose a photo instead"
+  fallback that runs `jsQR` once against a picked image. Entirely separate
+  from `pro-wallet.js`'s paid Gemini pipeline — no Worker call, no wallet,
+  no `EXTRACTED_SET`/`FIELD_SOURCE`/`AI_FILLED_FIELDS` bookkeeping, free.
+  Also tallies scan failures by reason (`old-format`/`not-found`/
+  `decode-error`) into `localStorage` under `aadhaarQrFailCounts` — no
+  personal data, just counts, to gauge whether an OCR fallback is ever
+  worth building.
 
 **`PICKS`** (in `forms-data.js`) is the registry of fillable form packs. Each
 pick has an `id` (e.g. `pk29`, `pk20`), a `type` (which field-groups it

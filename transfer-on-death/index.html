@@ -39,6 +39,7 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <!-- Structured data: WebApplication (this task) + directly-relevant FAQs -->
 <script type="application/ld+json">
@@ -214,6 +215,11 @@
             <div class="upload-grid">
               <div class="upload-slot upload-slot-wide" id="docSlot-aadhaar-buyer">
                 <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card<span class="upload-slot-state" id="state-aadhaar-buyer" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar-buyer" style="display:none" onclick="removeDoc('aadhaar_buyer')" data-i18n="ai.remove">✕ Remove</button></div>
+                <div class="qr-scan-row">
+                  <button type="button" class="btn-generate qr-scan-btn" onclick="openAadhaarQrScan()" data-i18n="ai.scanQr">📷 Scan QR</button>
+                  <span class="qr-free-badge" data-i18n="ai.free">Free</span>
+                </div>
+                <p class="qr-scan-result" id="qrScanResult" style="display:none"></p>
                 <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
                 <div class="aadhaar-two-col">
                   <div>
@@ -433,6 +439,8 @@
 <script src="/forms-data.js"></script>
 <script src="/task-pricing.js"></script>
 <script src="/ui.js"></script>
+<script src="/aadhaar-qr.js"></script>
+<script src="/aadhaar-qr-scan.js"></script>
 <script src="/pro-wallet.js"></script>
 <div class="modal-overlay" id="proBuyModal" style="display:none">
   <div class="modal-box">
@@ -474,6 +482,30 @@
       <button type="button" class="btn-blank" id="cameraRetakeBtn" style="display:none" onclick="retakeCameraPhoto()" data-i18n="camera.retake">Retake</button>
       <button type="button" class="btn-generate" id="cameraUseBtn" style="display:none" onclick="useCameraPhoto()" data-i18n="camera.usePhoto">Use this photo</button>
       <button type="button" class="btn-blank" id="cameraChooseFileFallback" style="display:none" onclick="useChooseFileFallback()" data-i18n="camera.chooseFile">Choose file</button>
+    </div>
+  </div>
+</div>
+
+<!-- Aadhaar Secure QR scan (buyer box) — getUserMedia + jsQR, entirely
+     on-device; see aadhaar-qr-scan.js. Separate from the photo-capture
+     modal above: this one loops continuously looking for a QR pattern
+     instead of taking one still photo. -->
+<div class="modal-overlay" id="qrScanModal" style="display:none">
+  <div class="modal-box camera-modal-box">
+    <div class="modal-head">
+      <h3 data-i18n="camera.qrTitle">Scan Aadhaar QR</h3>
+      <button type="button" class="modal-close" onclick="closeAadhaarQrScan()">&times;</button>
+    </div>
+    <p class="fld-hint" data-i18n="ai.qrInstructions">Point your camera at the QR code on the Aadhaar card, letter, or e-Aadhaar PDF.</p>
+    <div class="camera-viewport">
+      <video id="qrScanVideo" autoplay playsinline muted></video>
+      <canvas id="qrScanCanvas" style="display:none"></canvas>
+    </div>
+    <p class="status" id="qrScanStatusLine"></p>
+    <p class="status err" id="qrScanError" style="display:none"></p>
+    <div class="camera-modal-actions">
+      <label class="btn-blank" for="qrScanFileInput" data-i18n="ai.qrChoosePhoto">📁 Or choose a photo</label>
+      <input type="file" accept="image/*" id="qrScanFileInput" style="display:none" onchange="handleQrScanFileSelect(this.files[0])">
     </div>
   </div>
 </div>
