@@ -50,7 +50,7 @@ test('worker/frontend contract: PROMPTS and AI_FIELD_MAP cover the same document
   assert.deepEqual(promptDocTypes, Object.keys(AI_FIELD_MAP).sort());
 });
 
-for (const docType of ['aadhaar', 'pan', 'rc']) {
+for (const docType of Object.keys(AI_FIELD_MAP)) {
   test(`worker/frontend contract: AI_FIELD_MAP.${docType} only reads fields the Worker actually declares`, () => {
     const workerFields = workerOutputFields(docType);
     const readFields = frontendReadFields(docType);

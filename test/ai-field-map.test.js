@@ -5,65 +5,14 @@ const { AI_FIELD_MAP, DOC_RULES, resolveDocRole } = require('../field-mapping.js
 /* Sample payloads below mirror the exact JSON shape each PROMPTS.<docType>
    in worker/src/index.js tells Gemini to return — see
    test/worker-frontend-contract.test.js for the automated check that keeps
-   these two in sync. */
+   these two in sync.
 
-test('AI_FIELD_MAP.aadhaar maps a full sample response to seller fields', () => {
-  const sample = {
-    name: 'RAMESH KUMAR SHARMA',
-    aadhaar_number: '234567890123',
-    dob: '15/08/1985',
-    gender: 'Male',
-    address_line: 'H.No. 45, Station Road',
-    town: 'Jamshedpur',
-    district: 'East Singhbhum',
-    state: 'Jharkhand',
-    pincode: '831001',
-    father_or_husband_name: 'Shri Mohan Lal Sharma',
-  };
-  assert.deepEqual(AI_FIELD_MAP.aadhaar(sample, 'seller'), {
-    s_name: 'RAMESH KUMAR SHARMA',
-    s_father: 'Shri Mohan Lal Sharma',
-    s_addr: 'H.No. 45, Station Road',
-    s_town: 'Jamshedpur',
-    s_dist: 'East Singhbhum',
-    s_state: 'Jharkhand',
-  });
-});
-
-test('AI_FIELD_MAP.aadhaar writes state through the b_ prefix too, when role is buyer', () => {
-  /* Bug fix: state used to be one shared, unprefixed field regardless of
-     role — a buyer's Aadhaar state could only ever land in that one
-     global slot, indistinguishable from the seller's. */
-  const out = AI_FIELD_MAP.aadhaar({ name: 'SURESH YADAV', state: 'Odisha' }, 'buyer');
-  assert.deepEqual(out, { b_name: 'SURESH YADAV', b_state: 'Odisha' });
-});
-
-test('AI_FIELD_MAP.aadhaar uses the b_ prefix when role is buyer', () => {
-  const out = AI_FIELD_MAP.aadhaar({ name: 'SURESH YADAV', address_line: 'Village Rampur' }, 'buyer');
-  assert.deepEqual(out, { b_name: 'SURESH YADAV', b_addr: 'Village Rampur' });
-});
-
-test('AI_FIELD_MAP.aadhaar omits keys Gemini left empty, instead of writing blanks', () => {
-  const out = AI_FIELD_MAP.aadhaar({ name: '', town: 'Jamshedpur' }, 'seller');
-  assert.deepEqual(out, { s_town: 'Jamshedpur' });
-});
-
-test('AI_FIELD_MAP.pan maps name and father_name only (pan_number/dob are extracted but not autofilled)', () => {
-  const sample = {
-    name: 'RAMESH KUMAR SHARMA',
-    pan_number: 'ABCDE1234F',
-    father_name: 'Mohan Lal Sharma',
-    dob: '15/08/1985',
-  };
-  assert.deepEqual(AI_FIELD_MAP.pan(sample, 'seller'), {
-    s_name: 'RAMESH KUMAR SHARMA',
-    s_father: 'Mohan Lal Sharma',
-  });
-});
-
-test('AI_FIELD_MAP.pan uses the b_ prefix when role is buyer', () => {
-  assert.deepEqual(AI_FIELD_MAP.pan({ name: 'SURESH YADAV' }, 'buyer'), { b_name: 'SURESH YADAV' });
-});
+   RC is the only extraction source — Aadhaar/PAN extraction was removed
+   for Aadhaar Act compliance (see the PROMPTS comment in
+   worker/src/index.js); they're attach-only now and never reach
+   AI_FIELD_MAP or Gemini. See worker/src/index.js's /extract-package
+   docType allowlist for the actual server-side enforcement, and
+   test/worker-rejects-non-rc.test.js for its test coverage. */
 
 test('AI_FIELD_MAP.rc maps a full sample response: vehicle fields plus role-prefixed owner fields', () => {
   const sample = {
@@ -150,10 +99,8 @@ test('AI_FIELD_MAP.rc omits empty/zero-length fields entirely', () => {
 
 /* ── DOC_RULES / resolveDocRole ── */
 
-test('DOC_RULES declares rc as fixed-to-seller, aadhaar and pan as either-party choice', () => {
-  assert.deepEqual(DOC_RULES.rc, { role: 'fixed', defaultRole: 'seller' });
-  assert.equal(DOC_RULES.aadhaar.role, 'choice');
-  assert.equal(DOC_RULES.pan.role, 'choice');
+test('DOC_RULES declares rc as fixed-to-seller, and nothing else — RC is the only extraction source', () => {
+  assert.deepEqual(DOC_RULES, { rc: { role: 'fixed', defaultRole: 'seller' } });
 });
 
 test('resolveDocRole: a fixed-role doc type always returns its defaultRole, ignoring the passed role', () => {
@@ -162,9 +109,8 @@ test('resolveDocRole: a fixed-role doc type always returns its defaultRole, igno
   assert.equal(resolveDocRole('rc', undefined), 'seller');
 });
 
-test('resolveDocRole: a choice-role doc type passes through a valid role, and falls back to defaultRole otherwise', () => {
-  assert.equal(resolveDocRole('aadhaar', 'buyer'), 'buyer');
-  assert.equal(resolveDocRole('aadhaar', 'seller'), 'seller');
-  assert.equal(resolveDocRole('aadhaar', undefined), 'seller');
-  assert.equal(resolveDocRole('pan', 'buyer'), 'buyer');
+test('resolveDocRole: an unrecognized docType falls back to passed role, or seller by default', () => {
+  assert.equal(resolveDocRole('unknown', 'buyer'), 'buyer');
+  assert.equal(resolveDocRole('unknown', 'seller'), 'seller');
+  assert.equal(resolveDocRole('unknown', undefined), 'seller');
 });

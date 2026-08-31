@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Privacy Policy — RTO Forms India</title>
-<meta name="description" content="How rtoformsindia.com collects, uses and stores your information, including how Aadhaar/PAN/RC photos are processed by Google Gemini for AI auto-fill.">
+<meta name="description" content="How rtoformsindia.com collects, uses and stores your information, including how your RC photo is processed by Google Gemini for AI auto-fill, and why Aadhaar/PAN never leave your browser.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://rto-forms.onrender.com/privacy-policy.html">
 <meta name="theme-color" content="#142850">
@@ -30,7 +30,7 @@
   <div class="legal-hero-in">
     <div class="legal-eyebrow">// Legal</div>
     <h1>Privacy Policy</h1>
-    <div class="legal-updated">Effective / last updated: 26 August 2026</div>
+    <div class="legal-updated">Effective / last updated: 31 August 2026</div>
   </div>
 </section>
 
@@ -53,13 +53,14 @@
 
   <h2 id="overview">1. Overview</h2>
   <p>rtoformsindia.com ("we", "us", "this site") is an independently operated tool run by an individual proprietor based in Jamshedpur, Jharkhand, India. It is <strong>not</strong> an official government website. This policy explains what information the site collects when you fill RTO/CMVR forms, use the optional paid "AI auto-fill" feature, or add money to the AI auto-fill wallet.</p>
-  <p>The short version: filling and downloading forms is completely free and happens entirely inside your own browser — nothing is uploaded. The only things that ever leave your device are (a) a document photo you deliberately choose to submit for AI auto-fill, sent for one-time processing and never stored by us, and (b) payment details, which go straight to Razorpay, never to us.</p>
+  <p>The short version: filling and downloading forms is completely free and happens entirely inside your own browser — nothing is uploaded. The only things that ever leave your device are (a) your RC (Registration Certificate) photo, if you use the paid AI auto-fill feature, sent for one-time processing and never stored by us, and (b) payment details, which go straight to Razorpay, never to us. Your Aadhaar and PAN photos are never sent anywhere — see Section 2(b) below.</p>
 
   <h2 id="collect">2. Information we collect</h2>
   <h3>a. Form details you type</h3>
   <p>Name, address, vehicle registration number, engine/chassis number and similar details you type into the form filler are used only inside your browser to generate your PDF. They are never transmitted to any server we control. For your convenience, in-progress values are saved to your own browser's <code class="mono">localStorage</code> (on your device only) so an accidental refresh doesn't lose your work — this data never reaches us and you can clear it any time from your browser settings.</p>
-  <h3>b. Documents you upload for AI auto-fill (Aadhaar / PAN / RC)</h3>
-  <p>If you choose to use the paid "AI auto-fill" feature, you upload a photo of an identity or vehicle document. This photo is sent for one-time text extraction as described in <a href="#gemini">Section 3</a> below.</p>
+  <h3>b. Documents you upload (RC, and optionally Aadhaar / PAN / photo)</h3>
+  <p>If you choose to use the paid "AI auto-fill" feature, you upload a photo of your RC (Registration Certificate). Only this RC photo is sent anywhere — for one-time text extraction, as described in <a href="#gemini">Section 3</a> below.</p>
+  <p><strong>Aadhaar and PAN photos, and the optional face photo, are never sent to us or to Google.</strong> These documents carry sensitive personal data — an Aadhaar card in particular is treated as sensitive personal data under India's Aadhaar Act — so we deliberately do not extract or transmit them. If you upload a copy of your Aadhaar, PAN, or a face photo, it is only so you can optionally attach it as an extra page in the PDF you generate; that attachment happens entirely inside your browser and the image never leaves your device.</p>
   <h3>c. Payment &amp; wallet information</h3>
   <p>If you add money to your AI auto-fill wallet, payment is collected and processed by Razorpay. We never see or store your card, UPI or bank details. What we do store: a randomly generated wallet ID (not linked to your name), your wallet balance, and — only if you use the "recover my wallet" feature — the mobile number Razorpay's own checkout screen collected during payment, used solely to send a one-time wallet-recovery link.</p>
   <h3>d. Technical / log data</h3>
@@ -67,18 +68,19 @@
 
   <h2 id="gemini">3. How Google Gemini is used (AI auto-fill)</h2>
   <div class="legal-note">
-    <strong>In plain terms:</strong> when you upload an Aadhaar, PAN or RC photo and tap "Extract", that photo is sent to Google's Gemini API for one-time text extraction. It passes through our Cloudflare Worker only for the duration of that single request — <strong>we do not save a copy of the photo on our server or in any database.</strong>
+    <strong>In plain terms:</strong> only your RC (Registration Certificate) photo is ever sent to Google's Gemini API, and only when you tap "Extract" on it. It passes through our Cloudflare Worker only for the duration of that single request — <strong>we do not save a copy of the photo on our server or in any database.</strong> Aadhaar and PAN photos are never sent to Gemini, or to us, or to any third party — they stay in your browser and, if you choose to attach them, go straight into the PDF you download.
   </div>
   <p>Here is exactly what happens, step by step:</p>
   <ol>
-    <li>You take or select a photo of your document in your browser. It stays on your device until you press the "Extract" button for that document.</li>
+    <li>You take or select a photo of your RC in your browser. It stays on your device until you press the "Extract" button.</li>
     <li>On pressing Extract, the image is sent over an encrypted connection to our Cloudflare Worker (the AI auto-fill backend).</li>
-    <li>The Worker forwards the image directly to Google's Gemini API (<span class="mono">generativelanguage.googleapis.com</span>) with a request to extract specific fields (e.g. name, registration number, address) as structured data.</li>
+    <li>The Worker forwards the image directly to Google's Gemini API (<span class="mono">generativelanguage.googleapis.com</span>) with a request to extract specific fields (e.g. owner name, registration number, address, chassis/engine number) as structured data.</li>
     <li>Gemini returns the extracted text to our Worker, which relays it straight back to your browser and immediately discards the image — it is not written to any storage on our side.</li>
-    <li>The extracted fields are used to fill in your form, in your browser. The photo itself, if you uploaded it in this browser session, stays only in your browser's memory and is cleared when you close or refresh the tab — <strong>unless</strong> you separately tick "Attach uploaded documents as extra pages in the final PDF", in which case it becomes part of the PDF you download (still generated entirely on your device).</li>
+    <li>The extracted fields are used to fill in your form, in your browser. The RC photo itself, if you uploaded it in this browser session, stays only in your browser's memory and is cleared when you close or refresh the tab — <strong>unless</strong> you separately tick "Attach uploaded documents as extra pages in the final PDF", in which case it becomes part of the PDF you download (still generated entirely on your device).</li>
   </ol>
-  <p>Because your document image is processed by Google's Gemini API, that processing is also subject to Google's own terms and privacy practices for the Gemini API. You can read Google's policies at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a> and the Gemini API's data-handling terms at <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener">ai.google.dev/gemini-api/terms</a>. We do not control, and are not responsible for, how Google's own systems handle a request once it reaches them, beyond what those terms describe.</p>
-  <p>Uploading a document for AI auto-fill is entirely optional — you can fill every form on this site by typing the details yourself, for free, without uploading anything.</p>
+  <p>Any Aadhaar, PAN, or face photo you upload skips all of the above entirely — it is never sent to our Worker or to Gemini. It is read directly into your browser's memory and, only if you tick the attach option, embedded as a page in the PDF generated on your own device.</p>
+  <p>Because your RC image is processed by Google's Gemini API, that processing is also subject to Google's own terms and privacy practices for the Gemini API. You can read Google's policies at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a> and the Gemini API's data-handling terms at <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener">ai.google.dev/gemini-api/terms</a>. We do not control, and are not responsible for, how Google's own systems handle a request once it reaches them, beyond what those terms describe.</p>
+  <p>Uploading your RC for AI auto-fill is entirely optional — you can fill every form on this site by typing the details yourself, for free, without uploading anything.</p>
 
   <h2 id="use">4. How we use your information</h2>
   <ul>
@@ -92,14 +94,15 @@
   <h2 id="retention">5. Storage &amp; retention</h2>
   <ul>
     <li><strong>Form field values</strong> — stored only in your own browser's local storage, under your control, until you clear it.</li>
-    <li><strong>Document photos (Aadhaar/PAN/RC)</strong> — not retained by us at all; see Section 3.</li>
+    <li><strong>RC photo</strong> — not retained by us at all; see Section 3.</li>
+    <li><strong>Aadhaar/PAN/face photos</strong> — never sent to us at all; they never leave your browser (see Section 2(b)/3), so there is nothing on our side to retain.</li>
     <li><strong>Wallet ID and balance</strong> — retained until you ask us to delete it (contact details below), or as required to resolve a payment dispute.</li>
   </ul>
 
   <h2 id="thirdparty">6. Third-party service providers</h2>
   <p>We rely on the following providers to run the site and its paid features. Each processes data under its own terms:</p>
   <ul>
-    <li><strong>Google Gemini API</strong> — document text extraction for AI auto-fill (Section 3).</li>
+    <li><strong>Google Gemini API</strong> — RC text extraction for AI auto-fill (Section 3). Aadhaar and PAN are never sent to this or any other third party.</li>
     <li><strong>Razorpay</strong> — payment processing for wallet top-ups. Razorpay collects your payment details directly; we never see your card/UPI credentials.</li>
     <li><strong>Cloudflare</strong> — hosts the main website (Pages) and runs the AI auto-fill backend (Worker), plus security/CDN services.</li>
   </ul>

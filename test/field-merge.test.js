@@ -1,27 +1,24 @@
-/* Coverage for the order-independent, priority-based field merge engine
-   (mergeExtractedFields, FIELD_SOURCE_PRIORITY, fieldConceptFor) and the
-   RC owner_type resolver (resolveOwnerType) in field-mapping.js.
+/* Coverage for mergeExtractedFields and the RC owner_type resolver
+   (resolveOwnerType) in field-mapping.js.
 
-   Scenarios pinned here mirror the product requirement directly:
-     1. RC only            -> seller name + address + full vehicle details
-     2. Aadhaar only        -> name + address + father, vehicle left empty
-     3. RC + Aadhaar, agree -> vehicle from RC, address from Aadhaar, name from RC
-     4. RC + Aadhaar, differ on address -> Aadhaar's value applied, RC's
-        value recorded as a pending conflict (in EITHER extraction order)
-     5. Firm-owned RC       -> owner_type resolves to 'firm'; s_father is
-        never populated by RC (it has no father field to begin with)
-   Plus a dedicated reverse-order test: merging the same two documents in
-   both possible orders must produce byte-identical results. */
+   mergeExtractedFields used to arbitrate between competing document types
+   via a FIELD_SOURCE_PRIORITY table (e.g. "Aadhaar's address beats RC's").
+   That table — and the cross-document conflict detection built on it — was
+   removed when Aadhaar/PAN extraction was removed for Aadhaar Act
+   compliance (see the PROMPTS comment in worker/src/index.js): RC is now
+   the only extraction source, so no field ever has two competing sources
+   to arbitrate between. What's left is plain last-write-wins with source
+   tracking, tested here. */
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { AI_FIELD_MAP, mergeExtractedFields, resolveOwnerType } = require('../field-mapping.js');
 
 function freshCtx(){
-  return { vals:{}, fieldSource:{}, pendingConflicts:{} };
+  return { vals:{}, fieldSource:{} };
 }
 
-/* Sample payloads mirror the exact JSON shape PROMPTS.<docType> in
+/* Sample payload mirrors the exact JSON shape PROMPTS.rc in
    worker/src/index.js tells Gemini to return. */
 const RC_SAMPLE = {
   owner_name: 'RAMESH KUMAR SHARMA',
@@ -52,21 +49,7 @@ const RC_SAMPLE = {
   pincode: '831001',
 };
 
-const AADHAAR_SAMPLE = {
-  name: 'RAMESH KUMAR SHARMA',
-  aadhaar_number: '234567890123',
-  dob: '15/08/1985',
-  gender: 'Male',
-  address_line: 'NEW HOUSE, AADHAAR ADDRESS ROAD',
-  town: 'AADHAAR-TOWN',
-  district: 'AADHAAR-DISTRICT',
-  state: 'AADHAAR-STATE',
-  pincode: '831002',
-  father_or_husband_name: 'Shri Mohan Lal Sharma',
-};
-
-/* ── Scenario 1: RC only ── */
-test('scenario 1: RC only fills seller name + full address + full vehicle details', () => {
+test('RC fills seller name + full address + full vehicle details', () => {
   const ctx = freshCtx();
   mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx);
 
@@ -81,141 +64,29 @@ test('scenario 1: RC only fills seller name + full address + full vehicle detail
   assert.equal(ctx.vals.make, 'Maruti Suzuki');
   assert.equal(ctx.vals.model, 'Swift VXi');
   assert.equal(ctx.vals.fuel, 'Petrol');
-  assert.deepEqual(ctx.pendingConflicts, {}, 'a single document can never conflict with itself');
+  assert.equal(ctx.fieldSource.s_name, 'rc');
 });
 
-/* ── Scenario 2: Aadhaar only ── */
-test('scenario 2: Aadhaar only fills name + address + father, leaves vehicle fields untouched', () => {
+test('a re-extraction of the same docType (Retry) refreshes the value instead of being skipped', () => {
   const ctx = freshCtx();
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(AADHAAR_SAMPLE, 'seller'), ctx);
+  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx);
+  const retryData = { ...RC_SAMPLE, owner_name: 'RAMESH K SHARMA (CORRECTED)' };
+  mergeExtractedFields('rc', AI_FIELD_MAP.rc(retryData, 'seller'), ctx);
+
+  assert.equal(ctx.vals.s_name, 'RAMESH K SHARMA (CORRECTED)');
+  assert.equal(ctx.fieldSource.s_name, 'rc');
+});
+
+test('empty/blank values from an extraction never overwrite an existing value', () => {
+  const ctx = freshCtx();
+  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx);
+  mergeExtractedFields('rc', { s_name: '' }, ctx);
 
   assert.equal(ctx.vals.s_name, 'RAMESH KUMAR SHARMA');
-  assert.equal(ctx.vals.s_father, 'Shri Mohan Lal Sharma');
-  assert.equal(ctx.vals.s_addr, 'NEW HOUSE, AADHAAR ADDRESS ROAD');
-  assert.equal(ctx.vals.reg_no, undefined, 'Aadhaar never supplies vehicle fields');
-  assert.equal(ctx.vals.ch_no, undefined);
-  assert.equal(ctx.vals.make, undefined);
 });
 
-/* ── Scenario 3: RC + Aadhaar, addresses AGREE — vehicle from RC, name from RC, address from Aadhaar ── */
-function scenario3Data(){
-  const rc = { ...RC_SAMPLE, address_line: 'SAME ADDRESS', town: 'SAME TOWN', district: 'SAME DIST', state: 'SAME STATE' };
-  const aadhaar = { ...AADHAAR_SAMPLE, address_line: 'SAME ADDRESS', town: 'SAME TOWN', district: 'SAME DIST', state: 'SAME STATE' };
-  return { rc, aadhaar };
-}
-
-test('scenario 3: RC + Aadhaar (RC first) — vehicle from RC, name from RC, address from Aadhaar (source), no conflicts', () => {
-  const { rc, aadhaar } = scenario3Data();
-  const ctx = freshCtx();
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(rc, 'seller'), ctx);
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(aadhaar, 'seller'), ctx);
-
-  assert.equal(ctx.vals.s_name, 'RAMESH KUMAR SHARMA'); // RC wins name
-  assert.equal(ctx.vals.reg_no, 'JH05AB1234'); // only RC has this
-  assert.equal(ctx.vals.s_addr, 'SAME ADDRESS');
-  assert.equal(ctx.fieldSource.s_addr, 'aadhaar', 'Aadhaar owns the address field even though the values happened to match');
-  assert.equal(ctx.fieldSource.s_name, 'rc');
-  assert.deepEqual(ctx.pendingConflicts, {});
-});
-
-test('scenario 3: RC + Aadhaar (Aadhaar first) — same outcome as RC-first', () => {
-  const { rc, aadhaar } = scenario3Data();
-  const ctx = freshCtx();
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(aadhaar, 'seller'), ctx);
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(rc, 'seller'), ctx);
-
-  assert.equal(ctx.vals.s_name, 'RAMESH KUMAR SHARMA');
-  assert.equal(ctx.vals.reg_no, 'JH05AB1234');
-  assert.equal(ctx.vals.s_addr, 'SAME ADDRESS');
-  assert.equal(ctx.fieldSource.s_addr, 'aadhaar');
-  assert.equal(ctx.fieldSource.s_name, 'rc');
-  assert.deepEqual(ctx.pendingConflicts, {});
-});
-
-/* ── Scenario 4: RC + Aadhaar, addresses DIFFER — Aadhaar applied, RC recorded as a pending conflict ── */
-test('scenario 4: differing address — Aadhaar\'s value is applied, RC\'s is offered as a switchable conflict (RC extracted first)', () => {
-  const ctx = freshCtx();
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx);
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(AADHAAR_SAMPLE, 'seller'), ctx);
-
-  /* Every piece of the address block (address_line/town/district/state)
-     independently disagrees between the two samples — all four must
-     resolve the same way: Aadhaar applied, RC offered as the switch. */
-  assert.equal(ctx.vals.s_addr, 'NEW HOUSE, AADHAAR ADDRESS ROAD', "Aadhaar's address wins per FIELD_SOURCE_PRIORITY");
-  assert.equal(ctx.vals.s_town, 'AADHAAR-TOWN');
-  assert.equal(ctx.vals.s_dist, 'AADHAAR-DISTRICT');
-  assert.equal(ctx.vals.s_state, 'AADHAAR-STATE');
-  assert.deepEqual(ctx.pendingConflicts.s_addr, {
-    winner: { docType: 'aadhaar', value: 'NEW HOUSE, AADHAAR ADDRESS ROAD' },
-    loser: { docType: 'rc', value: 'OLD HOUSE, RC ADDRESS ROAD' },
-  });
-  assert.deepEqual(ctx.pendingConflicts.s_town, { winner: { docType: 'aadhaar', value: 'AADHAAR-TOWN' }, loser: { docType: 'rc', value: 'RC-TOWN' } });
-  assert.deepEqual(ctx.pendingConflicts.s_dist, { winner: { docType: 'aadhaar', value: 'AADHAAR-DISTRICT' }, loser: { docType: 'rc', value: 'RC-DISTRICT' } });
-  assert.deepEqual(ctx.pendingConflicts.s_state, { winner: { docType: 'aadhaar', value: 'AADHAAR-STATE' }, loser: { docType: 'rc', value: 'RC-STATE' } });
-  // name never conflicts here — Aadhaar and RC happen to agree on it in this sample
-  assert.equal(ctx.pendingConflicts.s_name, undefined);
-});
-
-test('scenario 4: differing address — same outcome when Aadhaar is extracted first instead', () => {
-  const ctx = freshCtx();
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(AADHAAR_SAMPLE, 'seller'), ctx);
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx);
-
-  assert.equal(ctx.vals.s_addr, 'NEW HOUSE, AADHAAR ADDRESS ROAD');
-  assert.deepEqual(ctx.pendingConflicts.s_addr, {
-    winner: { docType: 'aadhaar', value: 'NEW HOUSE, AADHAAR ADDRESS ROAD' },
-    loser: { docType: 'rc', value: 'OLD HOUSE, RC ADDRESS ROAD' },
-  });
-});
-
-/* ── Dedicated reverse-order test: identical documents, both orders, byte-identical result ── */
-test('reverse-order merge: RC+Aadhaar merged in either order produce an identical final state', () => {
-  const forward = freshCtx();
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), forward);
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(AADHAAR_SAMPLE, 'seller'), forward);
-
-  const reverse = freshCtx();
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(AADHAAR_SAMPLE, 'seller'), reverse);
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), reverse);
-
-  assert.deepEqual(forward.vals, reverse.vals, 'applied values must not depend on extraction order');
-  assert.deepEqual(forward.fieldSource, reverse.fieldSource, 'field ownership must not depend on extraction order');
-  assert.deepEqual(forward.pendingConflicts, reverse.pendingConflicts, 'conflict notices must not depend on extraction order');
-});
-
-/* ── Dedicated regression: RC's state must never land in the BUYER's
-   fields, even when a buyer's Aadhaar is extracted in the same session
-   and genuinely has a different state. This is the exact bug that was
-   reported: 'state' used to be one shared, unprefixed field, so whichever
-   document extracted last simply overwrote it — a seller's RC could stomp
-   a buyer's own (correct, different) state on the printed form. ── */
-test("RC (seller) + Aadhaar (buyer) with different states — s_state and b_state stay fully independent", () => {
-  const ctx = freshCtx();
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx); // RC_SAMPLE.state = 'RC-STATE'
-
-  const buyerAadhaar = { name: 'SURESH YADAV', address_line: 'Village Rampur', town: 'Baharagora', district: 'East Singhbhum', state: 'ODISHA' };
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(buyerAadhaar, 'buyer'), ctx);
-
-  assert.equal(ctx.vals.s_state, 'RC-STATE', "the seller's state (from RC) must be untouched");
-  assert.equal(ctx.vals.b_state, 'ODISHA', "the buyer's state (from their own Aadhaar) must be set independently");
-  /* Different fields entirely (s_state vs b_state) — not the same field
-     from two sources, so this must NOT be flagged as a conflict. */
-  assert.equal(ctx.pendingConflicts.s_state, undefined);
-  assert.equal(ctx.pendingConflicts.b_state, undefined);
-});
-
-test("RC (seller) + Aadhaar (buyer) — order reversed, same independence", () => {
-  const ctx = freshCtx();
-  const buyerAadhaar = { name: 'SURESH YADAV', state: 'ODISHA' };
-  mergeExtractedFields('aadhaar', AI_FIELD_MAP.aadhaar(buyerAadhaar, 'buyer'), ctx);
-  mergeExtractedFields('rc', AI_FIELD_MAP.rc(RC_SAMPLE, 'seller'), ctx);
-
-  assert.equal(ctx.vals.s_state, 'RC-STATE');
-  assert.equal(ctx.vals.b_state, 'ODISHA');
-});
-
-/* ── Scenario 5: firm-owned RC ── */
-test('scenario 5: resolveOwnerType returns "firm" only for an exact "firm" value', () => {
+/* ── firm-owned RC ── */
+test('resolveOwnerType returns "firm" only for an exact "firm" value', () => {
   assert.equal(resolveOwnerType({ owner_type: 'firm' }), 'firm');
   assert.equal(resolveOwnerType({ owner_type: 'individual' }), 'individual');
   assert.equal(resolveOwnerType({ owner_type: '' }), 'individual');
@@ -224,7 +95,7 @@ test('scenario 5: resolveOwnerType returns "firm" only for an exact "firm" value
   assert.equal(resolveOwnerType({ owner_type: 'FIRM' }), 'individual', 'case-sensitive on purpose — the prompt is instructed to return the exact lowercase literal');
 });
 
-test('scenario 5: a firm-owned RC never populates s_father — AI_FIELD_MAP.rc has no concept of a father field at all', () => {
+test('a firm-owned RC never populates s_father — AI_FIELD_MAP.rc has no concept of a father field at all', () => {
   const firmRc = { ...RC_SAMPLE, owner_name: 'M/S MANGALAM HOMES', owner_type: 'firm' };
   const ctx = freshCtx();
   mergeExtractedFields('rc', AI_FIELD_MAP.rc(firmRc, 'seller'), ctx);

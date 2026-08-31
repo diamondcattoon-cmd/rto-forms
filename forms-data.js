@@ -187,24 +187,30 @@ const VERIFIED_FIELDS=new Set();
    (applyExtractionResult()). */
 const AI_MISSED_FIELDS=new Set();
 
-/* Which document type currently "owns" a given field's applied value —
-   used by mergeExtractedFields() (field-mapping.js, called from
-   applyExtractionResult() in pro-wallet.js) to arbitrate when two different
-   uploaded documents supply different values for the same field, instead
-   of simple last-write-wins. Declared here (not in pro-wallet.js, which
-   is the only file that writes to it) because ui.js's own bootstrap call
-   to updateSections() runs during ui.js's script evaluation — i.e. before
-   pro-wallet.js (loaded after ui.js) has even executed — so anything
-   fieldHTML()/updateSections() read at that point must already exist;
-   forms-data.js loads first, same reasoning as VALS/AI_FILLED_FIELDS. */
+/* Which document type supplied a given field's applied value — written by
+   mergeExtractedFields() (field-mapping.js, called from
+   applyExtractionResult() in pro-wallet.js). Now that RC is the only
+   extraction source (Aadhaar/PAN extraction was removed for Aadhaar Act
+   compliance — see worker/src/index.js's PROMPTS comment), this is always
+   'rc' in practice; kept as source tracking (not removed) since re-running
+   an extraction still needs to know a field was AI-supplied. Declared here
+   (not in pro-wallet.js, which is the only file that writes to it) because
+   ui.js's own bootstrap call to updateSections() runs during ui.js's script
+   evaluation — i.e. before pro-wallet.js (loaded after ui.js) has even
+   executed — so anything fieldHTML()/updateSections() read at that point
+   must already exist; forms-data.js loads first, same reasoning as
+   VALS/AI_FILLED_FIELDS. */
 const FIELD_SOURCE={};
 
 /* Fields where two different document types disagreed and the
    lower-priority one's value was NOT applied — fieldHTML() (ui.js) shows
    a small notice + a button to switch to the other document's value
-   instead (resolveFieldConflict(), pro-wallet.js). Cleared the instant
-   the user edits the field by hand (handleInput(), ui.js) or picks a
-   side. Shape: { fieldId: {winner:{docType,value}, loser:{docType,value}} } */
+   instead (resolveFieldConflict(), pro-wallet.js). Now that RC is the only
+   extraction source, no two document types can ever compete for the same
+   field, so this stays permanently empty — kept (not removed) only so the
+   switch-notice UI code in ui.js/pro-wallet.js has something to read
+   rather than needing its own dead-code removal pass; harmless either way.
+   Shape: { fieldId: {winner:{docType,value}, loser:{docType,value}} } */
 const PENDING_CONFLICTS={};
 
 /* Individual vs firm/company ownership — only ever set for the SELLER

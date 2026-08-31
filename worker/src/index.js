@@ -56,6 +56,11 @@ const GEMINI_URL = (key) =>
    tier for a task that should be ₹5, never a free extraction, since the
    price still always comes from this table. Deliberately not hardened
    further than that; revisit if it's ever actually abused. */
+/* b_transfer stays priced higher than the rest even though every task
+   now extracts at most one document (RC only, see PROMPTS below) — the
+   price table intentionally wasn't touched when Aadhaar/PAN extraction
+   was removed, so this gap is currently just margin, not a reflection of
+   extraction cost. Left as-is on purpose. */
 const TASK_PRICING = {
   b_transfer: 500,
   b_rcrenew:  300,
@@ -69,46 +74,19 @@ const TASK_PRICING = {
 };
 
 
+/* ── Extraction scope: RC only ──
+   Aadhaar and PAN prompts were removed deliberately, not just unused —
+   see the docType allowlist check in /extract-package below, which
+   rejects anything but 'rc' outright. An Aadhaar card carries a photo
+   and a government ID number the Aadhaar Act treats as sensitive
+   personal data; sending it to a third-party API (Gemini) carries real
+   compliance risk that a vehicle Registration Certificate does not.
+   Aadhaar/PAN images are still collected client-side for PDF
+   attachment, but that never involves this Worker or Gemini — see
+   pro-wallet.js's markAttachOnly()/isSlotExtractable(). The old prompts
+   are recoverable from git history if extraction is ever reinstated
+   under a proper compliance review. */
 const PROMPTS = {
-  aadhaar: `You are extracting fields from an Indian Aadhaar card. You may receive one or two images (front side and back side of the same card) — combine information from both if two are given.
-Return ONLY valid JSON, no markdown, no explanation, in this exact shape:
-{
-  "name": "",
-  "aadhaar_number": "",
-  "dob": "",
-  "gender": "",
-  "address_line": "",
-  "town": "",
-  "district": "",
-  "state": "",
-  "pincode": "",
-  "father_or_husband_name": ""
-}
-Rules:
-- aadhaar_number: return the FULL 12-digit number exactly as printed, NOT masked, no spaces (digits only).
-- dob: format DD/MM/YYYY. If only year of birth is printed, return "01/01/YYYY".
-- The address is usually printed as one block (usually on the back side) — split it into its parts:
-  - address_line: house/door number, street, locality, landmark (everything except town, district, state, pincode)
-  - town: city / town / village name
-  - district: district name (often after "Dist." or "Distt.")
-  - state: state name
-  - pincode: 6-digit PIN code
-- If you cannot clearly separate a part, put the remaining text in address_line and leave that part empty — never guess.
-- If a field is not visible/legible in any image provided, return empty string "" for it — never guess.`,
-
-  pan: `You are extracting fields from an Indian PAN card image.
-Return ONLY valid JSON, no markdown, no explanation, in this exact shape:
-{
-  "name": "",
-  "pan_number": "",
-  "father_name": "",
-  "dob": ""
-}
-Rules:
-- pan_number: exactly 10 characters as printed (5 letters, 4 digits, 1 letter), uppercase.
-- dob: format DD/MM/YYYY.
-- If a field is not visible/legible, return empty string "" for it — never guess.`,
-
   rc: `You are extracting fields from an Indian Vehicle Registration Certificate (RC) image.
 Return ONLY valid JSON, no markdown, no explanation, in this exact shape:
 {
@@ -410,11 +388,13 @@ async function handleRequest(request, env) {
        Atomicity: every doc in the package is extracted BEFORE anything is
        charged. The balance is only ever touched once, at the very end, and
        only if every single doc succeeded (see decidePackageCharge()) — so
-       there's no "charge then refund" path to get wrong: if even one doc
-       fails, the deduction simply never happens. The tradeoff this accepts:
-       if doc 1 of 2 succeeds and doc 2 fails, the Gemini cost for doc 1 was
-       still spent (we paid Google) but the user pays nothing — that's the
-       whole point of "poora ya kuch nahi" and is deliberate, not a bug. */
+       there's no "charge then refund" path to get wrong: if the doc fails,
+       the deduction simply never happens. The tradeoff this accepts: the
+       Gemini cost may still have been spent (we paid Google) even though
+       the user pays nothing — that's the whole point of "poora ya kuch
+       nahi" and is deliberate, not a bug. The docs array/loop below still
+       supports more than one document structurally, even though the
+       docType allowlist currently limits a package to exactly one RC. */
     if (request.method === "POST" && url.pathname === "/extract-package") {
       if (!env.GEMINI_API_KEY) return json({ error: "Server not configured (missing API key)" }, 500);
 
@@ -429,9 +409,12 @@ async function handleRequest(request, env) {
       if (price === undefined) return json({ error: "Unknown taskId" }, 400);
 
       if (!Array.isArray(docs) || docs.length === 0) return json({ error: "docs array required" }, 400);
-      if (docs.length > 2) return json({ error: "Maximum 2 documents per package" }, 400);
+      if (docs.length > 1) return json({ error: "Maximum 1 document per package — only RC is extracted" }, 400);
       for (const d of docs) {
-        if (!d.docType || !PROMPTS[d.docType]) return json({ error: "docType must be one of: aadhaar, pan, rc" }, 400);
+        /* Aadhaar/PAN are rejected here even if a caller bypasses the
+           frontend entirely — see the PROMPTS comment above. This is the
+           actual enforcement point, not the UI. */
+        if (!d.docType || !PROMPTS[d.docType]) return json({ error: "docType must be 'rc' — Aadhaar/PAN are not extracted" }, 400);
         if (!Array.isArray(d.images) || d.images.length === 0 || d.images.length > 2) {
           return json({ error: "Each document needs 1-2 images" }, 400);
         }

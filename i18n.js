@@ -89,7 +89,7 @@ const I18N_STRINGS = {
     'root.addMoreNote': 'Fills from the same details — no extra charge to add one.',
     'root.autoFillTitle': 'Auto-fill from documents',
     'root.autoFillDesc': 'Upload a clear photo of your Aadhaar / PAN / RC — name, address, reg. no, chassis/engine no. and more fill in automatically. Each extraction costs ₹5.',
-    'root.uploadInstructions': 'Upload a document, then hit "Extract" — if your balance is low the payment window opens automatically (₹5/extraction), enter your number there. Pick whose Aadhaar/PAN it is right on the card.',
+    'root.uploadInstructions': 'Upload your RC, then hit "Extract" — if your balance is low the payment window opens automatically (₹5/extraction), enter your number there. Aadhaar/PAN just need to be attached to your PDF — they aren\'t extracted, and need no consent.',
     'root.downloadBlank': 'Download blank forms',
 
     /* ── task head (task pages only) ── */
@@ -109,7 +109,7 @@ const I18N_STRINGS = {
     'ai.start': 'Get started',
     'ai.freeLine': '— or fill it in yourself below, free —',
     'ai.pickerHead': 'Add a photo of your RC, Aadhaar or PAN',
-    'ai.consent': 'I confirm I am the authorized holder of this document (Aadhaar/PAN/RC). I understand its photo is sent to the Google Gemini API for extraction and is not stored on our server — I have read the <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>.',
+    'ai.consent': 'I confirm I am the authorised holder of this document. I understand the RC photo is sent to the Google Gemini API for extraction and is not stored on our server — I have read the <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>.',
     'ai.emptyNote': 'Select forms above — only the documents relevant to them will show here.',
     'ai.rcNote': 'RC fills in the seller’s details',
     'ai.fillsAutomatically': 'Fills the form automatically',
@@ -366,7 +366,7 @@ const I18N_STRINGS = {
     'root.addMoreNote': 'Same details se fill hote hain — add karne ka koi extra charge nahi.',
     'root.autoFillTitle': 'Auto-fill from documents',
     'root.autoFillDesc': 'Aadhaar / PAN / RC ki clear photo upload karo — naam, address, reg. no, chassis/engine no. jaisi details apne aap fields mein fill ho jayengi. Har extraction ₹5 leta hai.',
-    'root.uploadInstructions': 'Document upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN par kiska document hai wo waheen select karo.',
+    'root.uploadInstructions': 'RC upload karke seedha "Extract" dabao — balance kam hone par payment window khud khul jayega (₹5/extraction), usi mein apna number daalna. Aadhaar/PAN sirf PDF mein attach hote hain — inka extraction nahi hota, aur inko consent bhi nahi chahiye.',
     'root.downloadBlank': 'Download blank forms',
 
     /* ── task head (task pages only) ── */
@@ -387,7 +387,7 @@ const I18N_STRINGS = {
     'ai.start': 'Shuru karo',
     'ai.freeLine': '— ya neeche khud bhar lo, free —',
     'ai.pickerHead': 'RC, Aadhaar ya PAN ki photo daalo',
-    'ai.consent': 'Main confirm karta/karti hoon ki main is document (Aadhaar/PAN/RC) ka authorized user hoon. Main samajhta/samajhti hoon ki iski photo, extraction ke liye Google Gemini API ko bheji jaati hai aur hamare server par store nahi hoti — <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a> padh li hai.',
+    'ai.consent': 'I confirm I am the authorised holder of this document. I understand the RC photo is sent to the Google Gemini API for extraction and is not stored on our server — I have read the <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>.',
     'ai.emptyNote': 'Upar se forms select karo — us hisab se yahan sirf relevant documents dikhenge.',
     'ai.rcNote': 'RC se seller ki details bharenge',
     'ai.fillsAutomatically': 'Form apne aap bhar jaayega',

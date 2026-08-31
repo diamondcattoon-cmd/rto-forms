@@ -602,19 +602,21 @@ function docTypeOutputFields(docType){
   return fields;
 }
 
-/* Only show the RC slot / the SELLER (TRANSFEROR) upload group when
-   something needed actually needs vehicle/seller fields — e.g. no RC slot
-   if nothing needs vehicle fields. Face Photo is a plain attachment, not
-   tied to AI extraction, so it's excluded from this and always stays
-   visible.
+/* Only show the RC slot when something needed actually needs vehicle
+   fields. Face Photo is a plain attachment, not tied to AI extraction,
+   so it's excluded from this and always stays visible.
+   The SELLER (TRANSFEROR) group is Aadhaar/PAN, both attach-only now
+   (see isSlotExtractable(), pro-wallet.js — Aadhaar/PAN extraction was
+   removed entirely for Aadhaar Act compliance, so there's no per-field
+   "does this doc cover a needed field" question to ask any more, unlike
+   RC). It shows whenever the panel has anything to do at all.
    The BUYER (TRANSFEREE) group is gated purely on anyB (mirrors
    updateSections()'s own "do any selected forms need a buyer" check,
-   PICKS[i].needB), regardless of field relevance: no buyer-needing form
-   selected means there is no buyer at all (e.g. RC renewal / duplicate RC,
-   which never involve a buyer). Each group's own fixed-role slots (see
-   pro-wallet.js's isSlotExtractable()) never need a per-document role
-   toggle any more — which slot you upload into already says whose
-   document it is. */
+   PICKS[i].needB): no buyer-needing form selected means there is no
+   buyer at all (e.g. RC renewal / duplicate RC, which never involve a
+   buyer). Each group's own fixed-role slots (see isSlotExtractable())
+   never need a per-document role toggle — which slot you upload into
+   already says whose document it is. */
 function updateDocSlotVisibility(need, anyB){
   let anyVisible=false;
 
@@ -627,7 +629,7 @@ function updateDocSlotVisibility(need, anyB){
 
   const sellerGroup=document.getElementById('sellerDocGroup');
   if(sellerGroup){
-    const relevant=need && need.size && [...docTypeOutputFields('aadhaar')].some(f=>need.has(f));
+    const relevant=need && need.size>0;
     sellerGroup.style.display=relevant?'':'none';
     if(relevant) anyVisible=true;
   }

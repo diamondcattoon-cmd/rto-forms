@@ -132,7 +132,7 @@
 
           <label class="consent-chk" for="uploadConsentChk">
             <input type="checkbox" id="uploadConsentChk" onchange="onConsentChange()">
-            <span data-i18n="ai.consent">I confirm I am the authorized holder of this document.</span>
+            <span data-i18n="ai.consent">I confirm I am the authorised holder of this document. I understand the RC photo is sent to the Google Gemini API for extraction and is not stored on our server — I have read the <a href="/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span>
           </label>
 
           <p class="fld-hint" id="docSlotEmptyNote" style="display:none" data-i18n="ai.emptyNote">Select forms above — only the documents relevant to them will show here.</p>
@@ -159,19 +159,18 @@
 
           <div class="doc-group" id="sellerDocGroup">
             <div class="doc-group-label" data-i18n="ai.sellerGroup">Seller (Transferor)</div>
-            <div class="upload-grid" onclick="onDocSlotGridClick(event)">
-              <div class="upload-slot upload-slot-wide locked" id="docSlot-aadhaar-seller">
+            <div class="upload-grid">
+              <div class="upload-slot upload-slot-wide" id="docSlot-aadhaar-seller">
                 <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card<span class="upload-slot-state" id="state-aadhaar-seller" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar-seller" style="display:none" onclick="removeDoc('aadhaar_seller')" data-i18n="ai.remove">✕ Remove</button></div>
                 <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
-                <p class="consent-hint" id="consentHint-aadhaar-seller" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
                 <div class="aadhaar-two-col">
                   <div>
                     <span class="fld-hint" data-i18n="ai.frontSide">Front side</span>
                     <div class="doc-input-row">
                       <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_seller_front')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-seller-front-camera" disabled onchange="handleFileSelect('aadhaar_seller_front', this.files[0])">
+                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-seller-front-camera" onchange="handleFileSelect('aadhaar_seller_front', this.files[0])">
                       <label class="btn-choose" for="file-aadhaar-seller-front-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-seller-front-file" disabled onchange="handleFileSelect('aadhaar_seller_front', this.files[0])">
+                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-seller-front-file" onchange="handleFileSelect('aadhaar_seller_front', this.files[0])">
                     </div>
                     <div class="doc-preview-wrap" id="preview-aadhaar_seller_front"></div>
                     <div class="pdf-page-picker" id="pages-aadhaar_seller_front" style="display:none"></div>
@@ -180,9 +179,9 @@
                     <span class="fld-hint" data-i18n="ai.backSide">Back side (optional)</span>
                     <div class="doc-input-row">
                       <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_seller_back')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-seller-back-camera" disabled onchange="handleFileSelect('aadhaar_seller_back', this.files[0])">
+                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-seller-back-camera" onchange="handleFileSelect('aadhaar_seller_back', this.files[0])">
                       <label class="btn-choose" for="file-aadhaar-seller-back-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-seller-back-file" disabled onchange="handleFileSelect('aadhaar_seller_back', this.files[0])">
+                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-seller-back-file" onchange="handleFileSelect('aadhaar_seller_back', this.files[0])">
                     </div>
                     <div class="doc-preview-wrap" id="preview-aadhaar_seller_back"></div>
                     <div class="pdf-page-picker" id="pages-aadhaar_seller_back" style="display:none"></div>
@@ -190,15 +189,14 @@
                 </div>
               </div>
 
-              <div class="upload-slot locked" id="docSlot-pan-seller">
+              <div class="upload-slot" id="docSlot-pan-seller">
                 <div class="upload-slot-top"><span class="upload-slot-name">PAN Card<span class="upload-slot-state" id="state-pan-seller" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan-seller" style="display:none" onclick="removeDoc('pan_seller')" data-i18n="ai.remove">✕ Remove</button></div>
                 <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
-                <p class="consent-hint" id="consentHint-pan-seller" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
                 <div class="doc-input-row">
                   <button type="button" class="btn-camera" onclick="handleTakePhotoClick('pan_seller')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                  <input type="file" accept="image/*" capture="environment" id="file-pan-seller-camera" disabled onchange="handleFileSelect('pan_seller', this.files[0])">
+                  <input type="file" accept="image/*" capture="environment" id="file-pan-seller-camera" onchange="handleFileSelect('pan_seller', this.files[0])">
                   <label class="btn-choose" for="file-pan-seller-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-seller-file" disabled onchange="handleFileSelect('pan_seller', this.files[0])">
+                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-seller-file" onchange="handleFileSelect('pan_seller', this.files[0])">
                 </div>
                 <div class="doc-preview-wrap" id="preview-pan_seller"></div>
                 <div class="pdf-page-picker" id="pages-pan_seller" style="display:none"></div>
@@ -208,19 +206,18 @@
 
           <div class="doc-group" id="buyerDocGroup" style="display:none">
             <div class="doc-group-label" data-i18n="ai.buyerGroup">Buyer (Transferee)</div>
-            <div class="upload-grid" onclick="onDocSlotGridClick(event)">
-              <div class="upload-slot upload-slot-wide locked" id="docSlot-aadhaar-buyer">
+            <div class="upload-grid">
+              <div class="upload-slot upload-slot-wide" id="docSlot-aadhaar-buyer">
                 <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card<span class="upload-slot-state" id="state-aadhaar-buyer" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar-buyer" style="display:none" onclick="removeDoc('aadhaar_buyer')" data-i18n="ai.remove">✕ Remove</button></div>
-                <p class="doc-purpose-hint extract" data-i18n="ai.fillsAutomatically">Fills the form automatically</p>
-                <p class="consent-hint" id="consentHint-aadhaar-buyer" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
+                <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
                 <div class="aadhaar-two-col">
                   <div>
                     <span class="fld-hint" data-i18n="ai.frontSide">Front side</span>
                     <div class="doc-input-row">
                       <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_buyer_front')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-buyer-front-camera" disabled onchange="handleFileSelect('aadhaar_buyer_front', this.files[0])">
+                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-buyer-front-camera" onchange="handleFileSelect('aadhaar_buyer_front', this.files[0])">
                       <label class="btn-choose" for="file-aadhaar-buyer-front-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-buyer-front-file" disabled onchange="handleFileSelect('aadhaar_buyer_front', this.files[0])">
+                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-buyer-front-file" onchange="handleFileSelect('aadhaar_buyer_front', this.files[0])">
                     </div>
                     <div class="doc-preview-wrap" id="preview-aadhaar_buyer_front"></div>
                     <div class="pdf-page-picker" id="pages-aadhaar_buyer_front" style="display:none"></div>
@@ -229,9 +226,9 @@
                     <span class="fld-hint" data-i18n="ai.backSide">Back side (optional)</span>
                     <div class="doc-input-row">
                       <button type="button" class="btn-camera" onclick="handleTakePhotoClick('aadhaar_buyer_back')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-buyer-back-camera" disabled onchange="handleFileSelect('aadhaar_buyer_back', this.files[0])">
+                      <input type="file" accept="image/*" capture="environment" id="file-aadhaar-buyer-back-camera" onchange="handleFileSelect('aadhaar_buyer_back', this.files[0])">
                       <label class="btn-choose" for="file-aadhaar-buyer-back-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-buyer-back-file" disabled onchange="handleFileSelect('aadhaar_buyer_back', this.files[0])">
+                      <input type="file" accept="image/*,.pdf,application/pdf" id="file-aadhaar-buyer-back-file" onchange="handleFileSelect('aadhaar_buyer_back', this.files[0])">
                     </div>
                     <div class="doc-preview-wrap" id="preview-aadhaar_buyer_back"></div>
                     <div class="pdf-page-picker" id="pages-aadhaar_buyer_back" style="display:none"></div>
@@ -239,15 +236,14 @@
                 </div>
               </div>
 
-              <div class="upload-slot locked" id="docSlot-pan-buyer">
+              <div class="upload-slot" id="docSlot-pan-buyer">
                 <div class="upload-slot-top"><span class="upload-slot-name">PAN Card<span class="upload-slot-state" id="state-pan-buyer" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan-buyer" style="display:none" onclick="removeDoc('pan_buyer')" data-i18n="ai.remove">✕ Remove</button></div>
                 <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
-                <p class="consent-hint" id="consentHint-pan-buyer" data-i18n="ai.consentHint">Give consent above to upload ↑</p>
                 <div class="doc-input-row">
                   <button type="button" class="btn-camera" onclick="handleTakePhotoClick('pan_buyer')" data-i18n="ai.takePhoto">📷 Take photo</button>
-                  <input type="file" accept="image/*" capture="environment" id="file-pan-buyer-camera" disabled onchange="handleFileSelect('pan_buyer', this.files[0])">
+                  <input type="file" accept="image/*" capture="environment" id="file-pan-buyer-camera" onchange="handleFileSelect('pan_buyer', this.files[0])">
                   <label class="btn-choose" for="file-pan-buyer-file" data-i18n="ai.chooseFile">📁 Choose file</label>
-                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-buyer-file" disabled onchange="handleFileSelect('pan_buyer', this.files[0])">
+                  <input type="file" accept="image/*,.pdf,application/pdf" id="file-pan-buyer-file" onchange="handleFileSelect('pan_buyer', this.files[0])">
                 </div>
                 <div class="doc-preview-wrap" id="preview-pan_buyer"></div>
                 <div class="pdf-page-picker" id="pages-pan_buyer" style="display:none"></div>

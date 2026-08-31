@@ -84,7 +84,7 @@ test('hasEnoughBalance: zero balance fails against any positive price', async ()
   assert.equal(hasEnoughBalance(0, 300), false);
 });
 
-test('TASK_PRICING: b_transfer (2 extractions — RC + buyer Aadhaar) is priced higher than every 1-extraction task', async () => {
+test('TASK_PRICING: b_transfer is still priced higher than every other task — margin only now, not extraction count (every task extracts at most 1 doc, RC only — see the TASK_PRICING comment in worker/src/index.js)', async () => {
   const worker = await import(WORKER_URL);
   const source = require('node:fs').readFileSync(path.join(__dirname, '..', 'worker', 'src', 'index.js'), 'utf8');
   const match = /const TASK_PRICING = (\{[\s\S]*?\n\});/.exec(source);

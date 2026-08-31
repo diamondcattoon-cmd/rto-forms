@@ -50,21 +50,23 @@ function slotDomId(slotId){
   return slotId.replace(/_/g,'-');
 }
 
-/* Only RC and the BUYER's Aadhaar are ever sent to Gemini — cuts the
-   package to at most 2 extractions (matches TASK_PRICING/the Worker's own
-   "Maximum 2 documents per package" cap, task-pricing.js/worker/src/index.js)
-   and keeps both PAN slots + the seller's Aadhaar as plain attach-only
-   uploads, since none of their data is actually useful to extract (PAN has
-   nothing the forms need; the seller's identity already comes from the RC). */
+/* Only RC is ever sent to Gemini — Aadhaar/PAN extraction was removed for
+   Aadhaar Act compliance (an Aadhaar card carries a photo and a government
+   ID number the Act treats as sensitive personal data; sending it to a
+   third-party API carries real compliance risk a vehicle Registration
+   Certificate does not — see the PROMPTS comment in worker/src/index.js,
+   which is the actual enforcement point, not this function). All 4
+   identity slots (both Aadhaar, both PAN) stay plain attach-only uploads —
+   RTO still requires the copies attached, they just never reach Gemini. */
 function isSlotExtractable(slotId){
-  return slotId==='rc' || slotId==='aadhaar_buyer';
+  return slotId==='rc';
 }
 
-/* A non-extractable slot (both PAN slots; the seller's Aadhaar) still
-   needs its image ready for PDF attachment (see generatePDF()'s
-   attachment loop, ui.js, which reads PRO.uploads[key]) — this is that
-   path, mirroring what applyExtractionResult() does for an extracted doc,
-   minus the Gemini call and the `raw` field (nothing was extracted). */
+/* A non-extractable slot (all 4 Aadhaar/PAN slots) still needs its image
+   ready for PDF attachment (see generatePDF()'s attachment loop, ui.js,
+   which reads PRO.uploads[key]) — this is that path, mirroring what
+   applyExtractionResult() does for an extracted doc, minus the Gemini call
+   and the `raw` field (nothing was extracted). */
 async function markAttachOnly(slotId){
   const item=getBatchItem(slotId);
   if(!item) return;
@@ -139,31 +141,24 @@ function compressImage(dataUrl, maxDim, quality){
    a plain <script>) so the Node test suite can require() the exact same
    code the browser runs. */
 
-/* ── Consent gate: the 4 identity-document inputs (aadhaar front/back, PAN, RC) start
-   `disabled` in the HTML — this just mirrors that state once the user ticks the consent
-   checkbox above them. The face-photo upload is intentionally excluded: it never leaves
-   the browser (attached to the PDF locally), so it isn't sent to Gemini and needs no consent. */
+/* ── Consent gate: RC-only ──
+   Only the RC upload is ever sent to Gemini (see isSlotExtractable() above),
+   so consent is only meaningful for RC — the 4 Aadhaar/PAN inputs are
+   attach-only and start enabled, gating them on this checkbox would be
+   asking consent for something that never happens. The RC file inputs
+   start `disabled` in the HTML; this mirrors that state once the user
+   ticks the consent checkbox above it. */
 /* Each original single input is now a camera/gallery pair (see the
-   doc-input-row markup) — both members of every pair still gate on the
-   same consent checkbox. */
-const CONSENT_GATED_INPUT_IDS=[
-  'file-aadhaar-seller-front-camera','file-aadhaar-seller-front-file',
-  'file-aadhaar-seller-back-camera','file-aadhaar-seller-back-file',
-  'file-pan-seller-camera','file-pan-seller-file',
-  'file-aadhaar-buyer-front-camera','file-aadhaar-buyer-front-file',
-  'file-aadhaar-buyer-back-camera','file-aadhaar-buyer-back-file',
-  'file-pan-buyer-camera','file-pan-buyer-file',
-  'file-rc-camera','file-rc-file'
-];
-/* One hint per gated slot (not per input — aadhaar front+back share one slot/hint) — see
-   consentHint-* in index.html, sitting right above the greyed-out inputs so it's obvious
-   why they're disabled. */
-const CONSENT_HINT_IDS=['consentHint-aadhaar-seller','consentHint-pan-seller','consentHint-aadhaar-buyer','consentHint-pan-buyer','consentHint-rc'];
-/* Task-page v2 layout only — these cards get a visibly "locked" look
+   doc-input-row markup) — both members of the pair gate on consent. */
+const CONSENT_GATED_INPUT_IDS=['file-rc-camera','file-rc-file'];
+/* See consentHint-rc in index.html, sitting right above the greyed-out
+   inputs so it's obvious why they're disabled. */
+const CONSENT_HINT_IDS=['consentHint-rc'];
+/* Task-page v2 layout only — this card gets a visibly "locked" look
    (faded + lock icon, see .ai-box-picker .upload-slot.locked in style.css)
    until consent is given. The root page's older PRO panel doesn't use this
    class at all, so toggling it there is a harmless no-op. */
-const CONSENT_GATED_SLOT_IDS=['docSlot-rc','docSlot-aadhaar-seller','docSlot-pan-seller','docSlot-aadhaar-buyer','docSlot-pan-buyer'];
+const CONSENT_GATED_SLOT_IDS=['docSlot-rc'];
 function onConsentChange(){
   const checked=document.getElementById('uploadConsentChk').checked;
   CONSENT_GATED_INPUT_IDS.forEach(id=>{
@@ -308,8 +303,8 @@ function onDocReady(key){
     stateEl.textContent=t('ai.previewReady');
     stateEl.className='upload-slot-state';
   } else {
-    /* Both PAN slots, or the seller's Aadhaar — attach only, never sent
-       to Gemini (see isSlotExtractable()/markAttachOnly() above). */
+    /* Any Aadhaar/PAN slot — attach only, never sent to Gemini (see
+       isSlotExtractable()/markAttachOnly() above). */
     markAttachOnly(slotId);
   }
   updateCheckoutBox();
@@ -558,14 +553,13 @@ function getBatchItem(slotId){
 }
 
 /* Everything EXTRACTABLE (see isSlotExtractable() above) with a ready
-   preview that hasn't been successfully extracted yet — a slot that
-   failed (or was never attempted because an earlier one in the same
-   package failed) stays in this list, so clicking the button again
-   naturally retries just what's left. Both PAN slots, and the seller's
-   Aadhaar, never appear here at all — see markAttachOnly() for how those
-   still get attached to the PDF without ever reaching Gemini. */
+   preview that hasn't been successfully extracted yet — RC only. A slot
+   that failed stays in this list, so clicking the button again naturally
+   retries it. All 4 Aadhaar/PAN slots never appear here at all — see
+   markAttachOnly() for how those still get attached to the PDF without
+   ever reaching Gemini. */
 function computeReadyDocs(){
-  return ['rc','aadhaar_buyer'].map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.slotId));
+  return ['rc'].map(getBatchItem).filter(item=>item && !EXTRACTED_SET.has(item.slotId));
 }
 
 /* Current package price in paise for whatever's checked/on this page right
