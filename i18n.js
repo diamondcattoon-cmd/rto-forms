@@ -114,6 +114,11 @@ const I18N_STRINGS = {
     'ai.rcNote': 'RC fills in the seller’s details',
     'ai.fillsAutomatically': 'Fills the form automatically',
     'ai.attachedOnly': 'Attached to your PDF',
+    /* Document-type picker chips (Seller/Buyer columns) — proper nouns,
+       same in both language blocks. */
+    'ai.docTypeAadhaar': 'Aadhaar',
+    'ai.docTypePan': 'PAN',
+    'ai.attachPhotoChk': 'Attach photo',
     'ai.vehicleGroup': 'Vehicle',
     'ai.sellerGroup': 'Seller (Transferor)',
     'ai.buyerGroup': 'Buyer (Transferee)',
@@ -128,19 +133,12 @@ const I18N_STRINGS = {
     'ai.remove': '✕ Remove',
     'ai.removeConfirm': 'Removing this will empty the fields it filled in. Any amount already charged is not refunded.',
     'ai.addMoney': '+ Add Money',
-    /* ── Aadhaar Secure QR scan (buyer only) — free, entirely on-device, no
-       Gemini/Worker call. Always English, no Hinglish, per spec. Same text
-       in both language blocks. ── */
-    'ai.scanQr': '📷 Scan QR',
-    'ai.free': 'Free',
-    'ai.qrScanning': 'Looking for a QR code…',
-    'ai.qrChoosePhoto': '📁 Or choose a photo',
-    'ai.qrChoosePhotoHint': 'You can also choose a photo instead.',
+    /* ── Aadhaar Secure QR — auto-detected from the buyer's Aadhaar photo
+       right after upload (attemptAadhaarQrFromUpload(), aadhaar-qr-scan.js)
+       — no button, no separate step. Always English, no Hinglish, per
+       spec. Same text in both language blocks. ── */
     'ai.qrFilled': 'Details filled from Aadhaar QR',
     'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
-    'ai.qrCouldNotRead': "Couldn't read the QR. Fill the details manually below.",
-    'ai.qrInstructions': 'Point your camera at the QR code on the Aadhaar card, letter, or e-Aadhaar PDF.',
-    'camera.qrTitle': 'Scan Aadhaar QR',
     /* ── Desktop camera capture modal — always English, no Hinglish, per
        spec. Same text in both language blocks. ── */
     'camera.title': 'Take a photo',
@@ -405,6 +403,9 @@ const I18N_STRINGS = {
     'ai.rcNote': 'RC se seller ki details bharenge',
     'ai.fillsAutomatically': 'Form apne aap bhar jaayega',
     'ai.attachedOnly': 'Aapke PDF mein attach hoga',
+    'ai.docTypeAadhaar': 'Aadhaar',
+    'ai.docTypePan': 'PAN',
+    'ai.attachPhotoChk': 'Photo bhi attach karo',
     'ai.vehicleGroup': 'Vehicle',
     'ai.sellerGroup': 'Seller (Transferor)',
     'ai.buyerGroup': 'Buyer (Transferee)',
@@ -420,16 +421,8 @@ const I18N_STRINGS = {
     'ai.removeConfirm': 'Isse hatane par bhare hue fields khali ho jaayenge. Paisa wapas nahi hoga.',
     'ai.addMoney': '+ Add Money',
     /* Always English, no Hinglish, per spec — same text as the en block. */
-    'ai.scanQr': '📷 Scan QR',
-    'ai.free': 'Free',
-    'ai.qrScanning': 'Looking for a QR code…',
-    'ai.qrChoosePhoto': '📁 Or choose a photo',
-    'ai.qrChoosePhotoHint': 'You can also choose a photo instead.',
     'ai.qrFilled': 'Details filled from Aadhaar QR',
     'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
-    'ai.qrCouldNotRead': "Couldn't read the QR. Fill the details manually below.",
-    'ai.qrInstructions': 'Point your camera at the QR code on the Aadhaar card, letter, or e-Aadhaar PDF.',
-    'camera.qrTitle': 'Scan Aadhaar QR',
     /* Always English, no Hinglish, per spec — same text as the en block. */
     'camera.title': 'Take a photo',
     'camera.capture': 'Capture',

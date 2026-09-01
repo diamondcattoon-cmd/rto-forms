@@ -1,34 +1,33 @@
-/* ════════ Aadhaar Secure QR — scan UI (camera + photo fallback) ════════
-   Wires the "Scan QR" button in the buyer's Aadhaar box (docSlot-aadhaar-buyer
-   in the task page markup) to a live getUserMedia scan loop (jsQR, loaded
-   from a CDN as the global window.jsQR) plus an always-available "choose a
-   photo instead" fallback — both funnel into the same decodeAadhaarSecureQr()
-   (aadhaar-qr.js). Nothing here ever calls our Worker or any server: this is
-   a completely separate, free code path from pro-wallet.js's paid RC/AI
-   extraction — no wallet, no EXTRACTED_SET/FIELD_SOURCE bookkeeping, no
-   Gemini.
+/* ════════ Aadhaar Secure QR — auto-detect from the uploaded photo ════════
+   Right after the buyer's Aadhaar FRONT-side photo is attached — "Take
+   photo" or "Choose file", both converge on handleFileSelect() →
+   setDocImage() → onDocReady() in pro-wallet.js — this runs jsQR (loaded
+   from a CDN as the global window.jsQR) against that same image via
+   canvas, entirely in the browser: no Worker call, no Gemini, nothing
+   sent anywhere. If UIDAI's Secure QR is found, decodeAadhaarSecureQr()
+   (aadhaar-qr.js) reads it and fills the buyer's fields, for free. There
+   is no separate scan step or camera modal any more — this used to be a
+   live getUserMedia scan behind its own "Scan QR" button; seeing PDF-OCR
+   feasibility work land in the same codebase argued for one fewer manual
+   step here too, so it now just rides along on the upload everyone
+   already does.
 
-   Only the buyer's Aadhaar box gets this button, in every task page: the RC
-   already supplies the seller's details (DOC_RULES.rc, field-mapping.js is
-   fixed to 'seller'), so a scanned Aadhaar QR is always mapped onto the
-   buyer's fields regardless of whose physical Aadhaar was scanned — see
-   aadhaarQrMapToBuyerFields()'s own comment for the same reasoning applied
-   the other way. That also means these functions don't take a slotId param
-   the way pro-wallet.js's do — there's exactly one caller.
+   Failure is silent to the user in every case except one: a real,
+   correctly-read QR that turns out to be the OLD format (pre-2018,
+   carries the full 12-digit Aadhaar number) — that's the one outcome
+   worth surfacing, since "use a recent Aadhaar" is genuinely actionable
+   advice. Every other failure (no QR in the photo at all, blurry, wrong
+   angle, compression artefacts) just quietly falls back to manual entry
+   — a single still photo the user took for an unrelated reason (proving
+   identity, not framing a QR code) is a much less forgiving source than
+   a dedicated live scan was, so failing here is the common case, not an
+   error worth interrupting anyone over.
 
-   Live camera is the primary path (getUserMedia + jsQR, continuous frames —
-   far more reliable than a single static photo, since the user gets to
-   adjust framing/focus in real time); a picked photo is decoded once,
-   client-side, as a fallback for when camera access isn't available. */
+   Only the buyer's Aadhaar gets this: the RC already supplies the
+   seller's details (DOC_RULES.rc, field-mapping.js, fixed to 'seller'),
+   so a decoded Aadhaar QR is always mapped onto the buyer's fields
+   regardless — mirrors DOC_RULES.rc's own fixed role the other way. */
 
-let AADHAAR_QR_STREAM=null;
-let AADHAAR_QR_SCANNING=false;
-let AADHAAR_QR_RESUME_TIMER=null;
-
-/* ── Failure counter (localStorage only — no personal data, just tallies
-   how often each failure reason happens) — see the file's task instructions:
-   this is how we'll eventually decide whether an OCR fallback is worth
-   building, not something read back into the UI anywhere. ── */
 function aadhaarQrFailCounts(){
   try{ return JSON.parse(localStorage.getItem('aadhaarQrFailCounts')||'{}'); }
   catch(e){ return {}; }
@@ -41,136 +40,63 @@ function bumpAadhaarQrFail(reason){
   }catch(e){ /* best-effort telemetry only — a full/blocked localStorage just means we don't count this one */ }
 }
 
-function openAadhaarQrScan(){
-  const modal=document.getElementById('qrScanModal');
-  if(!modal) return;
-  modal.style.display='flex';
-  const errEl=document.getElementById('qrScanError');
-  if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
-  const statusLine=document.getElementById('qrScanStatusLine');
-  if(statusLine) statusLine.textContent=t('ai.qrScanning');
-  const resultEl=document.getElementById('qrScanResult');
-  if(resultEl) resultEl.style.display='none';
-  startAadhaarQrCamera();
+function loadImageEl(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=reject;
+    img.src=dataUrl;
+  });
 }
 
-function closeAadhaarQrScan(){
-  AADHAAR_QR_SCANNING=false;
-  if(AADHAAR_QR_RESUME_TIMER){ clearTimeout(AADHAAR_QR_RESUME_TIMER); AADHAAR_QR_RESUME_TIMER=null; }
-  if(AADHAAR_QR_STREAM){
-    AADHAAR_QR_STREAM.getTracks().forEach(tr=>tr.stop());
-    AADHAAR_QR_STREAM=null;
-  }
-  const modal=document.getElementById('qrScanModal');
-  if(modal) modal.style.display='none';
-}
+/* Called from onDocReady() (pro-wallet.js) for every doc-upload key, every
+   time — the key!=='aadhaar_buyer_front' guard is what makes this a no-op
+   everywhere else (seller's Aadhaar, both back sides, PAN, RC, face
+   photo). Never throws outward: any failure here is either silently
+   counted or shown as the one old-format notice, but always lets the
+   upload flow itself continue untouched. */
+async function attemptAadhaarQrFromUpload(key){
+  if(key!=='aadhaar_buyer_front') return;
+  const doc=DOC_STATE[key];
+  if(!doc || !doc.dataUrl) return;
+  if(typeof jsQR!=='function') return; // library failed to load from the CDN — silent, same as "no QR found"
 
-async function startAadhaarQrCamera(){
-  const video=document.getElementById('qrScanVideo');
-  const errEl=document.getElementById('qrScanError');
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    showAadhaarQrError(t('camera.notAvailable')+' '+t('ai.qrChoosePhotoHint'));
-    return;
-  }
+  let code=null;
   try{
-    /* Rear camera preferred (a laptop's front-facing webcam still works via
-       plain `ideal`, it just won't be steered toward any particular lens). */
-    AADHAAR_QR_STREAM=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false});
-    video.srcObject=AADHAAR_QR_STREAM;
-    AADHAAR_QR_SCANNING=true;
-    requestAnimationFrame(scanAadhaarQrFrame);
-  }catch(err){
-    let msg=t('camera.genericError');
-    if(err && err.name==='NotAllowedError') msg=t('camera.permissionDenied');
-    else if(err && err.name==='NotFoundError') msg=t('camera.notFound');
-    showAadhaarQrError(msg+' '+t('ai.qrChoosePhotoHint'));
-  }
-}
-
-function scanAadhaarQrFrame(){
-  if(!AADHAAR_QR_SCANNING) return;
-  const video=document.getElementById('qrScanVideo');
-  const canvas=document.getElementById('qrScanCanvas');
-  if(video && canvas && video.readyState===video.HAVE_ENOUGH_DATA && typeof jsQR==='function'){
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
-    const ctx=canvas.getContext('2d');
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    const code=jsQR(imageData.data, imageData.width, imageData.height, {inversionAttempts:'dontInvert'});
-    if(code && code.data){
-      AADHAAR_QR_SCANNING=false;
-      processAadhaarQrText(code.data);
-      return;
-    }
-  }
-  requestAnimationFrame(scanAadhaarQrFrame);
-}
-
-/* "Choose a photo instead" — decodes once against the picked image, no
-   loop. Used both as the always-available secondary path and as what a
-   user reaches for when camera access itself failed. */
-async function handleQrScanFileSelect(file){
-  if(!file) return;
-  const url=URL.createObjectURL(file);
-  try{
-    const img=await new Promise((resolve,reject)=>{
-      const el=new Image();
-      el.onload=()=>resolve(el);
-      el.onerror=reject;
-      el.src=url;
-    });
-    const canvas=document.getElementById('qrScanCanvas');
+    const img=await loadImageEl(doc.dataUrl);
+    const canvas=document.createElement('canvas');
     canvas.width=img.naturalWidth;
     canvas.height=img.naturalHeight;
     const ctx=canvas.getContext('2d');
     ctx.drawImage(img,0,0,canvas.width,canvas.height);
     const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    const code=(typeof jsQR==='function') ? jsQR(imageData.data, imageData.width, imageData.height) : null;
-    if(!code || !code.data){
-      bumpAadhaarQrFail('not-found');
-      showAadhaarQrError(t('ai.qrCouldNotRead'));
-      return;
-    }
-    AADHAAR_QR_SCANNING=false;
-    await processAadhaarQrText(code.data);
+    code=jsQR(imageData.data, imageData.width, imageData.height);
   }catch(e){
     bumpAadhaarQrFail('not-found');
-    showAadhaarQrError(t('ai.qrCouldNotRead'));
-  }finally{
-    URL.revokeObjectURL(url);
+    return;
   }
+  if(!code || !code.data){
+    bumpAadhaarQrFail('not-found');
+    return;
+  }
+  await processAadhaarQrText(code.data);
 }
 
-/* Common path for both a QR the live loop found and one decoded from a
-   photo: a QR pattern WAS found (jsQR itself only returns a checksum-valid
-   symbol, never garbage) — what's left is asking decodeAadhaarSecureQr()
-   whether it's a Secure QR we can use. On failure, live scanning resumes
-   automatically after a short pause so the user doesn't have to close and
-   reopen the modal to try again (e.g. after swapping which document they're
-   holding up); a photo-fallback failure just leaves the picker available. */
+/* A QR pattern WAS found in the photo (jsQR only ever returns a
+   checksum-valid symbol, never garbage) — what's left is asking
+   decodeAadhaarSecureQr() whether it's a Secure QR we can use.
+   'decode-error' (found a QR, but not a parseable Secure Aadhaar one —
+   e.g. an unrelated QR happened to be in frame) stays silent, same as
+   not-found; only 'old-format' is worth telling the user about. */
 async function processAadhaarQrText(qrText){
-  const statusLine=document.getElementById('qrScanStatusLine');
-  if(statusLine) statusLine.textContent=t('status.reading');
   const result=await decodeAadhaarSecureQr(qrText);
   if(!result.ok){
     bumpAadhaarQrFail(result.reason);
-    showAadhaarQrError(result.reason==='old-format' ? t('ai.qrOldFormat') : t('ai.qrCouldNotRead'));
-    const modal=document.getElementById('qrScanModal');
-    if(AADHAAR_QR_STREAM && modal && modal.style.display!=='none'){
-      AADHAAR_QR_RESUME_TIMER=setTimeout(()=>{
-        AADHAAR_QR_RESUME_TIMER=null;
-        if(!AADHAAR_QR_STREAM) return; // modal was closed in the meantime
-        AADHAAR_QR_SCANNING=true;
-        if(statusLine) statusLine.textContent=t('ai.qrScanning');
-        requestAnimationFrame(scanAadhaarQrFrame);
-      }, 2500);
-    }
+    if(result.reason==='old-format') showAadhaarQrNotice(t('ai.qrOldFormat'), 'err');
     return;
   }
   applyAadhaarQrResult(result.mapped);
-  closeAadhaarQrScan();
-  showAadhaarQrFilledNotice();
+  showAadhaarQrNotice(t('ai.qrFilled'), 'ok');
 }
 
 /* Same field-write pattern as pro-wallet.js's applyExtractionResult()
@@ -185,19 +111,23 @@ function applyAadhaarQrResult(mapped){
   updateSections();
 }
 
-function showAadhaarQrError(msg){
-  const errEl=document.getElementById('qrScanError');
-  const statusLine=document.getElementById('qrScanStatusLine');
-  if(statusLine) statusLine.textContent='';
-  if(errEl){ errEl.textContent=msg; errEl.style.display='block'; }
+/* #qrScanResult sits in the buyer Aadhaar box's own markup, right under
+   its header — the only place this feature ever speaks up. */
+function showAadhaarQrNotice(msg, kind){
+  const el=document.getElementById('qrScanResult');
+  if(!el) return;
+  el.textContent=msg;
+  el.className='qr-scan-result'+(kind==='err' ? ' err' : '');
+  el.style.display='block';
 }
 
-/* The box-level "Details filled from Aadhaar QR" line (docSlot-aadhaar-buyer
-   markup) — separate from state-aadhaar-buyer, which still tracks the
-   physical attachment's own upload state and is untouched by this. */
-function showAadhaarQrFilledNotice(){
-  const resultEl=document.getElementById('qrScanResult');
-  if(!resultEl) return;
-  resultEl.textContent=t('ai.qrFilled');
-  resultEl.style.display='block';
+/* Clears a stale notice ("Details filled from Aadhaar QR" / the
+   old-format warning) when the buyer's Aadhaar is removed — called from
+   removeDoc('aadhaar_buyer') (pro-wallet.js) so a removed photo doesn't
+   leave a claim on screen about a photo that's no longer there. */
+function clearAadhaarQrNotice(){
+  const el=document.getElementById('qrScanResult');
+  if(!el) return;
+  el.style.display='none';
+  el.textContent='';
 }

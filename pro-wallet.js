@@ -198,14 +198,45 @@ function onDocSlotGridClick(e){
   setTimeout(()=>box.classList.remove('consent-highlight'), 1500);
 }
 
+/* ── Seller/Buyer doc-type checkboxes (task-page v2 layout, .doc-parties)
+   — "Aadhaar"/"PAN" chips per party purely show/hide the matching
+   .doc-id-slot; unchecking hides without clearing anything already
+   uploaded there (re-checking brings it straight back), since this is a
+   visibility toggle, not a remove — see removeDoc() for the explicit
+   destructive action. ── */
+function toggleDocTypeSlot(role, docType){
+  const chk=document.getElementById('docTypeChk-'+docType+'-'+role);
+  const slot=document.getElementById('docSlot-'+docType+'-'+role);
+  if(!chk || !slot) return;
+  slot.style.display=chk.checked ? '' : 'none';
+}
+
+/* Same idea for the face-photo slot, driven by the "Attach photo"
+   checkbox below both columns instead of the old <details> toggle. */
+function toggleFacePhotoSlot(){
+  const chk=document.getElementById('attachPhotoChk');
+  const slot=document.getElementById('docSlot-photo');
+  if(!chk || !slot) return;
+  slot.style.display=chk.checked ? '' : 'none';
+}
+
 /* ── File selection: shows a preview immediately. PDFs render to page thumbnails so the
    right page can be picked (handles multi-page / multi-document PDFs and scans). ── */
 async function handleFileSelect(key, file){
   if(!file) return;
-  /* Belt-and-suspenders: the input itself is `disabled` until consent is given, but this
-     guard covers any path that could still fire (e.g. a value set programmatically). */
-  const consentEl=document.getElementById('uploadConsentChk');
-  if(consentEl && !consentEl.checked) return;
+  /* Belt-and-suspenders: RC's own inputs are `disabled` until consent is
+     given (see CONSENT_GATED_INPUT_IDS above), but this guard covers any
+     path that could still fire (e.g. a value set programmatically) — RC
+     only, though: Aadhaar/PAN/face-photo inputs are never disabled by
+     consent (they're attach-only, never sent to Gemini, see
+     isSlotExtractable()), so gating every key here on the same checkbox
+     silently dropped every non-RC upload for anyone who hadn't ticked a
+     checkbox about RC specifically — found while wiring
+     attemptAadhaarQrFromUpload() (aadhaar-qr-scan.js) to this function. */
+  if(key==='rc'){
+    const consentEl=document.getElementById('uploadConsentChk');
+    if(consentEl && !consentEl.checked) return;
+  }
   const isPdf = file.type==='application/pdf' || /\.pdf$/i.test(file.name||'');
   const previewEl=document.getElementById('preview-'+key);
   const pickerEl=document.getElementById('pages-'+key);
@@ -279,11 +310,14 @@ function setDocImage(key, dataUrl, keepPicker){
   onDocReady(key);
 }
 
-/* aadhaar_seller/aadhaar_buyer each have a _front/_back pair of file
-   inputs sharing one slot — every other key IS its slot id directly. */
+/* aadhaar_seller/aadhaar_buyer/pan_seller/pan_buyer each have a _front/
+   _back pair of file inputs sharing one slot — every other key IS its
+   slot id directly. */
 function slotIdFromKey(key){
   if(key==='aadhaar_seller_front' || key==='aadhaar_seller_back') return 'aadhaar_seller';
   if(key==='aadhaar_buyer_front' || key==='aadhaar_buyer_back') return 'aadhaar_buyer';
+  if(key==='pan_seller_front' || key==='pan_seller_back') return 'pan_seller';
+  if(key==='pan_buyer_front' || key==='pan_buyer_back') return 'pan_buyer';
   return key;
 }
 
@@ -307,6 +341,9 @@ function onDocReady(key){
        isSlotExtractable()/markAttachOnly() above). */
     markAttachOnly(slotId);
   }
+  /* No-op for every key except 'aadhaar_buyer_front' — see
+     attemptAadhaarQrFromUpload() (aadhaar-qr-scan.js). */
+  attemptAadhaarQrFromUpload(key);
   updateCheckoutBox();
 }
 
@@ -445,11 +482,12 @@ function useChooseFileFallback(){
 /* Clears one slot's uploaded photo(s) and, if it had already been
    successfully extracted, everything that extraction wrote — after
    confirming, since that ₹5 was already charged and won't be refunded by
-   removing the result. An aadhaar_seller/aadhaar_buyer slot clears both
-   front and back as one unit (they're billed and extracted together — see
-   getBatchItem()); 'photo' is the plain (never billed, never extracted)
-   face-photo attachment and skips all of that. Task-page v2 layout only —
-   root's markup has no #remove-* buttons wired to this. */
+   removing the result. An aadhaar_seller/aadhaar_buyer/pan_seller/
+   pan_buyer slot clears both front and back as one unit (they're billed
+   and extracted together — see getBatchItem()); 'photo' is the plain
+   (never billed, never extracted) face-photo attachment and skips all of
+   that. Task-page v2 layout only — root's markup has no #remove-* buttons
+   wired to this. */
 function removeDoc(slotId){
   if(slotId==='photo'){
     delete PRO.uploads.photo;
@@ -475,7 +513,14 @@ function removeDoc(slotId){
      attachment after the user removed it. */
   delete PRO.uploads[slotId];
 
-  if(slotId==='aadhaar_seller' || slotId==='aadhaar_buyer'){
+  /* A removed photo can't have filled anything any more — clears whatever
+     attemptAadhaarQrFromUpload() last showed (aadhaar-qr-scan.js). Doesn't
+     clear the fields themselves, same as this function already does for
+     every other doc type — a field the user may since have edited is left
+     alone rather than guessed at. */
+  if(slotId==='aadhaar_buyer' && typeof clearAadhaarQrNotice==='function') clearAadhaarQrNotice();
+
+  if(slotId==='aadhaar_seller' || slotId==='aadhaar_buyer' || slotId==='pan_seller' || slotId==='pan_buyer'){
     delete DOC_STATE[slotId+'_front'];
     delete DOC_STATE[slotId+'_back'];
     [slotId+'_front', slotId+'_back'].forEach(key=>{
@@ -529,25 +574,21 @@ function removeDoc(slotId){
 const EXTRACTED_SET=new Set(); // slotIds successfully extracted this session
 
 /* Returns {slotId, docType, role, images, uploadsKey} for a slot if its
-   preview is ready, else null. An aadhaar_seller/aadhaar_buyer slot
-   combines front (+ optional back) into one call. */
+   preview is ready, else null. An aadhaar_seller/aadhaar_buyer/pan_seller/
+   pan_buyer slot combines front (+ optional back) into one call. */
 function getBatchItem(slotId){
   if(slotId==='rc'){
     const doc=DOC_STATE.rc;
     if(!doc) return null;
     return {slotId:'rc', docType:'rc', role:'seller', images:[doc], uploadsKey:'rc'};
   }
-  if(slotId==='aadhaar_seller' || slotId==='aadhaar_buyer'){
+  if(slotId==='aadhaar_seller' || slotId==='aadhaar_buyer' || slotId==='pan_seller' || slotId==='pan_buyer'){
     const front=DOC_STATE[slotId+'_front'];
     if(!front) return null;
     const images=[front];
     if(DOC_STATE[slotId+'_back']) images.push(DOC_STATE[slotId+'_back']);
-    return {slotId, docType:'aadhaar', role:roleFromSlot(slotId), images, uploadsKey:slotId};
-  }
-  if(slotId==='pan_seller' || slotId==='pan_buyer'){
-    const doc=DOC_STATE[slotId];
-    if(!doc) return null;
-    return {slotId, docType:'pan', role:roleFromSlot(slotId), images:[doc], uploadsKey:slotId};
+    const docType=slotId.indexOf('aadhaar')===0 ? 'aadhaar' : 'pan';
+    return {slotId, docType, role:roleFromSlot(slotId), images, uploadsKey:slotId};
   }
   return null;
 }

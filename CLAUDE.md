@@ -142,17 +142,23 @@ correctly regardless of which path served the current page.
   `aadhaarQrMapToBuyerFields()` always writes to the buyer's (`b_`) fields
   regardless of whose Aadhaar was scanned, mirroring `DOC_RULES.rc`'s fixed
   'seller' role (field-mapping.js) for the other side of a transfer.
-- **`aadhaar-qr-scan.js`** — the DOM/camera wiring around the above: the
-  buyer Aadhaar box's "Scan QR" button (task-page markup only — `index.html`
-  has no buyer group), a `getUserMedia` + `jsQR` (CDN global, task pages
-  only) live-scan loop as the primary path, and a "choose a photo instead"
-  fallback that runs `jsQR` once against a picked image. Entirely separate
-  from `pro-wallet.js`'s paid Gemini pipeline — no Worker call, no wallet,
-  no `EXTRACTED_SET`/`FIELD_SOURCE`/`AI_FILLED_FIELDS` bookkeeping, free.
-  Also tallies scan failures by reason (`old-format`/`not-found`/
+- **`aadhaar-qr-scan.js`** — the DOM wiring around the above: no button, no
+  camera, no separate step. `attemptAadhaarQrFromUpload(key)` is called from
+  `onDocReady()` (`pro-wallet.js`) for every doc-upload key and is a no-op
+  unless `key==='aadhaar_buyer_front'` (task-page markup only — `index.html`
+  has no buyer group) — when it is, it runs `jsQR` (CDN global) once against
+  that same photo via canvas, right after the user attaches it (Take
+  photo/Choose file both converge on `onDocReady()`). Silent on every
+  outcome except a real, correctly-read old-format QR, which gets a visible
+  warning (`#qrScanResult`, in the buyer Aadhaar box) — a single still photo
+  taken for an unrelated reason is far less forgiving than the live scan
+  this replaced, so most uploads simply find nothing and say nothing.
+  Entirely separate from `pro-wallet.js`'s paid Gemini pipeline — no Worker
+  call, no wallet, no `EXTRACTED_SET`/`FIELD_SOURCE`/`AI_FILLED_FIELDS`
+  bookkeeping. Also tallies attempts by outcome (`old-format`/`not-found`/
   `decode-error`) into `localStorage` under `aadhaarQrFailCounts` — no
-  personal data, just counts, to gauge whether an OCR fallback is ever
-  worth building.
+  personal data, just counts, to gauge how often a photo taken for
+  attachment happens to also carry a readable QR.
 
 **`PICKS`** (in `forms-data.js`) is the registry of fillable form packs. Each
 pick has an `id` (e.g. `pk29`, `pk20`), a `type` (which field-groups it
