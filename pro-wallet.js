@@ -117,7 +117,11 @@ function loadImageDims(dataUrl){
   });
 }
 /* Downscales large photos (mobile cameras easily produce 10-20MB files) before upload —
-   keeps text legible for AI extraction while avoiding slow/failed uploads on weak networks. */
+   keeps text legible for AI extraction while avoiding slow/failed uploads on weak networks.
+   Old path, from a dataUrl already in memory: decodes at the SOURCE's full resolution
+   (an <img> always does, regardless of the canvas it's eventually drawn into) before
+   the canvas draw call ever gets to shrink it. Kept only as compressImageFile()'s
+   fallback for browsers without createImageBitmap — see that function for the real fix. */
 function compressImage(dataUrl, maxDim, quality){
   return new Promise(resolve=>{
     const img=new Image();
@@ -135,6 +139,55 @@ function compressImage(dataUrl, maxDim, quality){
     img.onerror=()=>resolve(dataUrl);
     img.src=dataUrl;
   });
+}
+
+/* The actual fix for the Android "Unable to complete previous operation due
+   to low memory" crash on camera capture: a phone camera photo can be
+   10-20MB at 4000x3000px+, and compressImage() above — like any <img>-based
+   approach — has to decode that at FULL resolution (a ~48MB+ raw RGBA
+   bitmap) before the canvas draw call ever gets to shrink it, on top of
+   the base64 string fileToBase64() already produced from the raw file.
+   On a low-RAM Android WebView those can add up to more memory than the
+   tab is allowed, and the capture fails outright rather than just being
+   slow.
+
+   createImageBitmap(file, {resizeWidth, resizeHeight}) decodes straight
+   from the File (no base64 round-trip at all) and, given explicit target
+   dimensions, downsamples DURING decode rather than after — the
+   full-resolution bitmap is never held in memory. Since resize options
+   only preserve aspect ratio when exactly one of resizeWidth/resizeHeight
+   is given (both together stretch to that exact box, distorting the
+   image — confirmed against the WHATWG spec algorithm before writing
+   this), getting the "cap the longer side, keep proportions" behaviour
+   compressImage() has always had means finding the real dimensions
+   first — so this probes them with one bitmap (closed immediately after
+   reading .width/.height, releasing it before the real decode) and then
+   requests the correctly-proportioned exact box on the second, real one.
+   Falls back to the old dataUrl-based path for any browser without
+   createImageBitmap, or if it throws on a given file (e.g. a format it
+   doesn't understand) — same visual result either way, just slower/
+   heavier on the fallback. */
+async function compressImageFile(file, maxDim, quality){
+  if(typeof createImageBitmap!=='function'){
+    return compressImage(await fileToBase64(file), maxDim, quality);
+  }
+  try{
+    const probe=await createImageBitmap(file);
+    let w=probe.width, h=probe.height;
+    probe.close();
+    if(w>maxDim || h>maxDim){
+      const scale=maxDim/Math.max(w,h);
+      w=Math.round(w*scale); h=Math.round(h*scale);
+    }
+    const resized=await createImageBitmap(file, {resizeWidth:w, resizeHeight:h, resizeQuality:'medium', imageOrientation:'from-image'});
+    const canvas=document.createElement('canvas');
+    canvas.width=w; canvas.height=h;
+    canvas.getContext('2d').drawImage(resized, 0, 0, w, h);
+    resized.close();
+    return canvas.toDataURL('image/jpeg', quality||0.85);
+  }catch(e){
+    return compressImage(await fileToBase64(file), maxDim, quality);
+  }
 }
 
 /* toISODate() and AI_FIELD_MAP now live in field-mapping.js (loaded above as
@@ -265,8 +318,7 @@ async function handleFileSelect(key, file){
       previewEl.innerHTML='<p class="fld-hint" style="color:var(--stamp)">'+t('status.pdfReadError',{msg:err.message})+'</p>';
     }
   }else{
-    const rawDataUrl=await fileToBase64(file);
-    const dataUrl=await compressImage(rawDataUrl, 1800, 0.85);
+    const dataUrl=await compressImageFile(file, 1800, 0.85);
     setDocImage(key, dataUrl);
   }
 }
@@ -882,8 +934,7 @@ async function handlePhotoUpload(file){
   if(!file) return;
   const stateEl=document.getElementById('state-photo');
   stateEl.textContent=t('status.reading');
-  const rawDataUrl=await fileToBase64(file);
-  const dataUrl=await compressImage(rawDataUrl, 1400, 0.85);
+  const dataUrl=await compressImageFile(file, 1400, 0.85);
   const dims=await loadImageDims(dataUrl);
   PRO.uploads.photo={dataUrl,w:dims.w,h:dims.h};
   const previewEl=document.getElementById('preview-photo');
