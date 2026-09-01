@@ -932,14 +932,23 @@ async function startPackageExtraction(){
 
 async function handlePhotoUpload(file){
   if(!file) return;
+  const hadPrevious=!!PRO.uploads.photo;
   const stateEl=document.getElementById('state-photo');
   stateEl.textContent=t('status.reading');
   const dataUrl=await compressImageFile(file, 1400, 0.85);
-  const dims=await loadImageDims(dataUrl);
-  PRO.uploads.photo={dataUrl,w:dims.w,h:dims.h};
+  const edited=(typeof openPhotoEditor==='function') ? await openPhotoEditor(dataUrl) : dataUrl;
+  if(!edited){
+    if(hadPrevious){ stateEl.textContent=t('status.uploaded'); stateEl.className='upload-slot-state done'; }
+    else { stateEl.textContent=t('ai.notUploaded'); stateEl.className='upload-slot-state'; }
+    const camIn=document.getElementById('file-photo-camera'); if(camIn) camIn.value='';
+    const fileIn=document.getElementById('file-photo-file'); if(fileIn) fileIn.value='';
+    return;
+  }
+  const dims=await loadImageDims(edited);
+  PRO.uploads.photo={dataUrl:edited,w:dims.w,h:dims.h};
   const previewEl=document.getElementById('preview-photo');
   previewEl.innerHTML='';
-  const img=document.createElement('img'); img.src=dataUrl;
+  const img=document.createElement('img'); img.src=edited;
   previewEl.appendChild(img);
   stateEl.textContent=t('status.uploaded'); stateEl.className='upload-slot-state done';
   const removeBtn=document.getElementById('remove-photo');

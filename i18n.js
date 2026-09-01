@@ -138,6 +138,13 @@ const I18N_STRINGS = {
        spec. Same text in both language blocks. ── */
     'ai.qrFilled': 'Details filled from Aadhaar QR',
     'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
+    'pe.title': 'Edit Photo',
+    'pe.rotateLeft': 'Rotate',
+    'pe.rotateRight': 'Rotate',
+    'pe.fineRotate': 'Fine rotate',
+    'pe.freeCrop': 'Free crop (any shape)',
+    'pe.reset': 'Reset',
+    'pe.save': 'Use this photo',
     /* ── Desktop camera capture modal — always English, no Hinglish, per
        spec. Same text in both language blocks. ── */
     'camera.title': 'Take a photo',
@@ -421,6 +428,13 @@ const I18N_STRINGS = {
     /* Always English, no Hinglish, per spec — same text as the en block. */
     'ai.qrFilled': 'Details filled from Aadhaar QR',
     'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
+    'pe.title': 'Edit Photo',
+    'pe.rotateLeft': 'Rotate',
+    'pe.rotateRight': 'Rotate',
+    'pe.fineRotate': 'Fine rotate',
+    'pe.freeCrop': 'Free crop (any shape)',
+    'pe.reset': 'Reset',
+    'pe.save': 'Use this photo',
     /* Always English, no Hinglish, per spec — same text as the en block. */
     'camera.title': 'Take a photo',
     'camera.capture': 'Capture',
