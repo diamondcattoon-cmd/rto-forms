@@ -159,22 +159,42 @@ function compressImage(dataUrl, maxDim, quality){
    is given (both together stretch to that exact box, distorting the
    image — confirmed against the WHATWG spec algorithm before writing
    this), getting the "cap the longer side, keep proportions" behaviour
-   compressImage() has always had means finding the real dimensions
-   first — so this probes them with one bitmap (closed immediately after
-   reading .width/.height, releasing it before the real decode) and then
-   requests the correctly-proportioned exact box on the second, real one.
-   Falls back to the old dataUrl-based path for any browser without
-   createImageBitmap, or if it throws on a given file (e.g. a format it
-   doesn't understand) — same visual result either way, just slower/
-   heavier on the fallback. */
+   compressImage() has always had means finding the real dimensions first.
+
+   An earlier version of this function found those dimensions by probing
+   with a plain `createImageBitmap(file)` (no resize options), closed
+   immediately after reading .width/.height. That reintroduced the exact
+   crash this function exists to prevent: a bare createImageBitmap() call
+   decodes at the source's FULL native resolution regardless of what you
+   do with the result afterward, so on a 48MP+ sensor (common even on
+   budget Android phones now) the probe itself could exceed the tab's
+   memory budget before the real, downsampled decode ever ran — confirmed
+   in production: same "low memory" crash, strictly size-dependent
+   (reproducible with a large-enough source, fine below some threshold),
+   the exact signature of an unbounded decode. Fixed by reading the real
+   pixel dimensions straight out of the file's JPEG/PNG header bytes
+   (probeImageDimensionsFromHeader() below) — a few hundred KB read and a
+   handful of integers parsed, no image decode at all — so createImageBitmap
+   is now called AT MOST ONCE per file, always with resize options that
+   downsample during decode. Falls back to a real (unbounded) probe decode
+   only for a format that header-parsing doesn't recognise (in practice:
+   anything that isn't JPEG or PNG — camera captures and gallery picks are
+   essentially always one of those two), and to the old dataUrl-based path
+   for any browser without createImageBitmap at all, or if everything above
+   throws — same visual result either way, just slower/heavier on the
+   fallback. */
 async function compressImageFile(file, maxDim, quality){
   if(typeof createImageBitmap!=='function'){
     return compressImage(await fileToBase64(file), maxDim, quality);
   }
   try{
-    const probe=await createImageBitmap(file);
-    let w=probe.width, h=probe.height;
-    probe.close();
+    let dims = await probeImageDimensionsFromHeader(file);
+    if(!dims){
+      const probe = await createImageBitmap(file);
+      dims = {w: probe.width, h: probe.height};
+      probe.close();
+    }
+    let w=dims.w, h=dims.h;
     if(w>maxDim || h>maxDim){
       const scale=maxDim/Math.max(w,h);
       w=Math.round(w*scale); h=Math.round(h*scale);
@@ -188,6 +208,129 @@ async function compressImageFile(file, maxDim, quality){
   }catch(e){
     return compressImage(await fileToBase64(file), maxDim, quality);
   }
+}
+
+/* Reads a File's real (post-EXIF-orientation) pixel dimensions without
+   decoding any image data — just enough header bytes to parse a JPEG's
+   SOF marker (or a PNG's IHDR chunk) directly. 512KB comfortably covers
+   even a JPEG with several large EXIF/ICC APP segments before the SOF
+   marker shows up; PNG's IHDR is always the very first chunk. Returns
+   null (never throws) for any format this doesn't recognise, or if
+   parsing fails for any reason — compressImageFile() falls back to a real
+   decode in that case. */
+async function probeImageDimensionsFromHeader(file){
+  try{
+    const HEADER_BYTES = 524288;
+    const buf = await file.slice(0, HEADER_BYTES).arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    const png = parsePngDimensions(bytes);
+    if(png) return png;
+    const jpeg = parseJpegDimensions(bytes);
+    if(!jpeg) return null;
+    // JPEG's SOF marker reports the raw sensor/encoded grid, not the
+    // as-displayed size — a photo shot in portrait is very often stored
+    // as a landscape grid plus an EXIF Orientation tag saying "rotate
+    // 90°". createImageBitmap(..., {imageOrientation:'from-image'}) (used
+    // by the real decode below) applies that rotation before resizing, so
+    // the resizeWidth/resizeHeight we hand it need to already be in
+    // post-rotation terms, or a portrait photo gets squeezed into a
+    // landscape box. Orientation values 5-8 are the ones that swap width
+    // and height on display; 1-4 (or no tag at all) don't.
+    const orientation = parseJpegOrientation(bytes);
+    if(orientation>=5 && orientation<=8) return {w: jpeg.h, h: jpeg.w};
+    return jpeg;
+  }catch(e){
+    return null;
+  }
+}
+
+function parsePngDimensions(bytes){
+  if(bytes.length<24) return null;
+  const sig=[0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A];
+  for(let i=0;i<8;i++){ if(bytes[i]!==sig[i]) return null; }
+  const width=((bytes[16]<<24)|(bytes[17]<<16)|(bytes[18]<<8)|bytes[19])>>>0;
+  const height=((bytes[20]<<24)|(bytes[21]<<16)|(bytes[22]<<8)|bytes[23])>>>0;
+  return (width>0 && height>0) ? {w:width,h:height} : null;
+}
+
+/* Walks top-level JPEG segments (skipping over each one by its own
+   declared length, never scanning INTO a segment's payload) until it
+   finds a Start-Of-Frame marker, which carries the image's real pixel
+   grid. Skipping segments by length rather than scanning byte-by-byte is
+   what keeps this from ever misreading an embedded EXIF thumbnail's own
+   (much smaller) SOF marker as the main image's. */
+function parseJpegDimensions(bytes){
+  if(bytes.length<4 || bytes[0]!==0xFF || bytes[1]!==0xD8) return null;
+  let offset=2;
+  while(offset+4<=bytes.length){
+    if(bytes[offset]!==0xFF){ offset++; continue; }
+    const marker=bytes[offset+1];
+    if(marker===0xD8 || marker===0x01 || (marker>=0xD0 && marker<=0xD7)){ offset+=2; continue; }
+    if(marker===0xD9) break;
+    if(offset+4>bytes.length) break;
+    const segLen=(bytes[offset+2]<<8)|bytes[offset+3];
+    const isSOF = marker>=0xC0 && marker<=0xCF && marker!==0xC4 && marker!==0xC8 && marker!==0xCC;
+    if(isSOF){
+      if(offset+9>bytes.length) return null;
+      const height=(bytes[offset+5]<<8)|bytes[offset+6];
+      const width=(bytes[offset+7]<<8)|bytes[offset+8];
+      return (width>0 && height>0) ? {w:width,h:height} : null;
+    }
+    offset += 2 + segLen;
+  }
+  return null;
+}
+
+/* Same top-level-segment walk as parseJpegDimensions(), looking for the
+   APP1 "Exif" segment instead of SOF, then reading tag 0x0112
+   (Orientation) out of IFD0. Returns 1 (no rotation) if there's no EXIF
+   segment, no orientation tag, or anything fails to parse. */
+function parseJpegOrientation(bytes){
+  if(bytes.length<4 || bytes[0]!==0xFF || bytes[1]!==0xD8) return 1;
+  let offset=2;
+  while(offset+4<=bytes.length){
+    if(bytes[offset]!==0xFF){ offset++; continue; }
+    const marker=bytes[offset+1];
+    if(marker===0xD8 || marker===0x01 || (marker>=0xD0 && marker<=0xD7)){ offset+=2; continue; }
+    if(marker===0xD9) break;
+    if(offset+4>bytes.length) break;
+    const segLen=(bytes[offset+2]<<8)|bytes[offset+3];
+    if(marker===0xE1){
+      const s=offset+4;
+      if(s+6<=bytes.length && bytes[s]===0x45 && bytes[s+1]===0x78 && bytes[s+2]===0x69 &&
+         bytes[s+3]===0x66 && bytes[s+4]===0x00 && bytes[s+5]===0x00){
+        const o=readExifOrientation(bytes, s+6);
+        if(o) return o;
+      }
+    }
+    const isSOF = marker>=0xC0 && marker<=0xCF && marker!==0xC4 && marker!==0xC8 && marker!==0xCC;
+    if(isSOF) break; // past where EXIF could still appear
+    offset += 2 + segLen;
+  }
+  return 1;
+}
+
+function readExifOrientation(bytes, tiffStart){
+  if(tiffStart+8>bytes.length) return null;
+  const big = bytes[tiffStart]===0x4D && bytes[tiffStart+1]===0x4D;
+  const little = bytes[tiffStart]===0x49 && bytes[tiffStart+1]===0x49;
+  if(!big && !little) return null;
+  const u16=(o)=> big ? ((bytes[o]<<8)|bytes[o+1]) : ((bytes[o+1]<<8)|bytes[o]);
+  const u32=(o)=> big
+    ? (((bytes[o]<<24)|(bytes[o+1]<<16)|(bytes[o+2]<<8)|bytes[o+3])>>>0)
+    : (((bytes[o+3]<<24)|(bytes[o+2]<<16)|(bytes[o+1]<<8)|bytes[o])>>>0);
+  const ifd0Offset = tiffStart + u32(tiffStart+4);
+  if(ifd0Offset<0 || ifd0Offset+2>bytes.length) return null;
+  const numEntries = u16(ifd0Offset);
+  for(let i=0;i<numEntries;i++){
+    const entryOffset = ifd0Offset + 2 + i*12;
+    if(entryOffset+12>bytes.length) break;
+    if(u16(entryOffset)===0x0112){
+      const value = u16(entryOffset+8);
+      return (value>=1 && value<=8) ? value : null;
+    }
+  }
+  return null;
 }
 
 /* toISODate() and AI_FIELD_MAP now live in field-mapping.js (loaded above as
@@ -266,6 +409,11 @@ function toggleFacePhotoSlot(){
    right page can be picked (handles multi-page / multi-document PDFs and scans). ── */
 async function handleFileSelect(key, file){
   if(!file) return;
+  /* Diagnostic only -- confirms the file input's change event actually
+     reached our JS (as opposed to the OS/camera app failing to hand back
+     the photo before our code ever runs). Cheap, no PII beyond the
+     filename the user already sees in their own file picker. */
+  console.log('[handleFileSelect] entry', key, file.name, file.size, file.type);
   /* Belt-and-suspenders: RC's own inputs are `disabled` until consent is
      given (see CONSENT_GATED_INPUT_IDS above), but this guard covers any
      path that could still fire (e.g. a value set programmatically) — RC
@@ -932,6 +1080,8 @@ async function startPackageExtraction(){
 
 async function handlePhotoUpload(file){
   if(!file) return;
+  /* Diagnostic only -- see handleFileSelect()'s identical log for why. */
+  console.log('[handlePhotoUpload] entry', file.name, file.size, file.type);
   const hadPrevious=!!PRO.uploads.photo;
   const stateEl=document.getElementById('state-photo');
   stateEl.textContent=t('status.reading');
