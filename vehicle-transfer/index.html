@@ -139,7 +139,7 @@
 
           <p class="fld-hint" id="docSlotEmptyNote" style="display:none" data-i18n="ai.emptyNote">Select forms above — only the documents relevant to them will show here.</p>
 
-          <div class="doc-group">
+          <div class="doc-group doc-parties-wrap">
             <div class="doc-group-label" data-i18n="ai.vehicleGroup">Vehicle</div>
             <div class="upload-grid" id="docSlotGrid" onclick="onDocSlotGridClick(event)">
               <div class="upload-slot locked" id="docSlot-rc">
@@ -163,12 +163,8 @@
             <div class="doc-parties">
               <div class="doc-party" id="sellerDocGroup">
                 <div class="doc-party-head" data-i18n="ai.sellerGroup">Seller (Transferor)</div>
-                <div class="doc-type-picker">
-                  <label class="doc-type-chk"><input type="checkbox" id="docTypeChk-aadhaar-seller" onchange="toggleDocTypeSlot('seller','aadhaar')"> <span data-i18n="ai.docTypeAadhaar">Aadhaar</span></label>
-                  <label class="doc-type-chk"><input type="checkbox" id="docTypeChk-pan-seller" onchange="toggleDocTypeSlot('seller','pan')"> <span data-i18n="ai.docTypePan">PAN</span></label>
-                </div>
 
-                <div class="doc-id-slot" id="docSlot-aadhaar-seller" style="display:none">
+                <div class="doc-id-slot" id="docSlot-aadhaar-seller">
                   <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card<span class="upload-slot-state" id="state-aadhaar-seller" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar-seller" style="display:none" onclick="removeDoc('aadhaar_seller')" data-i18n="ai.remove">✕ Remove</button></div>
                   <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
                   <div class="doc-side-grid">
@@ -197,7 +193,7 @@
                   </div>
                 </div>
 
-                <div class="doc-id-slot" id="docSlot-pan-seller" style="display:none">
+                <div class="doc-id-slot" id="docSlot-pan-seller">
                   <div class="upload-slot-top"><span class="upload-slot-name">PAN Card<span class="upload-slot-state" id="state-pan-seller" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan-seller" style="display:none" onclick="removeDoc('pan_seller')" data-i18n="ai.remove">✕ Remove</button></div>
                   <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
                   <div class="doc-side-grid">
@@ -229,12 +225,8 @@
 
               <div class="doc-party" id="buyerDocGroup" style="display:none">
                 <div class="doc-party-head" data-i18n="ai.buyerGroup">Buyer (Transferee)</div>
-                <div class="doc-type-picker">
-                  <label class="doc-type-chk"><input type="checkbox" id="docTypeChk-aadhaar-buyer" onchange="toggleDocTypeSlot('buyer','aadhaar')"> <span data-i18n="ai.docTypeAadhaar">Aadhaar</span></label>
-                  <label class="doc-type-chk"><input type="checkbox" id="docTypeChk-pan-buyer" onchange="toggleDocTypeSlot('buyer','pan')"> <span data-i18n="ai.docTypePan">PAN</span></label>
-                </div>
 
-                <div class="doc-id-slot" id="docSlot-aadhaar-buyer" style="display:none">
+                <div class="doc-id-slot" id="docSlot-aadhaar-buyer">
                   <div class="upload-slot-top"><span class="upload-slot-name">Aadhaar Card<span class="upload-slot-state" id="state-aadhaar-buyer" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-aadhaar-buyer" style="display:none" onclick="removeDoc('aadhaar_buyer')" data-i18n="ai.remove">✕ Remove</button></div>
                   <p class="qr-scan-result" id="qrScanResult" style="display:none"></p>
                   <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
@@ -264,7 +256,7 @@
                   </div>
                 </div>
 
-                <div class="doc-id-slot" id="docSlot-pan-buyer" style="display:none">
+                <div class="doc-id-slot" id="docSlot-pan-buyer">
                   <div class="upload-slot-top"><span class="upload-slot-name">PAN Card<span class="upload-slot-state" id="state-pan-buyer" data-i18n="ai.notUploaded">Not uploaded</span></span><button type="button" class="doc-remove-btn" id="remove-pan-buyer" style="display:none" onclick="removeDoc('pan_buyer')" data-i18n="ai.remove">✕ Remove</button></div>
                   <p class="doc-purpose-hint" data-i18n="ai.attachedOnly">Attached to your PDF</p>
                   <div class="doc-side-grid">

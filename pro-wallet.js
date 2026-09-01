@@ -198,21 +198,10 @@ function onDocSlotGridClick(e){
   setTimeout(()=>box.classList.remove('consent-highlight'), 1500);
 }
 
-/* ── Seller/Buyer doc-type checkboxes (task-page v2 layout, .doc-parties)
-   — "Aadhaar"/"PAN" chips per party purely show/hide the matching
-   .doc-id-slot; unchecking hides without clearing anything already
-   uploaded there (re-checking brings it straight back), since this is a
-   visibility toggle, not a remove — see removeDoc() for the explicit
-   destructive action. ── */
-function toggleDocTypeSlot(role, docType){
-  const chk=document.getElementById('docTypeChk-'+docType+'-'+role);
-  const slot=document.getElementById('docSlot-'+docType+'-'+role);
-  if(!chk || !slot) return;
-  slot.style.display=chk.checked ? '' : 'none';
-}
-
-/* Same idea for the face-photo slot, driven by the "Attach photo"
-   checkbox below both columns instead of the old <details> toggle. */
+/* Face-photo slot visibility, driven by the "Attach photo" checkbox below
+   both Seller/Buyer columns instead of the old <details> toggle. Aadhaar/
+   PAN slots themselves have no such toggle — they're always shown once
+   their party column is (see .doc-party, task-page v2 layout). */
 function toggleFacePhotoSlot(){
   const chk=document.getElementById('attachPhotoChk');
   const slot=document.getElementById('docSlot-photo');
