@@ -1,0 +1,12 @@
+# Cloudflare Pages custom headers.
+#
+# Scoped to the background-removal feasibility test page only — it needs
+# cross-origin isolation for SharedArrayBuffer (multi-threaded WASM), which
+# @imgly/background-removal can use for better performance. Deliberately
+# NOT applied site-wide: COEP: require-corp would break any cross-origin
+# embed that isn't CORS/CORP-marked (Razorpay checkout, Google Fonts, etc),
+# and nothing else on the site needs it. This is an internal/noindex test
+# page, not part of the real face-photo flow.
+/internal/bg-removal-test/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp

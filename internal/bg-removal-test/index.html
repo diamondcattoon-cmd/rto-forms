@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Background removal feasibility test — internal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root{ --ink:#16233f; --line:#dcdfe6; --bg:#f7f7f5; --ok:#1a7f4b; --err:#b3261e; }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .warn{background:#fff4e5;border:1px solid #f0b429;border-radius:8px;padding:12px 14px;font-size:13.5px;margin:14px 0 22px}
+  .warn b{color:#8a5300}
+  .box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input[type=file]{font-size:14px}
+  select{font-size:14px;padding:6px 8px;border-radius:6px;border:1px solid var(--line)}
+  label.inline{font-size:13.5px;display:flex;align-items:center;gap:6px}
+  button{background:var(--ink);color:#fff;border:none;border-radius:7px;padding:10px 18px;font-size:14.5px;font-weight:600;cursor:pointer}
+  button:disabled{background:#9aa3b5;cursor:not-allowed}
+  button.secondary{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+  .imgs{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+  .imgs figure{margin:0;flex:1 1 220px;max-width:280px}
+  .imgs img{max-width:100%;border-radius:6px;border:1px solid var(--line);display:block;background:
+    repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 16px 16px;}
+  .imgs figcaption{font-size:12px;color:#666;margin-top:4px;text-align:center}
+  .status{font-size:13.5px;color:#555;margin-top:10px;min-height:18px}
+  .status.err{color:var(--err)}
+  .status.ok{color:var(--ok)}
+  .metrics{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;color:#333;background:#f3f3f1;border-radius:6px;padding:12px 14px;margin-top:10px;white-space:pre-wrap}
+  .metrics b{color:var(--ink)}
+  h2{font-size:15px;margin:0 0 10px}
+  .device-info{font-size:12px;color:#777;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Client-side background removal — feasibility test</h1>
+  <div class="warn">
+    <b>Internal test page — not linked, not indexed, not production.</b>
+    Evaluating <code>@imgly/background-removal</code> (ONNX model via onnxruntime-web,
+    runs entirely in-browser) as a possible "plain white background" step for the
+    face-photo editor. Nothing here is wired into the real upload flow — this page
+    exists to measure real download size / processing time / memory use before we
+    decide anything. See the network note at the bottom for exactly what this page
+    fetches and why.
+  </div>
+
+  <div class="box">
+    <h2>1. Device / browser info</h2>
+    <div class="device-info" id="deviceInfo"></div>
+  </div>
+
+  <div class="box">
+    <h2>2. Upload a face-photo-style photo</h2>
+    <div class="row">
+      <input type="file" id="fileInput" accept="image/*">
+      <select id="modelSelect">
+        <option value="isnet_quint8">small / quantized (~40 MB — docs estimate)</option>
+        <option value="isnet_fp16" selected>medium / fp16, default (~80 MB — docs estimate)</option>
+      </select>
+      <label class="inline"><input type="checkbox" id="gpuChk"> Try GPU (WebGPU) if available</label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="runBtn" disabled>Remove background</button>
+      <button id="runAgainBtn" class="secondary" disabled>Run again (measures cached/repeat load)</button>
+    </div>
+    <p class="status" id="statusLine"></p>
+    <div class="metrics" id="metricsBox" style="display:none"></div>
+  </div>
+
+  <div class="box" id="resultBox" style="display:none">
+    <h2>3. Result</h2>
+    <div class="imgs">
+      <figure><img id="origImg" alt="Original"><figcaption>Original (as fed to the model)</figcaption></figure>
+      <figure><img id="cutoutImg" alt="Cutout"><figcaption>Model output (transparent — checkered = transparent)</figcaption></figure>
+      <figure><img id="whiteImg" alt="On white"><figcaption>Composited on plain white</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>What this page sends over the network</h2>
+    <p style="font-size:13.5px;color:#444">
+      On your first click of "Remove background", this page loads
+      <code>@imgly/background-removal</code> and <code>onnxruntime-web</code> as ES
+      modules (via an import map, from jsDelivr), which in turn fetch the ONNX
+      segmentation model weights and onnxruntime's own WASM runtime binary — by
+      default from IMG.LY's own CDN (<code>staticimgly.com</code>). Those are
+      one-way downloads of model/runtime files, the same every time, containing no
+      data from you. After that one-time load (cached by the browser + an
+      additional model cache the library manages itself), the actual background
+      removal runs locally via WASM/WebGPU: nothing in this page's code sends the
+      uploaded photo, the cutout, or any result anywhere. This page requests
+      cross-origin-isolation headers (<code>COOP</code>/<code>COEP</code>, scoped to
+      just this one route via <code>_headers</code>) so the library can use
+      <code>SharedArrayBuffer</code>-based multi-threading if the browser allows it
+      — that's a performance option, not a data-sharing one.
+    </p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/ort.bundle.min.mjs",
+    "onnxruntime-web/webgpu": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/ort.webgpu.bundle.min.mjs",
+    "@imgly/background-removal": "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/index.mjs"
+  }
+}
+</script>
+<script type="module">
+'use strict';
+
+const fileInput = document.getElementById('fileInput');
+const modelSelect = document.getElementById('modelSelect');
+const gpuChk = document.getElementById('gpuChk');
+const runBtn = document.getElementById('runBtn');
+const runAgainBtn = document.getElementById('runAgainBtn');
+const statusLine = document.getElementById('statusLine');
+const metricsBox = document.getElementById('metricsBox');
+const resultBox = document.getElementById('resultBox');
+const origImg = document.getElementById('origImg');
+const cutoutImg = document.getElementById('cutoutImg');
+const whiteImg = document.getElementById('whiteImg');
+const deviceInfo = document.getElementById('deviceInfo');
+
+deviceInfo.textContent = [
+  'UA: ' + navigator.userAgent,
+  'CPU cores (hardwareConcurrency): ' + (navigator.hardwareConcurrency || 'unknown'),
+  'Approx device memory (deviceMemory, GB): ' + (navigator.deviceMemory || 'not reported by this browser'),
+  'crossOriginIsolated (SharedArrayBuffer available): ' + (window.crossOriginIsolated === true),
+  'performance.memory available: ' + (!!performance.memory)
+].join('\n');
+
+function setStatus(msg, cls){
+  statusLine.textContent = msg;
+  statusLine.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+function fmtMB(bytes){ return (bytes / (1024*1024)).toFixed(2) + ' MB'; }
+function fmtMs(ms){ return Math.round(ms) + ' ms'; }
+
+let selectedFile = null;
+let hasSucceededOnce = false;
+fileInput.addEventListener('change', () => {
+  selectedFile = fileInput.files[0] || null;
+  runBtn.disabled = !selectedFile;
+  runAgainBtn.disabled = true;
+  resultBox.style.display = 'none';
+  metricsBox.style.display = 'none';
+  setStatus('');
+});
+
+async function heapSnapshot(){
+  // Best-effort GC nudge so before/after heap deltas aren't dominated by
+  // garbage still waiting to be collected. Not guaranteed — Chrome doesn't
+  // expose a real forced-GC hook outside --js-flags=--expose-gc — so this
+  // is a directional signal, not a hard ceiling.
+  await new Promise(r => setTimeout(r, 50));
+  return performance.memory ? performance.memory.usedJSHeapSize : null;
+}
+
+async function compositeOnWhite(blob){
+  const bmp = await createImageBitmap(blob);
+  const canvas = document.createElement('canvas');
+  canvas.width = bmp.width; canvas.height = bmp.height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close();
+  return canvas.toDataURL('image/jpeg', 0.92);
+}
+
+async function runRemoval(isRepeat){
+  if(!selectedFile) return;
+  runBtn.disabled = true;
+  runAgainBtn.disabled = true;
+  resultBox.style.display = 'none';
+  metricsBox.style.display = 'none';
+
+  const downloadedBytes = new Map(); // key -> total bytes for that asset
+  const progressLog = [];
+  const config = {
+    model: modelSelect.value,
+    device: gpuChk.checked ? 'gpu' : 'cpu',
+    output: { format: 'image/png', type: 'foreground' },
+    progress: (key, current, total) => {
+      if(typeof total === 'number' && total > 0) downloadedBytes.set(key, total);
+      progressLog.push(key + ': ' + current + '/' + total);
+    }
+  };
+
+  setStatus(isRepeat ? 'Running again (assets should already be cached)…' : 'Loading model + running (first run — downloads model files)…');
+
+  const heapBefore = await heapSnapshot();
+  const t0 = performance.now();
+  let resultBlob;
+  try{
+    const { removeBackground } = await import('@imgly/background-removal');
+    resultBlob = await removeBackground(selectedFile, config);
+  }catch(err){
+    setStatus('Failed: ' + (err && err.message ? err.message : String(err)), 'err');
+    runBtn.disabled = false;
+    runAgainBtn.disabled = !hasSucceededOnce;
+    console.error('[bg-removal-test]', err);
+    return;
+  }
+  const t1 = performance.now();
+  const heapAfter = await heapSnapshot();
+
+  let totalDownloadBytes = 0;
+  for(const v of downloadedBytes.values()) totalDownloadBytes += v;
+
+  origImg.src = URL.createObjectURL(selectedFile);
+  cutoutImg.src = URL.createObjectURL(resultBlob);
+  whiteImg.src = await compositeOnWhite(resultBlob);
+  resultBox.style.display = 'block';
+
+  const lines = [];
+  lines.push('Run type: ' + (isRepeat ? 'repeat (cache-warm)' : 'first run (cold)'));
+  lines.push('Model: ' + config.model + '   Device: ' + config.device);
+  lines.push('Total time (load + inference combined): ' + fmtMs(t1 - t0));
+  lines.push('Assets reported via progress callback: ' + downloadedBytes.size + ' file(s), ' + fmtMB(totalDownloadBytes) + ' total (0 on a repeat run usually means it served from cache without re-reporting progress)');
+  if(heapBefore != null && heapAfter != null){
+    lines.push('JS heap: ' + fmtMB(heapBefore) + ' -> ' + fmtMB(heapAfter) + '  (delta ' + fmtMB(heapAfter - heapBefore) + ')');
+  } else {
+    lines.push('JS heap: performance.memory not available in this browser (Chrome-only API)');
+  }
+  metricsBox.textContent = lines.join('\n') + '\n\n--- raw progress log ---\n' + progressLog.join('\n');
+  metricsBox.style.display = 'block';
+
+  console.log('[bg-removal-test] ' + lines.join(' | '));
+
+  hasSucceededOnce = true;
+  setStatus('Done.', 'ok');
+  runBtn.disabled = false;
+  runAgainBtn.disabled = false;
+}
+
+runBtn.addEventListener('click', () => runRemoval(false));
+runAgainBtn.addEventListener('click', () => runRemoval(true));
+</script>
+</body>
+</html>
