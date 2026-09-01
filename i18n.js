@@ -121,6 +121,9 @@ const I18N_STRINGS = {
     'ai.attachmentGroup': 'Attachment Only',
     'ai.frontSide': 'Front side',
     'ai.backSide': 'Back side (optional)',
+    /* Aadhaar's own back-side label — same as ai.backSide but without
+       "(optional)"; PAN's back side keeps the original ai.backSide key. */
+    'ai.aadhaarBackSide': 'Back side',
     'ai.notUploaded': 'Not uploaded',
     'ai.previewReady': 'Preview ready',
     'ai.consentHint': 'Give consent above to upload ↑',
@@ -406,6 +409,7 @@ const I18N_STRINGS = {
     'ai.attachmentGroup': 'Attachment Only',
     'ai.frontSide': 'Front side',
     'ai.backSide': 'Back side (optional)',
+    'ai.aadhaarBackSide': 'Back side',
     'ai.notUploaded': 'Not uploaded',
     'ai.previewReady': 'Preview ready',
     'ai.consentHint': 'Upload karne ke liye upar consent dein ↑',

@@ -453,6 +453,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .doc-side-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:4px}
 @media(min-width:1200px){.doc-side-grid{grid-template-columns:1fr 1fr}}
 .doc-side-box{position:relative;border:1.5px solid var(--line-soft);border-radius:7px;padding:10px;background:var(--paper)}
+/* "Front side"/"Back side" — the base .fld-hint's var(--txt-3) reads as
+   barely-there against this box's cream background; bumped to match the
+   rest of the section's label contrast (e.g. .doc-purpose-hint). */
+.doc-side-box .fld-hint{color:var(--txt-2);font-weight:600}
 .doc-side-box:has(.doc-preview-wrap img){border-color:var(--approve);background:var(--approve-soft)}
 .doc-side-box:has(.doc-preview-wrap img)::after{content:'✓';position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--approve);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
 .doc-attach-options{margin-top:2px}
