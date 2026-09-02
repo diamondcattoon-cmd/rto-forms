@@ -68,7 +68,10 @@ const AADHAAR_QR_SCAN_MAX_DIM=3200;
    there's no sourceFile to work from (e.g. a PDF upload) or anything
    here fails, so the caller can fall back to the existing display copy. */
 async function buildHighResQrCanvas(doc){
-  if(!doc.sourceFile || typeof createImageBitmap!=='function') return null;
+  if(!doc.sourceFile || typeof createImageBitmap!=='function'){
+    console.log('[aadhaar-qr] buildHighResQrCanvas: skipped — sourceFile=', !!doc.sourceFile, 'createImageBitmap=', typeof createImageBitmap);
+    return null;
+  }
   try{
     let dims = (typeof probeImageDimensionsFromHeader==='function')
       ? await probeImageDimensionsFromHeader(doc.sourceFile)
@@ -88,8 +91,10 @@ async function buildHighResQrCanvas(doc){
     canvas.width=w; canvas.height=h;
     canvas.getContext('2d').drawImage(bmp,0,0,w,h);
     bmp.close();
+    console.log('[aadhaar-qr] buildHighResQrCanvas: built', w+'x'+h, 'from sourceFile', doc.sourceFile.size, 'bytes');
     return canvas;
   }catch(e){
+    console.log('[aadhaar-qr] buildHighResQrCanvas: failed —', e && e.message);
     return null;
   }
 }
@@ -117,21 +122,24 @@ async function buildDisplayCopyQrCanvas(doc){
 async function attemptAadhaarQrFromUpload(key){
   if(key!=='aadhaar_buyer_front') return;
   const doc=DOC_STATE[key];
+  console.log('[aadhaar-qr] attemptAadhaarQrFromUpload: key=', key, 'hasDoc=', !!doc, 'hasDataUrl=', !!(doc && doc.dataUrl), 'hasSourceFile=', !!(doc && doc.sourceFile), 'jsQR=', typeof jsQR);
   if(!doc || !doc.dataUrl) return;
   if(typeof jsQR!=='function') return; // library failed to load from the CDN — silent, same as "no QR found"
 
   const canvases=[];
   const hiRes=await buildHighResQrCanvas(doc);
   if(hiRes) canvases.push(hiRes);
-  try{ canvases.push(await buildDisplayCopyQrCanvas(doc)); }catch(e){ /* nothing left to try if this also fails */ }
+  try{ canvases.push(await buildDisplayCopyQrCanvas(doc)); }catch(e){ console.log('[aadhaar-qr] buildDisplayCopyQrCanvas failed —', e && e.message); }
+  console.log('[aadhaar-qr] scanning', canvases.length, 'canvas(es):', canvases.map(c=>c.width+'x'+c.height).join(', '));
 
   let code=null;
   for(const canvas of canvases){
     try{
       const imageData=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
       code=jsQR(imageData.data, imageData.width, imageData.height);
+      console.log('[aadhaar-qr] jsQR on', canvas.width+'x'+canvas.height, '->', code ? 'FOUND (' + code.data.length + ' chars)' : 'not found');
       if(code && code.data) break;
-    }catch(e){ /* try the next canvas, if any */ }
+    }catch(e){ console.log('[aadhaar-qr] jsQR threw on', canvas.width+'x'+canvas.height, '—', e && e.message); }
   }
   if(!code || !code.data){
     bumpAadhaarQrFail('not-found');
@@ -148,6 +156,7 @@ async function attemptAadhaarQrFromUpload(key){
    not-found; only 'old-format' is worth telling the user about. */
 async function processAadhaarQrText(qrText){
   const result=await decodeAadhaarSecureQr(qrText);
+  console.log('[aadhaar-qr] decodeAadhaarSecureQr ->', result.ok ? 'ok' : ('rejected: ' + result.reason));
   if(!result.ok){
     bumpAadhaarQrFail(result.reason);
     if(result.reason==='old-format') showAadhaarQrNotice(t('ai.qrOldFormat'), 'err');
