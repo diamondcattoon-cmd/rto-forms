@@ -538,6 +538,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--white);color:var(--
 .camera-modal-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .camera-modal-actions button{flex:1 1 140px}
 
+/* ─── LIVE AADHAAR QR SCAN (mobile only — see aadhaar-qr-live-scan.js) ─── */
+.btn-scan-qr{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:36px;margin-top:8px;font-family:inherit;font-size:.82rem;font-weight:600;color:#fff;background:var(--approve);border:1.5px solid var(--approve);border-radius:8px;padding:0 12px;cursor:pointer;transition:all .15s;user-select:none}
+.btn-scan-qr:hover{background:#145c38}
+.qr-live-scan-box{max-width:480px}
+.qr-live-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:62%;aspect-ratio:1;border:3px solid #fff;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.4);pointer-events:none}
+
 /* ─── FACE-PHOTO EDITOR MODAL (Cropper.js) ─── */
 .photo-editor-box{max-width:600px}
 .photo-editor-canvas-wrap{width:100%;height:340px;background:#111;border-radius:10px;overflow:hidden;margin:14px 0}

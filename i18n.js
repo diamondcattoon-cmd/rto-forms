@@ -138,6 +138,10 @@ const I18N_STRINGS = {
        spec. Same text in both language blocks. ── */
     'ai.qrFilled': 'Details filled from Aadhaar QR',
     'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
+    'qrLive.scanBtn': '🔍 Scan QR',
+    'qrLive.title': 'Scan Aadhaar QR',
+    'qrLive.hint': 'Point your camera at the QR code on the Aadhaar card. It fills in automatically as soon as it’s found.',
+    'qrLive.timeout': 'Could not find a QR code — try uploading a photo instead.',
     'pe.title': 'Edit Photo',
     'pe.rotateLeft': 'Rotate',
     'pe.rotateRight': 'Rotate',
@@ -429,6 +433,10 @@ const I18N_STRINGS = {
     /* Always English, no Hinglish, per spec — same text as the en block. */
     'ai.qrFilled': 'Details filled from Aadhaar QR',
     'ai.qrOldFormat': 'This is an older Aadhaar QR. Please use a recent Aadhaar (PVC card, e-Aadhaar, or the mAadhaar app), or fill the details manually.',
+    'qrLive.scanBtn': '🔍 Scan QR',
+    'qrLive.title': 'Scan Aadhaar QR',
+    'qrLive.hint': 'Point your camera at the QR code on the Aadhaar card. It fills in automatically as soon as it’s found.',
+    'qrLive.timeout': 'Could not find a QR code — try uploading a photo instead.',
     'pe.title': 'Edit Photo',
     'pe.rotateLeft': 'Rotate',
     'pe.rotateRight': 'Rotate',
