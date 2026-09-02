@@ -1,0 +1,17 @@
+# Cloudflare Pages custom headers.
+#
+# JS/CSS get a short-lived cache with forced revalidation -- Pages' default
+# (Cache-Control: public, max-age=14400) meant the CDN edge would happily
+# keep serving an old cached pro-wallet.js/aadhaar-qr-scan.js/style.css for
+# up to 4 hours after a deploy, even though the new version was already
+# live at origin. Confirmed directly: cf-cache-status: HIT on the plain
+# URL serving stale content, while a cache-busted request to the same URL
+# got the new deploy immediately -- the deploy itself was never the
+# problem, the edge cache was. `no-cache` still lets the CDN/browser cache
+# the response, but forces a revalidation (conditional request against the
+# ETag Pages already sets) before ever serving it, so a real code change
+# shows up on the next request instead of silently waiting out the cache.
+/*.js
+  Cache-Control: no-cache
+/*.css
+  Cache-Control: no-cache
