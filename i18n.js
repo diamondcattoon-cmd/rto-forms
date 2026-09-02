@@ -165,6 +165,7 @@ const I18N_STRINGS = {
     /* ── AI checkout button — always English, no Hinglish, per spec: just
        the button + a one-line status. Same text in both language blocks. ── */
     'ai.fillWithAi': 'Fill with AI — ₹{price}',
+    'ai.uploadRcHint': 'Upload your RC above to fill with AI.',
     'ai.retryBtn': 'Retry',
     'ai.extractFailed': "Couldn't read the document. You were not charged.",
     'ai.balanceTooLow': 'Balance too low. You need ₹{price}.',
@@ -453,6 +454,7 @@ const I18N_STRINGS = {
     'ai.pageN': 'Page {n}',
     /* Always English, no Hinglish, per spec — same text as the en block. */
     'ai.fillWithAi': 'Fill with AI — ₹{price}',
+    'ai.uploadRcHint': 'Upload your RC above to fill with AI.',
     'ai.retryBtn': 'Retry',
     'ai.extractFailed': "Couldn't read the document. You were not charged.",
     'ai.balanceTooLow': 'Balance too low. You need ₹{price}.',

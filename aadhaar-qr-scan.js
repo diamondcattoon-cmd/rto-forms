@@ -49,31 +49,89 @@ function loadImageEl(dataUrl){
   });
 }
 
+/* UIDAI's Secure QR is dense (a compressed binary payload, not a short
+   URL) — a real module needs several real pixels to read reliably. The
+   ~1800px copy setDocImage() keeps for preview/PDF-attachment/extraction
+   is plenty for a human or for Gemini, but on a full card photo it can
+   downsample the QR itself past the point jsQR can lock onto it, which is
+   why this used to silently "not find" a QR that was genuinely there.
+   3200px keeps real headroom for QR legibility while staying well inside
+   the memory-safe range createImageBitmap's resize options were built to
+   guarantee (see compressImageFile() in pro-wallet.js and the crash it
+   fixed) — this never decodes at the source's true native resolution. */
+const AADHAAR_QR_SCAN_MAX_DIM=3200;
+
+/* Builds a canvas from the ORIGINAL uploaded file (doc.sourceFile, see
+   setDocImage() in pro-wallet.js) at up to AADHAAR_QR_SCAN_MAX_DIM —
+   still resize-constrained, decode-time-downsampled, never a bare/
+   unbounded createImageBitmap(file) call. Returns null (never throws) if
+   there's no sourceFile to work from (e.g. a PDF upload) or anything
+   here fails, so the caller can fall back to the existing display copy. */
+async function buildHighResQrCanvas(doc){
+  if(!doc.sourceFile || typeof createImageBitmap!=='function') return null;
+  try{
+    let dims = (typeof probeImageDimensionsFromHeader==='function')
+      ? await probeImageDimensionsFromHeader(doc.sourceFile)
+      : null;
+    if(!dims){
+      const probe=await createImageBitmap(doc.sourceFile);
+      dims={w:probe.width, h:probe.height};
+      probe.close();
+    }
+    let w=dims.w, h=dims.h;
+    if(w>AADHAAR_QR_SCAN_MAX_DIM || h>AADHAAR_QR_SCAN_MAX_DIM){
+      const scale=AADHAAR_QR_SCAN_MAX_DIM/Math.max(w,h);
+      w=Math.round(w*scale); h=Math.round(h*scale);
+    }
+    const bmp=await createImageBitmap(doc.sourceFile, {resizeWidth:w, resizeHeight:h, resizeQuality:'high', imageOrientation:'from-image'});
+    const canvas=document.createElement('canvas');
+    canvas.width=w; canvas.height=h;
+    canvas.getContext('2d').drawImage(bmp,0,0,w,h);
+    bmp.close();
+    return canvas;
+  }catch(e){
+    return null;
+  }
+}
+
+async function buildDisplayCopyQrCanvas(doc){
+  const img=await loadImageEl(doc.dataUrl);
+  const canvas=document.createElement('canvas');
+  canvas.width=img.naturalWidth;
+  canvas.height=img.naturalHeight;
+  canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+  return canvas;
+}
+
 /* Called from onDocReady() (pro-wallet.js) for every doc-upload key, every
    time — the key!=='aadhaar_buyer_front' guard is what makes this a no-op
    everywhere else (seller's Aadhaar, both back sides, PAN, RC, face
    photo). Never throws outward: any failure here is either silently
    counted or shown as the one old-format notice, but always lets the
-   upload flow itself continue untouched. */
+   upload flow itself continue untouched.
+
+   Tries the high-resolution decode of the original file first (far more
+   likely to actually contain a readable QR), then falls back to the same
+   ~1800px display copy this always used before — cheap, and covers the
+   rare case a sourceFile isn't available at all. */
 async function attemptAadhaarQrFromUpload(key){
   if(key!=='aadhaar_buyer_front') return;
   const doc=DOC_STATE[key];
   if(!doc || !doc.dataUrl) return;
   if(typeof jsQR!=='function') return; // library failed to load from the CDN — silent, same as "no QR found"
 
+  const canvases=[];
+  const hiRes=await buildHighResQrCanvas(doc);
+  if(hiRes) canvases.push(hiRes);
+  try{ canvases.push(await buildDisplayCopyQrCanvas(doc)); }catch(e){ /* nothing left to try if this also fails */ }
+
   let code=null;
-  try{
-    const img=await loadImageEl(doc.dataUrl);
-    const canvas=document.createElement('canvas');
-    canvas.width=img.naturalWidth;
-    canvas.height=img.naturalHeight;
-    const ctx=canvas.getContext('2d');
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
-    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    code=jsQR(imageData.data, imageData.width, imageData.height);
-  }catch(e){
-    bumpAadhaarQrFail('not-found');
-    return;
+  for(const canvas of canvases){
+    try{
+      const imageData=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+      code=jsQR(imageData.data, imageData.width, imageData.height);
+      if(code && code.data) break;
+    }catch(e){ /* try the next canvas, if any */ }
   }
   if(!code || !code.data){
     bumpAadhaarQrFail('not-found');

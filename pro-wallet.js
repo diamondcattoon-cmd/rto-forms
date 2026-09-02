@@ -467,7 +467,7 @@ async function handleFileSelect(key, file){
     }
   }else{
     const dataUrl=await compressImageFile(file, 1800, 0.85);
-    setDocImage(key, dataUrl);
+    setDocImage(key, dataUrl, false, file);
   }
 }
 
@@ -478,8 +478,16 @@ function selectPdfPage(key, dataUrl, pickerEl){
   setDocImage(key, dataUrl, true);
 }
 
-function setDocImage(key, dataUrl, keepPicker){
-  DOC_STATE[key]={dataUrl, mimeType:'image/jpeg'};
+/* sourceFile (the original, uncompressed File) is only ever set for the
+   image-upload path above -- kept alongside the ~1800px display copy
+   purely so attemptAadhaarQrFromUpload() (aadhaar-qr-scan.js) can decode
+   the buyer's Aadhaar photo at a much higher resolution for QR reading
+   than what's good enough for preview/PDF-attachment/extraction. A File
+   reference is cheap to hold (the browser owns the actual bytes; this
+   isn't a second base64 copy in JS heap) so this costs nothing for every
+   other upload that never looks at it. */
+function setDocImage(key, dataUrl, keepPicker, sourceFile){
+  DOC_STATE[key]={dataUrl, mimeType:'image/jpeg', sourceFile};
   const previewEl=document.getElementById('preview-'+key);
   if(!keepPicker){
     previewEl.innerHTML='';
@@ -817,7 +825,18 @@ function updateCheckoutBox(failReason){
   if(!box) return;
 
   const batch=computeReadyDocs();
-  if(!batch.length && !failReason){ box.style.display='none'; return; }
+  if(!batch.length && !failReason){
+    /* RC not uploaded yet — show a hint instead of just disappearing, so
+       "why isn't Fill with AI here" doesn't need an explanation every
+       time (only RC unlocks it; Aadhaar/PAN/face-photo are attach-only
+       and never trigger this box, which used to just silently hide with
+       no clue why). */
+    box.style.display='block';
+    payBtn.style.display='none';
+    resultEl.textContent=t('ai.uploadRcHint');
+    resultEl.className='status';
+    return;
+  }
   box.style.display='block';
 
   const price=getCurrentPackagePrice();
